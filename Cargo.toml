@@ -2,6 +2,13 @@
 name = "hl-rs"
 version = "0.1.0"
 edition = "2024"
+description = "Hyperliquid Rust SDK"
+authors = ["mektigboy"]
+license = "MIT"
+repository = "https://github.com/mektigboy/hl-rs"
+documentation = "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api"
+keywords = ["hyperliquid", "hl", "sdk", "rust"]
+categories = ["api-bindings"]
 
 [dependencies]
 alloy = "1.0.42"

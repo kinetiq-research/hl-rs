@@ -3,11 +3,20 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
+pub struct RegisterAsset {
+    pub max_gas: Option<i64>,
+    pub asset_request: RegisterAssetRequest,
+    pub dex: String,
+    pub schema: Option<PerpDexSchemaInput>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct RegisterAssetRequest {
     pub coin: String,
-    pub sz_decimals: u32,
+    pub sz_decimals: u64,
     pub oracle_px: String,
-    pub margin_table_id: u32,
+    pub margin_table_id: u64,
     pub only_isolated: bool,
 }
 
@@ -15,20 +24,8 @@ pub struct RegisterAssetRequest {
 #[serde(rename_all = "camelCase")]
 pub struct PerpDexSchemaInput {
     pub full_name: String,
-    pub collateral_token: i32,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    pub collateral_token: u64,
     pub oracle_updater: Option<String>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct RegisterAsset {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub max_gas: Option<String>,
-    pub asset_request: RegisterAssetRequest,
-    pub dex: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub schema: Option<PerpDexSchemaInput>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -48,15 +45,36 @@ pub struct SetFundingMultipliers {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct HaltTrading {
-    pub coin: String,
-    pub is_halted: bool,
+pub struct SetMarginTableIds {
+    pub ids: Vec<(String, i64)>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct SetMarginTableIds {
-    pub ids: Vec<(String, u32)>,
+pub struct InsertMarginTable {
+    pub dex: String,
+    pub margin_table: RawMarginTable,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct RawMarginTable {
+    pub description: String,
+    pub margin_tiers: Vec<RawMarginTier>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct RawMarginTier {
+    pub lower_bound: i64,
+    pub max_leverage: i64,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct HaltTrading {
+    pub coin: String,
+    pub is_halted: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -70,27 +88,6 @@ pub struct SetFeeRecipient {
 #[serde(rename_all = "camelCase")]
 pub struct SetOpenInterestCaps {
     pub caps: Vec<(String, String)>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct RawMarginTier {
-    pub lower_bound: i64,
-    pub max_leverage: u32,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct RawMarginTable {
-    pub description: String,
-    pub margin_tiers: Vec<RawMarginTier>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct InsertMarginTable {
-    pub dex: String,
-    pub margin_table: RawMarginTable,
 }
 
 /// Wrapper that serializes with type: "perpDeploy"
@@ -113,7 +110,7 @@ impl Serialize for PerpDeploy {
         S: serde::Serializer,
     {
         use serde::ser::SerializeStruct;
-        let mut state = serializer.serialize_struct("PerpDeploy", 2)?;
+        let mut state = serializer.serialize_struct("PerpDeploy", 1)?; // Changed from 2 to 1
         state.serialize_field("type", "perpDeploy")?;
         match self {
             PerpDeploy::RegisterAsset(v) => state.serialize_field("registerAsset", v)?,
@@ -231,5 +228,32 @@ impl<'de> Deserialize<'de> for PerpDeploy {
         }
 
         deserializer.deserialize_map(PerpDeployVisitor)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_perp_deploy_serialize() {
+        let perp_deploy = PerpDeploy::RegisterAsset(RegisterAsset {
+            max_gas: None,
+            asset_request: RegisterAssetRequest {
+                coin: "BTC".to_string(),
+                sz_decimals: 8,
+                oracle_px: "100".to_string(),
+                margin_table_id: 1,
+                only_isolated: true,
+            },
+            dex: "a".to_string(),
+            schema: None,
+        });
+
+        let serialized = serde_json::to_string(&perp_deploy).unwrap();
+        assert_eq!(
+            serialized,
+            "{\"type\":\"perpDeploy\",\"registerAsset\":{\"maxGas\":null,\"assetRequest\":{\"coin\":\"BTC\",\"szDecimals\":8,\"oraclePx\":\"100\",\"marginTableId\":1,\"onlyIsolated\":true},\"dex\":\"a\",\"schema\":null}}"
+        );
     }
 }

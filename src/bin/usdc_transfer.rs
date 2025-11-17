@@ -1,44 +1,37 @@
-use std::collections::HashMap;
+// use std::{collections::HashMap, str::FromStr};
 
-use alloy::signers::local::PrivateKeySigner;
-use hl_rs::{
-    ExchangeClient,
-    exchange::{ActionKind, builder::BuildAction, requests::UsdSend},
-};
+// use alloy::{primitives::Address, signers::local::PrivateKeySigner};
+// use hl_rs::{BaseUrl, ExchangeClient};
 
 #[tokio::main]
 async fn main() {
-    env_logger::init();
+    // dotenv::dotenv().unwrap();
 
-    // Key was randomly generated for testing and shouldn't be used with any real funds
-    let wallet: PrivateKeySigner =
-        "e908f86dbb4d55ac876378565aafeabc187f6690f046459397b17d9b9a19688e"
-            .parse()
-            .unwrap();
+    // let private_key = std::env::var("PRIVATE_KEY").unwrap();
+    // let wallet = PrivateKeySigner::from_str(&private_key).unwrap();
 
-    let exchange_client = ExchangeClient::new(None, None, HashMap::new()).unwrap();
+    // println!(
+    //     "{}",
+    //     format!(
+    //         "Sending USDC from {} to 0x1234567890123456789012345678901234567890",
+    //         wallet.address()
+    //     )
+    // );
 
-    let usd_send = UsdSend {
-        signature_chain_id: 421614,
-        hyperliquid_chain: "Testnet".to_string(),
-        destination: "0x1234567890123456789012345678901234567890".to_string(),
-        amount: "100".to_string(),
-        time: 1690393044548,
-    };
+    // let exchange_client =
+    //     ExchangeClient::new(Some(BaseUrl::Testnet), None, None, HashMap::new()).unwrap();
 
-    let action = ActionKind::UsdSend(usd_send)
-        .build(&exchange_client)
-        .expect("Failed to build action");
+    // let action = exchange_client
+    //     .usdc_transfer_action(
+    //         "100",
+    //         Address::from_str("0x1234567890123456789012345678901234567890").unwrap(),
+    //     )
+    //     .unwrap()
+    //     .sign(&wallet)
+    //     .unwrap()
+    //     .send()
+    //     .await
+    //     .unwrap();
 
-    let signed = action.sign(&wallet).expect("Failed to sign action");
-
-    println!("Signed action: {:?}", signed.signature.to_string());
-
-    // let res = signed.send().await.expect("Failed to send action");
-
-    // // let res = exchange_client
-    // //     .usdc_transfer(amount, destination, None)
-    // //     .await
-    // //     .unwrap();
-    // info!("Usdc transfer result: {res:?}");
+    // println!("USDC transfer result: {action:?}");
 }

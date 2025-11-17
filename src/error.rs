@@ -2,6 +2,9 @@ use thiserror::Error;
 
 #[derive(Error, Debug, Clone)]
 pub enum Error {
+    #[error(transparent)]
+    Api(#[from] ApiError),
+
     // TODO: turn some embedded types into errors instead of strings
     #[error(
         "Client error: status code: {status_code}, error code: {error_code:?}, error message: {error_message}, error data: {error_data:?}"
@@ -63,4 +66,24 @@ pub enum Error {
     SignatureFailure(String),
     #[error("Vault address not found")]
     VaultAddressNotFound,
+}
+
+#[derive(Error, Debug, Clone)]
+pub enum ApiError {
+    #[error(
+        "Insufficient staked HYPE: {message}. You need to stake HYPE tokens to deploy perp assets."
+    )]
+    InsufficientStakedHype { message: String },
+    // #[error(
+    //     "Signature verification failed: {message}. This usually indicates a mismatch between the signed data and what the server expects. Check that you're using the correct wallet and network."
+    // )]
+    // When Hyperliquid computes a different signature compared to what you provided it answers "User or API Wallet 0x… does not exist" (with a different value every time). Most likely because the p and s are invalid, they don’t follow Hyperliquid’s formatting rules.
+    // SignatureMismatch { message: String },
+
+    // #[error(
+    //     "User or API wallet not found: {address}. This may indicate a signature mismatch - the server recovered a different address from your signature than expected."
+    // )]
+    // WalletNotFound { address: String },
+    #[error("Exchange API error: {message}")]
+    Other { message: String },
 }

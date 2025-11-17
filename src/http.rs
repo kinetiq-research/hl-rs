@@ -54,19 +54,19 @@ async fn parse_response(response: Response) -> Result<String> {
 impl HttpClient {
     pub async fn post(&self, url_path: &'static str, data: String) -> Result<String> {
         let full_url = format!("{}{url_path}", self.base_url);
-        let request = self
+        let req = self
             .client
             .post(full_url)
             .header("Content-Type", "application/json")
             .body(data)
             .build()
             .map_err(|e| Error::GenericRequest(e.to_string()))?;
-        let result = self
+        let res = self
             .client
-            .execute(request)
+            .execute(req)
             .await
             .map_err(|e| Error::GenericRequest(e.to_string()))?;
-        parse_response(result).await
+        parse_response(res).await
     }
 
     pub fn is_mainnet(&self) -> bool {

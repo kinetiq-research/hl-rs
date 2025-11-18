@@ -5,7 +5,7 @@ use crate::{
         builder::BuildAction,
         client_builder::ExchangeClientBuilder,
         requests::{ApproveAgent, HaltTrading, PerpDeploy, PerpDexSchemaInput, UsdSend},
-        types::{DexParams, RegisterAssetParams},
+        types::{DexParams, RegisterAssetParams, SetOracleParams},
         Action, ActionKind,
     },
     http::HttpClient,
@@ -140,26 +140,8 @@ impl ExchangeClient {
         perp_deploy.build(self)
     }
 
-    pub fn set_oracle_action(
-        &self,
-        dex: impl Into<String>,
-        oracle_pxs: Vec<(String, String)>,
-        mark_pxs: Vec<Vec<(String, String)>>,
-        external_perp_pxs: Vec<(String, String)>,
-    ) -> Result<Action> {
-        use crate::exchange::{
-            requests::{PerpDeploy, SetOracle},
-            ActionKind,
-        };
-
-        let set_oracle = SetOracle {
-            dex: dex.into(),
-            oracle_pxs,
-            mark_pxs,
-            external_perp_pxs,
-        };
-
-        ActionKind::PerpDeploy(PerpDeploy::SetOracle(set_oracle)).build(self)
+    pub fn set_oracle(&self, oracle_params: SetOracleParams) -> Result<Action> {
+        ActionKind::PerpDeploy(PerpDeploy::SetOracle(oracle_params.into())).build(self)
     }
 
     pub(crate) fn is_mainnet(&self) -> bool {

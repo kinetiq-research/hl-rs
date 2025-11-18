@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct RegisterAsset {
-    pub max_gas: Option<i64>,
+    pub max_gas: Option<u64>,
     pub asset_request: RegisterAssetRequest,
     pub dex: String,
     pub schema: Option<PerpDexSchemaInput>,

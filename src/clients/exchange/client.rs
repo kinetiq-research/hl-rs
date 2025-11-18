@@ -4,15 +4,15 @@ use alloy::primitives::Address;
 use reqwest::Client;
 
 use crate::{
-    BaseUrl,
     exchange::{
-        Action, ActionKind,
         builder::BuildAction,
         requests::{ApproveAgent, HaltTrading, PerpDeploy, PerpDexSchemaInput, UsdSend},
+        Action, ActionKind,
     },
     http::HttpClient,
     prelude::Result,
     utils::next_nonce,
+    BaseUrl,
 };
 
 #[derive(Debug, Clone)]
@@ -105,7 +105,7 @@ impl ExchangeClient {
 
     pub fn register_asset_action<T: Into<String>>(
         &self,
-        max_gas: Option<i64>,
+        max_gas: Option<u64>,
         coin: T,
         sz_decimals: u64,
         oracle_px: f64,
@@ -115,8 +115,8 @@ impl ExchangeClient {
         schema: Option<PerpDexSchemaInput>,
     ) -> Result<Action> {
         use crate::exchange::{
-            ActionKind,
             requests::{PerpDeploy, RegisterAsset, RegisterAssetRequest},
+            ActionKind,
         };
 
         let schema = match schema {
@@ -163,8 +163,8 @@ impl ExchangeClient {
         external_perp_pxs: Vec<(String, String)>,
     ) -> Result<Action> {
         use crate::exchange::{
-            ActionKind,
             requests::{PerpDeploy, SetOracle},
+            ActionKind,
         };
 
         let set_oracle = SetOracle {

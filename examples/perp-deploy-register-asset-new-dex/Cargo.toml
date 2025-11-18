@@ -1,5 +1,5 @@
 [package]
-name = "perp_deploy_register_asset"
+name = "perp-deploy-register-asset-new-dex"
 version = "0.1.0"
 edition = "2024"
 

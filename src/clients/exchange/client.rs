@@ -7,6 +7,7 @@ use crate::{
     exchange::{
         builder::BuildAction,
         requests::{ApproveAgent, HaltTrading, PerpDeploy, PerpDexSchemaInput, UsdSend},
+        types::{DexParams, RegisterAssetParams},
         Action, ActionKind,
     },
     http::HttpClient,
@@ -103,15 +104,50 @@ impl ExchangeClient {
         ActionKind::UsdSend(usd_send).build(self)
     }
 
-    pub fn register_asset_action<T: Into<String>>(
+    pub fn register_asset_on_new_dex(
+        &self,
+        dex_params: DexParams,
+        asset_params: RegisterAssetParams,
+    ) -> Result<Action> {
+        let dex_name = dex_params.full_name.to_owned();
+        self.register_asset(
+            asset_params.max_gas,
+            asset_params.ticker.as_str(),
+            asset_params.size_decimals,
+            asset_params.oracle_price,
+            asset_params.margin_table_id,
+            asset_params.only_isolated,
+            dex_name.as_str(),
+            Some(dex_params.into()),
+        )
+    }
+
+    pub fn register_asset_on_existing_dex(
+        &self,
+        dex_name: &str,
+        asset_params: RegisterAssetParams,
+    ) -> Result<Action> {
+        self.register_asset(
+            asset_params.max_gas,
+            asset_params.ticker.as_str(),
+            asset_params.size_decimals,
+            asset_params.oracle_price,
+            asset_params.margin_table_id,
+            asset_params.only_isolated,
+            dex_name,
+            None,
+        )
+    }
+
+    fn register_asset(
         &self,
         max_gas: Option<u64>,
-        coin: T,
+        coin: &str,
         sz_decimals: u64,
         oracle_px: f64,
         margin_table_id: u64,
         only_isolated: bool,
-        dex: T,
+        dex: &str,
         schema: Option<PerpDexSchemaInput>,
     ) -> Result<Action> {
         use crate::exchange::{
@@ -119,17 +155,8 @@ impl ExchangeClient {
             ActionKind,
         };
 
-        let schema = match schema {
-            Some(schema) => Some(PerpDexSchemaInput {
-                full_name: schema.full_name,
-                collateral_token: schema.collateral_token,
-                oracle_updater: schema.oracle_updater.map(|updater| updater.to_lowercase()),
-            }),
-            None => None,
-        };
-
         let register_asset_request = RegisterAssetRequest {
-            coin: coin.into(),
+            coin: coin.to_string(),
             sz_decimals,
             oracle_px: oracle_px.to_string(),
             margin_table_id,
@@ -139,7 +166,7 @@ impl ExchangeClient {
         let register_asset = RegisterAsset {
             max_gas,
             asset_request: register_asset_request,
-            dex: dex.into(),
+            dex: dex.to_string(),
             schema,
         };
 

@@ -1,10 +1,10 @@
 use std::{collections::HashMap, str::FromStr};
 
 use alloy::signers::local::PrivateKeySigner;
-use hl_rs::{BaseUrl, ExchangeClient, exchange::requests::PerpDexSchemaInput};
-
-const REGISTER_PERP_DEX: bool = true;
-const DUMMY_PERP_DEX: &str = "dummy";
+use hl_rs::{
+    exchange::types::{DexParams, RegisterAssetParams},
+    BaseUrl, ExchangeClient,
+};
 
 #[tokio::main]
 async fn main() {
@@ -29,26 +29,21 @@ async fn main() {
     )
     .unwrap();
 
-    let perp_dex_schema_input = if REGISTER_PERP_DEX {
-        Some(PerpDexSchemaInput {
-            full_name: "test dex".to_string(),
-            collateral_token: 0,
-            oracle_updater: Some(agent_wallet.address().to_string().to_lowercase()),
-        })
-    } else {
-        None
-    };
-
     let signed_action = exchange_client
-        .register_asset_action(
-            Some(1000000000000),
-            format!("{DUMMY_PERP_DEX}:DUMMY"),
-            2,
-            10.0,
-            10,
-            false,
-            DUMMY_PERP_DEX.to_string(),
-            perp_dex_schema_input,
+        .register_asset_on_new_dex(
+            DexParams {
+                full_name: "Example DEX".to_string(),
+                collateral_token: 0,
+                oracle_updater: Some(agent_wallet.address().to_string().to_lowercase()),
+            },
+            RegisterAssetParams {
+                max_gas: Some(1000000000000),
+                ticker: "EXAMPLE:ASSET".to_string(),
+                size_decimals: 2,
+                oracle_price: 10.0,
+                margin_table_id: 10,
+                only_isolated: false,
+            },
         )
         .unwrap()
         .sign(&agent_wallet)

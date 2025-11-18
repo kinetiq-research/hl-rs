@@ -5,8 +5,8 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{
-    Error, Result,
     utils::{float_to_string_for_hashing, uuid_to_hex_string},
+    Error, ExchangeClient, Result,
 };
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
@@ -99,7 +99,9 @@ pub struct ClientOrderRequest {
 }
 
 impl ClientOrderRequest {
-    pub fn convert(self, coin_to_asset: &HashMap<String, u32>) -> Result<OrderRequest> {
+    pub fn convert(self, exchange_client: &ExchangeClient) -> Result<OrderRequest> {
+        let coin_to_asset = exchange_client.coin_to_asset().as_map();
+
         let order_type = match self.order_type {
             ClientOrder::Limit(limit) => Order::Limit(Limit { tif: limit.tif }),
             ClientOrder::Trigger(trigger) => Order::Trigger(Trigger {

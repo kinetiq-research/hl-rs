@@ -21,13 +21,11 @@ async fn main() {
         )
     );
 
-    let exchange_client = ExchangeClient::new(
-        Some(BaseUrl::Testnet),
-        Some(agent_wallet.address()),
-        None,
-        HashMap::new(),
-    )
-    .unwrap();
+    let exchange_client = ExchangeClient::builder(BaseUrl::Testnet)
+        .vault_address(agent_wallet.address())
+        .build()
+        .await
+        .unwrap();
 
     let signed_action = exchange_client
         .register_asset_on_existing_dex(

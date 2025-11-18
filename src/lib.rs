@@ -10,7 +10,8 @@ mod types;
 
 pub use clients::{
     exchange::{self, ExchangeClient},
-    info, ws,
+    info::{self, InfoClient},
+    // ws::{self, WsClient},
 };
 pub use consts::{EPSILON, LOCAL_API_URL, MAINNET_API_URL, TESTNET_API_URL};
 pub use error::Error;

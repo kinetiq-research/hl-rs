@@ -1,10 +1,10 @@
-use alloy::primitives::{Address, B256, keccak256};
+use alloy::primitives::{Address, B256};
 
 use crate::{
-    Error, Result,
     eip712::Eip712,
     exchange::{Action, ActionKind, ExchangeClient, SigningData},
     utils::next_nonce,
+    Error, Result,
 };
 
 pub trait BuildAction {
@@ -13,8 +13,8 @@ pub trait BuildAction {
 
 impl BuildAction for ActionKind {
     fn build(self, exchange_client: &ExchangeClient) -> Result<Action> {
-        let vault_address = exchange_client.vault_address();
-        let expires_after = exchange_client.expires_after();
+        let vault_address = exchange_client.vault_address;
+        let expires_after = exchange_client.expires_after;
         let is_l1_action = self.is_l1_action();
 
         let timestamp = if is_l1_action {
@@ -87,7 +87,7 @@ impl ActionKind {
                 connection_id,
                 is_mainnet: exchange_client.is_mainnet(),
             },
-            http_client: exchange_client.http_client().clone(),
+            http_client: exchange_client.http_client.clone(),
         })
     }
 
@@ -108,7 +108,7 @@ impl ActionKind {
             vault_address,
             expires_after,
             signing_data: SigningData::TypedData { hash },
-            http_client: exchange_client.http_client().clone(),
+            http_client: exchange_client.http_client.clone(),
         })
     }
 

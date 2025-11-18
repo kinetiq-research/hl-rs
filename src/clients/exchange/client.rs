@@ -1,17 +1,14 @@
-use std::collections::HashMap;
-
 use alloy::{primitives::Address, signers::local::PrivateKeySigner};
-use reqwest::Client;
 
 use crate::{
     exchange::{
         builder::BuildAction,
+        client_builder::ExchangeClientBuilder,
         requests::{ApproveAgent, HaltTrading, PerpDeploy, PerpDexSchemaInput, UsdSend},
         types::{DexParams, RegisterAssetParams},
         Action, ActionKind,
     },
     http::HttpClient,
-    info::InfoClient,
     prelude::Result,
     types::{CoinToAsset, Meta},
     utils::next_nonce,
@@ -19,148 +16,18 @@ use crate::{
 };
 
 #[derive(Debug, Clone)]
-pub struct ExchangeClientBuilder {
-    base_url: BaseUrl,
-    http_client: Option<HttpClient>,
-    signer_private_key: Option<PrivateKeySigner>,
-    meta: Option<Meta>,
-    vault_address: Option<Address>,
-    expires_after: Option<u64>,
-    info_client: Option<InfoClient>,
-}
-
-impl ExchangeClientBuilder {
-    pub fn new(base_url: BaseUrl) -> Self {
-        Self {
-            base_url,
-            http_client: None,
-            signer_private_key: None,
-            meta: None,
-            vault_address: None,
-            expires_after: None,
-            info_client: None,
-        }
-    }
-
-    pub fn http_client(mut self, http_client: HttpClient) -> Self {
-        self.http_client = Some(http_client);
-        self
-    }
-
-    pub fn signer_private_key(mut self, signer: PrivateKeySigner) -> Self {
-        self.signer_private_key = Some(signer);
-        self
-    }
-
-    pub fn meta(mut self, meta: Meta) -> Self {
-        self.meta = Some(meta);
-        self
-    }
-
-    pub fn vault_address(mut self, address: Address) -> Self {
-        self.vault_address = Some(address);
-        self
-    }
-
-    pub fn expires_after(mut self, expires: u64) -> Self {
-        self.expires_after = Some(expires);
-        self
-    }
-
-    pub fn info_client(mut self, info_client: InfoClient) -> Self {
-        self.info_client = Some(info_client);
-        self
-    }
-
-    pub async fn build(mut self) -> Result<ExchangeClient> {
-        let http_client = self.http_client.unwrap_or(HttpClient {
-            client: Client::default(),
-            base_url: self.base_url.get_url(),
-        });
-        let info_client = if let Some(client) = self.info_client.take() {
-            client
-        } else {
-            InfoClient::builder(self.base_url).build()?
-        };
-
-        let meta = if let Some(meta) = self.meta.take() {
-            meta
-        } else {
-            info_client.meta().await?
-        };
-
-        let coin_to_asset =
-            Self::derive_coin_to_asset_from_meta(meta.clone(), &info_client).await?;
-
-        Ok(ExchangeClient {
-            http_client,
-            signer_private_key: self.signer_private_key,
-            vault_address: self.vault_address,
-            meta: Some(meta),
-            expires_after: self.expires_after,
-            coin_to_asset: CoinToAsset::new(coin_to_asset),
-        })
-    }
-
-    async fn derive_coin_to_asset_from_meta(
-        meta: Meta,
-        info_client: &InfoClient,
-    ) -> Result<HashMap<String, u32>> {
-        let mut coin_to_asset = HashMap::new();
-        for (asset_ind, asset) in meta.universe.iter().enumerate() {
-            coin_to_asset.insert(asset.name.clone(), asset_ind as u32);
-        }
-
-        coin_to_asset = info_client
-            .spot_meta()
-            .await?
-            .add_pair_and_name_to_index_map(coin_to_asset);
-
-        Ok(coin_to_asset)
-    }
-}
-
-#[derive(Debug, Clone)]
 pub struct ExchangeClient {
-    http_client: HttpClient,
-    signer_private_key: Option<PrivateKeySigner>,
-    meta: Option<Meta>,
-    vault_address: Option<Address>,
-    expires_after: Option<u64>,
-    coin_to_asset: CoinToAsset,
+    pub(crate) http_client: HttpClient,
+    pub(crate) signer_private_key: Option<PrivateKeySigner>,
+    pub(crate) meta: Option<Meta>,
+    pub(crate) vault_address: Option<Address>,
+    pub(crate) expires_after: Option<u64>,
+    pub(crate) coin_to_asset: CoinToAsset,
 }
 
 impl ExchangeClient {
     pub fn builder(base_url: BaseUrl) -> ExchangeClientBuilder {
         ExchangeClientBuilder::new(base_url)
-    }
-
-    pub(crate) fn vault_address(&self) -> Option<Address> {
-        self.vault_address
-    }
-
-    pub(crate) fn is_mainnet(&self) -> bool {
-        self.http_client.is_mainnet()
-    }
-
-    pub(crate) fn hyperliquid_chain(&self) -> String {
-        if self.is_mainnet() {
-            "Mainnet".to_string()
-        } else {
-            "Testnet".to_string()
-        }
-    }
-
-    pub(crate) fn expires_after(&self) -> Option<u64> {
-        self.expires_after
-    }
-
-    pub(crate) fn http_client(&self) -> &HttpClient {
-        &self.http_client
-    }
-
-    pub(crate) fn coin_to_asset(&self) -> &CoinToAsset {
-        &self.coin_to_asset
     }
 
     pub fn approve_agent_action<T: Into<String>>(
@@ -293,5 +160,17 @@ impl ExchangeClient {
         };
 
         ActionKind::PerpDeploy(PerpDeploy::SetOracle(set_oracle)).build(self)
+    }
+
+    pub(crate) fn is_mainnet(&self) -> bool {
+        self.http_client.is_mainnet()
+    }
+
+    pub(crate) fn hyperliquid_chain(&self) -> String {
+        if self.is_mainnet() {
+            "Mainnet".to_string()
+        } else {
+            "Testnet".to_string()
+        }
     }
 }

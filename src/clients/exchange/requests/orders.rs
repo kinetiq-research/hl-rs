@@ -100,7 +100,7 @@ pub struct ClientOrderRequest {
 
 impl ClientOrderRequest {
     pub fn convert(self, exchange_client: &ExchangeClient) -> Result<OrderRequest> {
-        let coin_to_asset = exchange_client.coin_to_asset().as_map();
+        let coin_to_asset = exchange_client.coin_to_asset.as_map();
 
         let order_type = match self.order_type {
             ClientOrder::Limit(limit) => Order::Limit(Limit { tif: limit.tif }),

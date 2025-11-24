@@ -20,6 +20,11 @@ pub enum InfoRequest {
     UserFees {
         user: Address,
     },
+    #[serde(rename = "delegatorSummary")]
+    UserStakingSummary {
+        user: Address,
+    },
+
     OpenOrders {
         user: Address,
     },

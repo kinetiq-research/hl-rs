@@ -163,3 +163,12 @@ pub struct PerpDex {
     pub last_deployer_fee_scale_change_time: String,
     // pub sub_deployers: Vec<Vec<String>>,
 }
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UserStakingSummary {
+    pub delegated: String,
+    pub undelegated: String,
+    pub total_pending_withdrawal: String,
+    pub n_pending_withdrawals: u64,
+}

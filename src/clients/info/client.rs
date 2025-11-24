@@ -1,3 +1,4 @@
+use alloy::primitives::Address;
 use serde::Deserialize;
 
 use crate::{
@@ -5,7 +6,7 @@ use crate::{
     http::HttpClient,
     info::{client_builder::InfoClientBuilder, types::InfoRequest},
     prelude::{Error, Result},
-    types::{Meta, PerpDex, SpotMeta},
+    types::{Meta, PerpDex, SpotMeta, UserStakingSummary},
     BaseUrl,
 };
 
@@ -65,10 +66,19 @@ impl InfoClient {
 
         Ok(dexs)
     }
+
+    pub async fn user_staking_summary(&self, user: &Address) -> Result<UserStakingSummary> {
+        self.send_request(InfoRequest::UserStakingSummary {
+            user: user.to_owned(),
+        })
+        .await
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use super::*;
 
     #[tokio::test]
@@ -76,5 +86,17 @@ mod tests {
         let info_client = InfoClient::builder(BaseUrl::Testnet).build().unwrap();
         let perp_dexs = info_client.perp_dexs().await.unwrap();
         println!("{:?}", perp_dexs);
+    }
+
+    #[tokio::test]
+    async fn test_user_staking_summary() {
+        let info_client = InfoClient::builder(BaseUrl::Testnet).build().unwrap();
+        let user_staking_summary = info_client
+            .user_staking_summary(
+                &Address::from_str("0x1234567890123456789012345678901234567890").unwrap(),
+            )
+            .await
+            .unwrap();
+        println!("{:?}", user_staking_summary);
     }
 }

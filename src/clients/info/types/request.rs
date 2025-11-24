@@ -68,6 +68,7 @@ pub enum InfoRequest {
         coin: String,
     },
     PerpDeployAuctionStatus,
+    PerpDexs,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]

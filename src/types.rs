@@ -149,3 +149,17 @@ pub struct TokenInfo {
     pub token_id: B128,
     pub is_canonical: bool,
 }
+
+#[derive(Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct PerpDex {
+    pub name: String,
+    pub full_name: String,
+    pub deployer: String,
+    pub deployer_fee_scale: String,
+    pub fee_recipient: Option<String>,
+    pub oracle_updater: Option<String>,
+    pub asset_to_streaming_oi_cap: Vec<(String, String)>,
+    pub last_deployer_fee_scale_change_time: String,
+    // pub sub_deployers: Vec<Vec<String>>,
+}

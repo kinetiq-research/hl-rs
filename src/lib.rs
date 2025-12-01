@@ -1,3 +1,4 @@
+pub mod types;
 pub mod utils;
 
 mod clients;
@@ -6,12 +7,10 @@ mod eip712;
 mod error;
 mod http;
 mod prelude;
-mod types;
 
 pub use clients::{
     exchange::{self, ExchangeClient},
     info::{self, InfoClient},
-    // ws::{self, WsClient},
 };
 pub use consts::{EPSILON, LOCAL_API_URL, MAINNET_API_URL, TESTNET_API_URL};
 pub use error::Error;

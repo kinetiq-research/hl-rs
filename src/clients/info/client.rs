@@ -6,7 +6,7 @@ use crate::{
     http::HttpClient,
     info::{client_builder::InfoClientBuilder, types::InfoRequest},
     prelude::{Error, Result},
-    types::{Meta, PerpDex, PerpDexStatus, SpotMeta, UserStakingSummary},
+    types::{Meta, PerpDeployAuctionStatus, PerpDex, PerpDexStatus, SpotMeta, UserStakingSummary},
     BaseUrl,
 };
 
@@ -80,6 +80,11 @@ impl InfoClient {
         })
         .await
     }
+
+    pub async fn perp_deploy_auction_status(&self) -> Result<PerpDeployAuctionStatus> {
+        self.send_request(InfoRequest::PerpDeployAuctionStatus)
+            .await
+    }
 }
 
 #[cfg(test)]
@@ -126,5 +131,12 @@ mod tests {
         let info_client = InfoClient::builder(BaseUrl::Testnet).build().unwrap();
         let perp_dex_status = info_client.perp_dex_status("ss").await.unwrap();
         println!("{:?}", perp_dex_status);
+    }
+
+    #[tokio::test]
+    async fn test_perp_deploy_auction_status() {
+        let info_client = InfoClient::builder(BaseUrl::Testnet).build().unwrap();
+        let perp_deploy_auction_status = info_client.perp_deploy_auction_status().await.unwrap();
+        println!("{:?}", perp_deploy_auction_status);
     }
 }

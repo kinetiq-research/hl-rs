@@ -72,12 +72,11 @@ pub enum InfoRequest {
         user: Address,
         coin: String,
     },
-    PerpDeployAuctionStatus,
     PerpDexs,
-    #[serde(rename = "perpDexStatus")]
     PerpDexStatus {
         dex: String,
     },
+    PerpDeployAuctionStatus,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]

@@ -178,3 +178,13 @@ pub struct UserStakingSummary {
     pub total_pending_withdrawal: String,
     pub n_pending_withdrawals: u64,
 }
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PerpDeployAuctionStatus {
+    pub start_time_seconds: u64,
+    pub duration_seconds: u64,
+    pub start_gas: String,
+    pub current_gas: String,
+    pub end_gas: Option<String>,
+}

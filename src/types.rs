@@ -164,6 +164,12 @@ pub struct PerpDex {
     // pub sub_deployers: Vec<Vec<String>>,
 }
 
+#[derive(Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct PerpDexStatus {
+    pub total_net_deposit: String,
+}
+
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UserStakingSummary {

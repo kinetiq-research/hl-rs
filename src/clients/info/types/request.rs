@@ -74,6 +74,10 @@ pub enum InfoRequest {
     },
     PerpDeployAuctionStatus,
     PerpDexs,
+    #[serde(rename = "perpDexStatus")]
+    PerpDexStatus {
+        dex: String,
+    },
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]

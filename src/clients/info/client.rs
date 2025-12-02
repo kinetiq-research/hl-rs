@@ -6,7 +6,7 @@ use crate::{
     http::HttpClient,
     info::{client_builder::InfoClientBuilder, types::InfoRequest},
     prelude::{Error, Result},
-    types::{Meta, PerpDex, SpotMeta, UserStakingSummary},
+    types::{Meta, PerpDex, PerpDexStatus, SpotMeta, UserStakingSummary},
     BaseUrl,
 };
 
@@ -39,6 +39,13 @@ impl InfoClient {
         self.send_request(InfoRequest::SpotMeta).await
     }
 
+    pub async fn user_staking_summary(&self, user: &Address) -> Result<UserStakingSummary> {
+        self.send_request(InfoRequest::UserStakingSummary {
+            user: user.to_owned(),
+        })
+        .await
+    }
+
     pub async fn perp_dexs(&self) -> Result<Vec<PerpDex>> {
         use serde_json::Value;
 
@@ -67,9 +74,9 @@ impl InfoClient {
         Ok(dexs)
     }
 
-    pub async fn user_staking_summary(&self, user: &Address) -> Result<UserStakingSummary> {
-        self.send_request(InfoRequest::UserStakingSummary {
-            user: user.to_owned(),
+    pub async fn perp_dex_status(&self, dex_name: &str) -> Result<PerpDexStatus> {
+        self.send_request(InfoRequest::PerpDexStatus {
+            dex: dex_name.to_string(),
         })
         .await
     }
@@ -82,10 +89,17 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_perp_dexs() {
+    async fn test_meta() {
         let info_client = InfoClient::builder(BaseUrl::Testnet).build().unwrap();
-        let perp_dexs = info_client.perp_dexs().await.unwrap();
-        println!("{:?}", perp_dexs);
+        let meta = info_client.meta().await.unwrap();
+        println!("{:?}", meta);
+    }
+
+    #[tokio::test]
+    async fn test_spot_meta() {
+        let info_client = InfoClient::builder(BaseUrl::Testnet).build().unwrap();
+        let spot_meta = info_client.spot_meta().await.unwrap();
+        println!("{:?}", spot_meta);
     }
 
     #[tokio::test]
@@ -98,5 +112,19 @@ mod tests {
             .await
             .unwrap();
         println!("{:?}", user_staking_summary);
+    }
+
+    #[tokio::test]
+    async fn test_perp_dexs() {
+        let info_client = InfoClient::builder(BaseUrl::Testnet).build().unwrap();
+        let perp_dexs = info_client.perp_dexs().await.unwrap();
+        println!("{:?}", perp_dexs);
+    }
+
+    #[tokio::test]
+    async fn test_perp_dex_status() {
+        let info_client = InfoClient::builder(BaseUrl::Testnet).build().unwrap();
+        let perp_dex_status = info_client.perp_dex_status("ss").await.unwrap();
+        println!("{:?}", perp_dex_status);
     }
 }

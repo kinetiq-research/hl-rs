@@ -196,11 +196,13 @@ impl<'de> Deserialize<'de> for PerpDeploy {
                     }
                 }
 
-                if type_val.as_deref() != Some("perpDeploy") {
-                    return Err(de::Error::invalid_value(
-                        serde::de::Unexpected::Str(type_val.unwrap_or_default().as_str()),
-                        &"perpDeploy",
-                    ));
+                if let Some(t) = type_val.as_deref() {
+                    if t != "perpDeploy" {
+                        return Err(de::Error::invalid_value(
+                            serde::de::Unexpected::Str(t),
+                            &"perpDeploy",
+                        ));
+                    }
                 }
 
                 if let Some(v) = register_asset {

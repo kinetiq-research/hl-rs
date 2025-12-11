@@ -190,7 +190,7 @@ impl ExchangeClient {
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct ExchangePayload {
+pub struct ExchangePayload {
     action: ActionKind,
     #[serde(serialize_with = "crate::exchange::action::serialize_sig")]
     signature: Signature,

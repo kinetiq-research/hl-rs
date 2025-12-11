@@ -1,10 +1,10 @@
 use alloy::{
-    primitives::{Address, B256, Signature},
-    signers::{SignerSync, local::PrivateKeySigner},
+    primitives::{Address, Signature, B256},
+    signers::{local::PrivateKeySigner, SignerSync},
 };
-use serde::{Deserialize, Serialize, Serializer, ser::SerializeStruct};
+use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
 
-use crate::{Error, exchange::ActionKind, http::HttpClient, utils::sign_l1_action};
+use crate::{exchange::ActionKind, http::HttpClient, utils::{recover_user_from_user_signed_action, sign_l1_action}, Error};
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -135,5 +135,11 @@ impl SignedAction {
             serde_json::from_str(&output).map_err(|e| Error::JsonParse(e.to_string()))?;
 
         raw_response.into_result()
+    }
+
+    pub fn recover_user(
+        &self
+    ) -> Result<Address, Error> {
+        recover_user_from_user_signed_action(&self.signature, &self.action)
     }
 }

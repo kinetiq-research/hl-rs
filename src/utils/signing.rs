@@ -49,8 +49,8 @@ pub fn sign_typed_data<T: Eip712>(payload: &T, wallet: &PrivateKeySigner) -> Res
 }
 
 pub fn recover_user_from_user_signed_action(
-    signature: Signature,
-    action: ActionKind,
+    signature: &Signature,
+    action: &ActionKind,
 ) -> Result<Address> {
     let hash = action.extract_eip712_hash()?;
     let recovered = signature

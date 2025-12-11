@@ -75,11 +75,9 @@ impl ActionKind {
         };
 
         let connection_id = self.hash(timestamp, hash_vault_address, expires_after)?;
-        let action_json =
-            serde_json::to_value(&self).map_err(|e| Error::JsonParse(e.to_string()))?;
 
         Ok(Action {
-            action: action_json,
+            action: self,
             nonce: timestamp,
             vault_address,
             expires_after,
@@ -99,11 +97,9 @@ impl ActionKind {
         expires_after: Option<i64>,
     ) -> Result<Action> {
         let hash = self.extract_eip712_hash()?;
-        let action_json =
-            serde_json::to_value(&self).map_err(|e| Error::JsonParse(e.to_string()))?;
 
         Ok(Action {
-            action: action_json,
+            action: self,
             nonce: timestamp,
             vault_address,
             expires_after,
@@ -112,7 +108,7 @@ impl ActionKind {
         })
     }
 
-    fn extract_eip712_hash(&self) -> Result<B256> {
+    pub fn extract_eip712_hash(&self) -> Result<B256> {
         match self {
             ActionKind::UsdSend(usd_send) => Ok(usd_send.eip712_signing_hash()),
             ActionKind::Withdraw3(withdraw) => Ok(withdraw.eip712_signing_hash()),

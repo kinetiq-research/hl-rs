@@ -5,17 +5,20 @@ edition = "2021"
 description = "Hyperliquid Rust SDK"
 authors = ["mektigboy"]
 license = "MIT"
-repository = "https://github.com/mektigboy/hl-rs"
+repository = "https://github.com/kinetiq-research/hl-rs"
 documentation = "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api"
 keywords = ["hyperliquid", "hl", "sdk", "rust"]
 categories = ["api-bindings"]
 
 [dependencies]
 alloy = "1.1.1"
+alloy-signer = { version = "1.1.1", features = ["eip712"] }
 chrono = "0.4.42"
 dotenv = "0.15.0"
 env_logger = "0.11.8"
 error-stack = "0.6.0"
+f = "0.1.0"
+k256 = "0.13.4"
 lazy_static = "1.5.0"
 log = "0.4.28"
 reqwest = "0.12.24"

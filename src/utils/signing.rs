@@ -1,12 +1,12 @@
 use alloy::{
     dyn_abi::Eip712Domain,
     primitives::{Address, B256},
-    signers::{Signature, SignerSync, local::PrivateKeySigner},
+    signers::{local::PrivateKeySigner, Signature, SignerSync},
     sol,
-    sol_types::{SolStruct, eip712_domain},
+    sol_types::{eip712_domain, SolStruct},
 };
 
-use crate::{Error, Result, eip712::Eip712};
+use crate::{eip712::Eip712, exchange::ActionKind, Error, Result};
 
 sol! {
     #[derive(Debug)]
@@ -46,6 +46,17 @@ pub fn sign_typed_data<T: Eip712>(payload: &T, wallet: &PrivateKeySigner) -> Res
     wallet
         .sign_hash_sync(&payload.eip712_signing_hash())
         .map_err(|e| Error::SignatureFailure(e.to_string()))
+}
+
+pub fn recover_user_from_user_signed_action(
+    signature: Signature,
+    action: ActionKind,
+) -> Result<Address> {
+    let hash = action.extract_eip712_hash()?;
+    let recovered = signature
+        .recover_address_from_prehash(&hash)
+        .map_err(|e| Error::RecoverAddressFailure(e.to_string()))?;
+    Ok(recovered)
 }
 
 #[cfg(test)]
@@ -121,4 +132,26 @@ mod tests {
         );
         Ok(())
     }
+
+    #[test]
+    fn test_recover_user_from_user_signed_action() -> Result<()> {
+        let wallet = get_wallet()?;
+        let expected_address = wallet.address();
+
+        let usd_send = UsdSend {
+            signature_chain_id: 421614,
+            hyperliquid_chain: "Testnet".to_string(),
+            destination: "0x0D1d9635D0640821d15e323ac8AdADfA9c111414".to_string(),
+            amount: "1".to_string(),
+            time: 1690393044548,
+        };
+
+        let signature = sign_typed_data(&usd_send, &wallet)?;
+        let action = ActionKind::UsdSend(usd_send);
+        let recovered_address = recover_user_from_user_signed_action(signature, action)?;
+
+        assert_eq!(recovered_address, expected_address);
+        Ok(())
+    }
+
 }

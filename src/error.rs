@@ -64,6 +64,8 @@ pub enum Error {
     NoCloid,
     #[error("ECDSA signature failed: {0:?}")]
     SignatureFailure(String),
+    #[error("Error recovering address from signature: {0:?}")]
+    RecoverAddressFailure(String),
     #[error("Vault address not found")]
     VaultAddressNotFound,
 }

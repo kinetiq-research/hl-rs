@@ -10,4 +10,4 @@ mod client_builder;
 
 pub use action::{Action, SignedAction, SigningData};
 pub use action_kind::ActionKind;
-pub use client::ExchangeClient;
+pub use client::{ExchangeClient, ExchangePayload};

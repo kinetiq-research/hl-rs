@@ -185,6 +185,6 @@ pub struct PerpDeployAuctionStatus {
     pub start_time_seconds: u64,
     pub duration_seconds: u64,
     pub start_gas: String,
-    pub current_gas: String,
+    pub current_gas: Option<String>,
     pub end_gas: Option<String>,
 }

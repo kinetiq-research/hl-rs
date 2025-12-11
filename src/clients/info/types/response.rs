@@ -2,8 +2,6 @@ use serde::{Deserialize, Serialize};
 
 use alloy::primitives::Address;
 
-use crate::{error::ApiError, Error};
-
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UserStateResponse {

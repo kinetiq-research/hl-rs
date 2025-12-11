@@ -32,7 +32,6 @@ impl BuildAction for ActionKind {
             )
         } else {
             self.build_typed_data_action(
-                exchange_client,
                 timestamp,
                 vault_address,
                 expires_after.map(|e| e as i64),
@@ -75,11 +74,9 @@ impl ActionKind {
         };
 
         let connection_id = self.hash(timestamp, hash_vault_address, expires_after)?;
-        let action_json =
-            serde_json::to_value(&self).map_err(|e| Error::JsonParse(e.to_string()))?;
 
         Ok(Action {
-            action: action_json,
+            action: self,
             nonce: timestamp,
             vault_address,
             expires_after,
@@ -87,32 +84,27 @@ impl ActionKind {
                 connection_id,
                 is_mainnet: exchange_client.is_mainnet(),
             },
-            http_client: exchange_client.http_client.clone(),
         })
     }
 
     fn build_typed_data_action(
         self,
-        exchange_client: &ExchangeClient,
         timestamp: i64,
         vault_address: Option<Address>,
         expires_after: Option<i64>,
     ) -> Result<Action> {
         let hash = self.extract_eip712_hash()?;
-        let action_json =
-            serde_json::to_value(&self).map_err(|e| Error::JsonParse(e.to_string()))?;
 
         Ok(Action {
-            action: action_json,
+            action: self,
             nonce: timestamp,
             vault_address,
             expires_after,
             signing_data: SigningData::TypedData { hash },
-            http_client: exchange_client.http_client.clone(),
         })
     }
 
-    fn extract_eip712_hash(&self) -> Result<B256> {
+    pub fn extract_eip712_hash(&self) -> Result<B256> {
         match self {
             ActionKind::UsdSend(usd_send) => Ok(usd_send.eip712_signing_hash()),
             ActionKind::Withdraw3(withdraw) => Ok(withdraw.eip712_signing_hash()),

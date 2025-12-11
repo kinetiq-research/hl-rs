@@ -129,7 +129,7 @@ mod tests {
     #[tokio::test]
     async fn test_perp_dex_status() {
         let info_client = InfoClient::builder(BaseUrl::Testnet).build().unwrap();
-        let perp_dex_status = info_client.perp_dex_status("ss").await.unwrap();
+        let perp_dex_status = info_client.perp_dex_status("slob").await.unwrap();
         println!("{:?}", perp_dex_status);
     }
 

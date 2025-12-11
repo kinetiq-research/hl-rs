@@ -3,14 +3,13 @@ use alloy::{
     signers::{SignerSync, local::PrivateKeySigner},
 };
 use serde::{Deserialize, Serialize, Serializer, ser::SerializeStruct};
-use serde_json::Value;
 
-use crate::{Error, http::HttpClient, utils::sign_l1_action};
+use crate::{Error, exchange::ActionKind, http::HttpClient, utils::sign_l1_action};
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct ExchangePayload {
-    action: Value,
+    action: ActionKind,
     #[serde(serialize_with = "serialize_sig")]
     signature: Signature,
     nonce: i64,
@@ -41,7 +40,7 @@ where
 /// let signed = action.sign(&wallet)?;
 /// ```
 pub struct Action {
-    pub action: Value,
+    pub action: ActionKind,
     pub nonce: i64,
     pub vault_address: Option<Address>,
     pub expires_after: Option<i64>,
@@ -66,7 +65,7 @@ pub enum SigningData {
 /// This action has been fully prepared and signed, and can be sent
 /// immediately to the exchange.
 pub struct SignedAction {
-    pub action: Value,
+    pub action: ActionKind,
     pub nonce: i64,
     pub signature: Signature,
     pub vault_address: Option<Address>,

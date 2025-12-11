@@ -4,20 +4,13 @@ use alloy::{
 };
 use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
 
-use crate::{exchange::ActionKind, http::HttpClient, utils::{recover_user_from_user_signed_action, sign_l1_action}, Error};
+use crate::{
+    exchange::ActionKind,
+    utils::{recover_user_from_user_signed_action, sign_l1_action},
+    Error,
+};
 
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct ExchangePayload {
-    action: ActionKind,
-    #[serde(serialize_with = "serialize_sig")]
-    signature: Signature,
-    nonce: i64,
-    // vault_address: Option<Address>,
-    // expires_after: Option<i64>,
-}
-
-fn serialize_sig<S>(sig: &Signature, s: S) -> std::result::Result<S::Ok, S::Error>
+pub fn serialize_sig<S>(sig: &Signature, s: S) -> std::result::Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
@@ -34,22 +27,16 @@ where
 /// necessary metadata (timestamp, vault address, signing data) but has
 /// not yet been signed.
 ///
-/// # Example
-/// ```no_run
-/// let action = ActionKind::UsdSend(usd_send).build(&client)?;
-/// let signed = action.sign(&wallet)?;
-/// ```
 pub struct Action {
     pub action: ActionKind,
     pub nonce: i64,
     pub vault_address: Option<Address>,
     pub expires_after: Option<i64>,
     pub signing_data: SigningData,
-    pub http_client: HttpClient,
 }
 
 /// Enum representing data needed for signing an action.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize)]
 pub enum SigningData {
     /// L1 actions require a connection_id and network type.
     L1 {
@@ -64,13 +51,13 @@ pub enum SigningData {
 ///
 /// This action has been fully prepared and signed, and can be sent
 /// immediately to the exchange.
+#[derive(Debug, Deserialize)]
 pub struct SignedAction {
     pub action: ActionKind,
     pub nonce: i64,
     pub signature: Signature,
     pub vault_address: Option<Address>,
     pub expires_after: Option<i64>,
-    pub http_client: HttpClient,
 }
 
 impl Action {
@@ -92,7 +79,6 @@ impl Action {
             signature,
             vault_address: self.vault_address,
             expires_after: self.expires_after,
-            http_client: self.http_client,
         })
     }
 
@@ -105,7 +91,6 @@ impl Action {
             signature,
             vault_address: self.vault_address,
             expires_after: self.expires_after,
-            http_client: self.http_client,
         }
     }
 
@@ -116,30 +101,7 @@ impl Action {
 }
 
 impl SignedAction {
-    /// Send signed action to Hyperliquid API.
-    pub async fn send(self) -> Result<crate::exchange::responses::ExchangeResponse, Error> {
-        let exchange_payload = ExchangePayload {
-            action: self.action,
-            signature: self.signature,
-            nonce: self.nonce,
-            // vault_address: self.vault_address,
-            // expires_after: self.expires_after,
-        };
-
-        let res = serde_json::to_string(&exchange_payload)
-            .map_err(|e| Error::JsonParse(e.to_string()))?;
-
-        let output = self.http_client.post("/exchange", res).await?;
-
-        let raw_response: crate::exchange::responses::ExchangeResponseStatusRaw =
-            serde_json::from_str(&output).map_err(|e| Error::JsonParse(e.to_string()))?;
-
-        raw_response.into_result()
-    }
-
-    pub fn recover_user(
-        &self
-    ) -> Result<Address, Error> {
+    pub fn recover_user(&self) -> Result<Address, Error> {
         recover_user_from_user_signed_action(&self.signature, &self.action)
     }
 }

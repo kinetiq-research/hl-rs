@@ -148,7 +148,7 @@ mod tests {
 
         let signature = sign_typed_data(&usd_send, &wallet)?;
         let action = ActionKind::UsdSend(usd_send);
-        let recovered_address = recover_user_from_user_signed_action(signature, action)?;
+        let recovered_address = recover_user_from_user_signed_action(&signature, &action)?;
 
         assert_eq!(recovered_address, expected_address);
         Ok(())

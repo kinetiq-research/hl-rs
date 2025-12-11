@@ -1,4 +1,6 @@
 use alloy::{primitives::Address, signers::local::PrivateKeySigner};
+use alloy_signer::Signature;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     exchange::{
@@ -6,7 +8,7 @@ use crate::{
         client_builder::ExchangeClientBuilder,
         requests::{ApproveAgent, HaltTrading, PerpDeploy, PerpDexSchemaInput, UsdSend},
         types::{DexParams, RegisterAssetParams, SetOracleParams},
-        Action, ActionKind,
+        Action, ActionKind, SignedAction,
     },
     http::HttpClient,
     prelude::Result,
@@ -144,6 +146,35 @@ impl ExchangeClient {
         ActionKind::PerpDeploy(PerpDeploy::SetOracle(oracle_params.into())).build(self)
     }
 
+    pub async fn send_action(
+        self,
+        signed_action: SignedAction,
+    ) -> Result<crate::exchange::responses::ExchangeResponse> {
+        let SignedAction {
+            action,
+            signature,
+            nonce,
+            ..
+        } = signed_action;
+        let exchange_payload = ExchangePayload {
+            action,
+            signature,
+            nonce,
+            // vault_address: self.vault_address,
+            // expires_after: self.expires_after,
+        };
+
+        let res = serde_json::to_string(&exchange_payload)
+            .map_err(|e| crate::Error::JsonParse(e.to_string()))?;
+
+        let output = self.http_client.post("/exchange", res).await?;
+
+        let raw_response: crate::exchange::responses::ExchangeResponseStatusRaw =
+            serde_json::from_str(&output).map_err(|e| crate::Error::JsonParse(e.to_string()))?;
+
+        raw_response.into_result()
+    }
+
     pub(crate) fn is_mainnet(&self) -> bool {
         self.http_client.is_mainnet()
     }
@@ -155,4 +186,15 @@ impl ExchangeClient {
             "Testnet".to_string()
         }
     }
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ExchangePayload {
+    action: ActionKind,
+    #[serde(serialize_with = "crate::exchange::action::serialize_sig")]
+    signature: Signature,
+    nonce: i64,
+    // vault_address: Option<Address>,
+    // expires_after: Option<i64>,
 }

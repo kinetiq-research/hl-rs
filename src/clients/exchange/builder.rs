@@ -32,7 +32,6 @@ impl BuildAction for ActionKind {
             )
         } else {
             self.build_typed_data_action(
-                exchange_client,
                 timestamp,
                 vault_address,
                 expires_after.map(|e| e as i64),
@@ -85,13 +84,11 @@ impl ActionKind {
                 connection_id,
                 is_mainnet: exchange_client.is_mainnet(),
             },
-            http_client: exchange_client.http_client.clone(),
         })
     }
 
     fn build_typed_data_action(
         self,
-        exchange_client: &ExchangeClient,
         timestamp: i64,
         vault_address: Option<Address>,
         expires_after: Option<i64>,
@@ -104,7 +101,6 @@ impl ActionKind {
             vault_address,
             expires_after,
             signing_data: SigningData::TypedData { hash },
-            http_client: exchange_client.http_client.clone(),
         })
     }
 

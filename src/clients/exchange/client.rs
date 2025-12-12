@@ -147,7 +147,7 @@ impl ExchangeClient {
     }
 
     pub async fn send_action(
-        self,
+        &self,
         signed_action: SignedAction,
     ) -> Result<crate::exchange::responses::ExchangeResponse> {
         let SignedAction {

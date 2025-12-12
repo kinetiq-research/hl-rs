@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{Error, error::ApiError};
 
@@ -64,7 +64,7 @@ pub enum ExchangeDataStatus {
     Success,
     WaitingForFill,
     WaitingForTrigger,
-    Error(String),
+//    Error(String),
     Resting(RestingOrder),
     Filled(FilledOrder),
 }
@@ -74,7 +74,7 @@ pub struct ExchangeDataStatuses {
     pub statuses: Vec<ExchangeDataStatus>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct ExchangeResponse {
     #[serde(rename = "type")]
     pub response_type: String,

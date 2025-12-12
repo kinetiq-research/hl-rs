@@ -191,10 +191,10 @@ impl ExchangeClient {
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ExchangePayload {
-    action: ActionKind,
+    pub action: ActionKind,
     #[serde(serialize_with = "crate::exchange::action::serialize_sig")]
-    signature: Signature,
-    nonce: i64,
+    pub signature: Signature,
+    pub nonce: i64,
     // vault_address: Option<Address>,
     // expires_after: Option<i64>,
 }

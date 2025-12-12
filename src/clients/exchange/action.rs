@@ -2,7 +2,7 @@ use alloy::{
     primitives::{Address, Signature, B256},
     signers::{local::PrivateKeySigner, SignerSync},
 };
-use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
+use serde::{ser::SerializeStruct, Deserialize, Serializer};
 
 use crate::{
     exchange::ActionKind,

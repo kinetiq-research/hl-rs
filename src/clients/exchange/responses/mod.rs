@@ -45,12 +45,12 @@ fn extract_address_from_error(msg: &str) -> Option<String> {
         .map(|s| s.to_string())
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct RestingOrder {
     pub oid: u64,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct FilledOrder {
     pub total_sz: String,
@@ -58,7 +58,7 @@ pub struct FilledOrder {
     pub oid: u64,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub enum ExchangeDataStatus {
     Success,
@@ -69,7 +69,7 @@ pub enum ExchangeDataStatus {
     Filled(FilledOrder),
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct ExchangeDataStatuses {
     pub statuses: Vec<ExchangeDataStatus>,
 }

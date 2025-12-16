@@ -1,13 +1,13 @@
-use alloy::primitives::{Address, B256, keccak256};
+use alloy::primitives::{keccak256, Address, B256};
 use serde::{Deserialize, Serialize, Serializer};
 
 use crate::{
-    Error, Result,
     exchange::requests::{
         ApproveAgent, ApproveBuilderFee, BulkCancel, BulkCancelCloid, BulkModify, BulkOrder,
         ClaimRewards, EvmUserModify, PerpDeploy, ScheduleCancel, SendAsset, SetReferrer, SpotSend,
         SpotUser, UpdateIsolatedMargin, UpdateLeverage, UsdSend, VaultTransfer, Withdraw3,
     },
+    Error, Result,
 };
 
 #[derive(Debug, Clone, Deserialize)]
@@ -64,6 +64,9 @@ impl Serialize for ActionKind {
                     }
                     PerpDeploy::InsertMarginTable(v) => {
                         state.serialize_field("insertMarginTable", v)?
+                    }
+                    PerpDeploy::SetSubDeployers(v) => {
+                        state.serialize_field("setSubDeployers", v)?
                     }
                 }
                 state.end()

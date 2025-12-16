@@ -90,6 +90,34 @@ pub struct SetOpenInterestCaps {
     pub caps: Vec<(String, String)>,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SetSubDeployers {
+    pub dex: String,
+    pub sub_deployers: Vec<SubDeployer>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SubDeployer {
+    pub variant: Variant, // corresponds to a variant of PerpDeployAction. For example, "haltTrading" or "setOracle"
+    pub user: Address,
+    pub allowed: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub enum Variant {
+    RegisterAsset,
+    SetOracle,
+    SetFundingMultipliers,
+    HaltTrading,
+    SetMarginTableIds,
+    SetFeeRecipient,
+    SetOpenInterestCaps,
+    InsertMarginTable,
+}
+
 /// Wrapper that serializes with type: "perpDeploy"
 /// and one of the action fields (registerAsset, setOracle, etc.)
 #[derive(Debug, Clone)]
@@ -102,6 +130,7 @@ pub enum PerpDeploy {
     SetFeeRecipient(SetFeeRecipient),
     SetOpenInterestCaps(SetOpenInterestCaps),
     InsertMarginTable(InsertMarginTable),
+    SetSubDeployers(SetSubDeployers),
 }
 
 impl Serialize for PerpDeploy {
@@ -125,6 +154,7 @@ impl Serialize for PerpDeploy {
                 state.serialize_field("setOpenInterestCaps", v)?;
             }
             PerpDeploy::InsertMarginTable(v) => state.serialize_field("insertMarginTable", v)?,
+            PerpDeploy::SetSubDeployers(v) => state.serialize_field("setSubDeployers", v)?,
         }
         state.end()
     }

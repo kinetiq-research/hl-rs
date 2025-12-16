@@ -2,7 +2,7 @@ use alloy::{
     primitives::{Address, Signature, B256},
     signers::{local::PrivateKeySigner, SignerSync},
 };
-use serde::{ser::SerializeStruct, Deserialize, Serializer};
+use serde::{ser::SerializeStruct, Deserialize, Serializer, Serialize};
 
 use crate::{
     exchange::ActionKind,
@@ -27,6 +27,7 @@ where
 /// necessary metadata (timestamp, vault address, signing data) but has
 /// not yet been signed.
 ///
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Action {
     pub action: ActionKind,
     pub nonce: i64,
@@ -36,7 +37,7 @@ pub struct Action {
 }
 
 /// Enum representing data needed for signing an action.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum SigningData {
     /// L1 actions require a connection_id and network type.
     L1 {
@@ -51,7 +52,7 @@ pub enum SigningData {
 ///
 /// This action has been fully prepared and signed, and can be sent
 /// immediately to the exchange.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct SignedAction {
     pub action: ActionKind,
     pub nonce: i64,

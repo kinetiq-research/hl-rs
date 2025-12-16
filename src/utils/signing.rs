@@ -6,7 +6,11 @@ use alloy::{
     sol_types::{eip712_domain, SolStruct},
 };
 
-use crate::{eip712::Eip712, exchange::ActionKind, Error, Result};
+use crate::{
+    eip712::Eip712,
+    exchange::{Action, ActionKind, SignedAction, SigningData},
+    Error, ExchangeClient, Result,
+};
 
 sol! {
     #[derive(Debug)]
@@ -18,11 +22,23 @@ sol! {
 
 impl Eip712 for Agent {
     fn domain(&self) -> Eip712Domain {
-        eip712_domain! {
-            name: "Exchange",
-            version: "1",
-            chain_id: 1337,
-            verifying_contract: Address::ZERO,
+        #[cfg(feature = "enclave")]
+        {
+            eip712_domain! {
+                name: "LaunchEnclave",
+                version: "1",
+                chain_id: 1337,
+                verifying_contract: Address::ZERO,
+            }
+        }
+        #[cfg(not(feature = "enclave"))]
+        {
+            eip712_domain! {
+                name: "Exchange",
+                version: "1",
+                chain_id: 1337,
+                verifying_contract: Address::ZERO,
+            }
         }
     }
     fn struct_hash(&self) -> B256 {
@@ -48,15 +64,44 @@ pub fn sign_typed_data<T: Eip712>(payload: &T, wallet: &PrivateKeySigner) -> Res
         .map_err(|e| Error::SignatureFailure(e.to_string()))
 }
 
-pub fn recover_user_from_user_signed_action(
+pub fn recover_action(
+    exchange_client: &ExchangeClient,
     signature: &Signature,
-    action: &ActionKind,
+    signed_action: &SignedAction,
 ) -> Result<Address> {
-    let hash = action.extract_eip712_hash()?;
-    let recovered = signature
+    let is_l1_action = signed_action.action.is_l1_action();
+    let action = if is_l1_action {
+        signed_action.action.clone().build_l1_action(
+            exchange_client,
+            signed_action.nonce,
+            signed_action.vault_address,
+            signed_action.expires_after,
+        )?
+    } else {
+        signed_action.action.clone().build_typed_data_action(
+            signed_action.nonce,
+            signed_action.vault_address,
+            signed_action.expires_after,
+        )?
+    };
+    let hash = match action.signing_data {
+        SigningData::L1 {
+            connection_id,
+            is_mainnet,
+        } => {
+            let source = if is_mainnet { "a" } else { "b" }.to_string();
+            let payload = Agent {
+                source,
+                connectionId: connection_id,
+            };
+            <Agent as Eip712>::eip712_signing_hash(&payload)
+        }
+        SigningData::TypedData { hash } => hash,
+    };
+
+    signature
         .recover_address_from_prehash(&hash)
-        .map_err(|e| Error::RecoverAddressFailure(e.to_string()))?;
-    Ok(recovered)
+        .map_err(|e| Error::RecoverAddressFailure(e.to_string()))
 }
 
 #[cfg(test)]
@@ -64,7 +109,7 @@ mod tests {
     use std::str::FromStr;
 
     use super::*;
-    use crate::exchange::requests::{UsdSend, Withdraw3};
+    use crate::{BaseUrl, exchange::{builder::BuildAction, requests::{UsdSend, Withdraw3}}};
 
     fn get_wallet() -> Result<PrivateKeySigner> {
         let priv_key = "e908f86dbb4d55ac876378565aafeabc187f6690f046459397b17d9b9a19688e";
@@ -133,10 +178,11 @@ mod tests {
         Ok(())
     }
 
-    #[test]
-    fn test_recover_user_from_user_signed_action() -> Result<()> {
+    #[tokio::test]
+    async fn test_recover_action() -> Result<()> {
         let wallet = get_wallet()?;
         let expected_address = wallet.address();
+        let exchange_client = ExchangeClient::builder(BaseUrl::Testnet).build().await.unwrap();
 
         let usd_send = UsdSend {
             signature_chain_id: 421614,
@@ -145,13 +191,12 @@ mod tests {
             amount: "1".to_string(),
             time: 1690393044548,
         };
+        let action = ActionKind::UsdSend(usd_send.clone()).build(&exchange_client).unwrap();
 
-        let signature = sign_typed_data(&usd_send, &wallet)?;
-        let action = ActionKind::UsdSend(usd_send);
-        let recovered_address = recover_user_from_user_signed_action(&signature, &action)?;
+        let signed_action = action.sign(&wallet).unwrap();
+        let recovered_address = signed_action.recover_user(&exchange_client)?;
 
         assert_eq!(recovered_address, expected_address);
         Ok(())
     }
-
 }

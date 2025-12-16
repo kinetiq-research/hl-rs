@@ -41,7 +41,7 @@ impl BuildAction for ActionKind {
 }
 
 impl ActionKind {
-    fn is_l1_action(&self) -> bool {
+    pub fn is_l1_action(&self) -> bool {
         matches!(
             self,
             ActionKind::Order(_)
@@ -60,7 +60,7 @@ impl ActionKind {
         )
     }
 
-    fn build_l1_action(
+    pub fn build_l1_action(
         self,
         exchange_client: &ExchangeClient,
         timestamp: i64,
@@ -87,7 +87,7 @@ impl ActionKind {
         })
     }
 
-    fn build_typed_data_action(
+    pub fn build_typed_data_action(
         self,
         timestamp: i64,
         vault_address: Option<Address>,

@@ -5,9 +5,7 @@ use alloy::{
 use serde::{ser::SerializeStruct, Deserialize, Serializer, Serialize};
 
 use crate::{
-    exchange::ActionKind,
-    utils::{recover_user_from_user_signed_action, sign_l1_action},
-    Error,
+    Error, exchange::{self, ActionKind, ExchangeClient}, utils::{recover_action, sign_l1_action}
 };
 
 pub fn serialize_sig<S>(sig: &Signature, s: S) -> std::result::Result<S::Ok, S::Error>
@@ -102,7 +100,7 @@ impl Action {
 }
 
 impl SignedAction {
-    pub fn recover_user(&self) -> Result<Address, Error> {
-        recover_user_from_user_signed_action(&self.signature, &self.action)
+    pub fn recover_user(&self, exchange_client: &ExchangeClient) -> Result<Address, Error> {
+        recover_action(exchange_client, &self.signature, &self)
     }
 }

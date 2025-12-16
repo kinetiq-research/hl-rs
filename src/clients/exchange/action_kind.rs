@@ -126,9 +126,9 @@ impl Serialize for ActionKind {
 impl ActionKind {
     pub fn hash(
         &self,
-        timestamp: i64,
+        timestamp: u64,
         vault_address: Option<Address>,
-        expires_after: Option<i64>,
+        expires_after: Option<u64>,
     ) -> Result<B256> {
         let mut bytes =
             rmp_serde::to_vec_named(self).map_err(|e| Error::RmpParse(e.to_string()))?;

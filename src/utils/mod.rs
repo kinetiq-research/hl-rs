@@ -1,4 +1,4 @@
-use std::sync::atomic::{AtomicI64, Ordering};
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use chrono::prelude::Utc;
 use lazy_static::lazy_static;
@@ -13,12 +13,12 @@ mod signing;
 pub use conversion::float_to_int_for_hashing;
 pub use signing::{sign_l1_action, sign_typed_data, recover_action};
 
-fn now_timestamp_ms() -> i64 {
+fn now_timestamp_ms() -> u64 {
     let now = Utc::now();
-    now.timestamp_millis()
+    now.timestamp_millis().try_into().unwrap()
 }
 
-pub fn next_nonce() -> i64 {
+pub fn next_nonce() -> u64 {
     let nonce = CUR_NONCE.fetch_add(1, Ordering::Relaxed);
     let now_ms = now_timestamp_ms();
     if nonce > now_ms + 1000 {
@@ -77,7 +77,7 @@ pub fn bps_diff(x: f64, y: f64) -> u16 {
 }
 
 lazy_static! {
-    static ref CUR_NONCE: AtomicI64 = AtomicI64::new(now_timestamp_ms());
+    static ref CUR_NONCE: AtomicU64 = AtomicU64::new(now_timestamp_ms());
 }
 
 #[cfg(test)]

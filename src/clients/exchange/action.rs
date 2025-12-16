@@ -30,9 +30,9 @@ where
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Action {
     pub action: ActionKind,
-    pub nonce: i64,
+    pub nonce: u64,
     pub vault_address: Option<Address>,
-    pub expires_after: Option<i64>,
+    pub expires_after: Option<u64>,
     pub signing_data: SigningData,
 }
 
@@ -55,10 +55,10 @@ pub enum SigningData {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct SignedAction {
     pub action: ActionKind,
-    pub nonce: i64,
+    pub nonce: u64,
     pub signature: Signature,
     pub vault_address: Option<Address>,
-    pub expires_after: Option<i64>,
+    pub expires_after: Option<u64>,
 }
 
 impl Action {

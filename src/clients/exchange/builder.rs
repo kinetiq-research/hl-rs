@@ -23,20 +23,15 @@ impl BuildAction for ActionKind {
             self.extract_timestamp().unwrap_or_else(|| next_nonce())
         };
 
-        if is_l1_action {
-            self.build_l1_action(
-                exchange_client,
-                timestamp,
-                vault_address,
-                expires_after.map(|e| e as i64),
-            )
-        } else {
-            self.build_typed_data_action(
-                timestamp,
-                vault_address,
-                expires_after.map(|e| e as i64),
-            )
-        }
+        let signing_data =
+            self.signing_data(exchange_client, timestamp, vault_address, expires_after)?;
+        Ok(Action {
+            action: self,
+            nonce: timestamp,
+            vault_address,
+            expires_after,
+            signing_data,
+        })
     }
 }
 
@@ -60,12 +55,37 @@ impl ActionKind {
         )
     }
 
+    pub fn signing_data(
+        &self,
+        exchange_client: &ExchangeClient,
+        timestamp: u64,
+        vault_address: Option<Address>,
+        expires_after: Option<u64>,
+    ) -> Result<SigningData> {
+        if self.is_l1_action() {
+            // For perpDeploy, sign with vault_address=None even if it's set
+            let hash_vault_address = match &self {
+                ActionKind::PerpDeploy(_) => None,
+                _ => vault_address,
+            };
+
+            let connection_id = self.hash(timestamp, hash_vault_address, expires_after)?;
+            Ok(SigningData::L1 {
+                connection_id,
+                is_mainnet: exchange_client.is_mainnet(),
+            })
+        } else {
+            let hash = self.extract_eip712_hash()?;
+            Ok(SigningData::TypedData { hash })
+        }
+    }
+
     pub fn build_l1_action(
         self,
         exchange_client: &ExchangeClient,
-        timestamp: i64,
+        timestamp: u64,
         vault_address: Option<Address>,
-        expires_after: Option<i64>,
+        expires_after: Option<u64>,
     ) -> Result<Action> {
         // For perpDeploy, sign with vault_address=None even if it's set
         let hash_vault_address = match &self {
@@ -89,9 +109,9 @@ impl ActionKind {
 
     pub fn build_typed_data_action(
         self,
-        timestamp: i64,
+        timestamp: u64,
         vault_address: Option<Address>,
-        expires_after: Option<i64>,
+        expires_after: Option<u64>,
     ) -> Result<Action> {
         let hash = self.extract_eip712_hash()?;
 
@@ -120,16 +140,14 @@ impl ActionKind {
         }
     }
 
-    fn extract_timestamp(&self) -> Option<i64> {
+    fn extract_timestamp(&self) -> Option<u64> {
         match self {
-            ActionKind::UsdSend(usd_send) => Some(usd_send.time as i64),
-            ActionKind::Withdraw3(withdraw) => Some(withdraw.time as i64),
-            ActionKind::SpotSend(spot_send) => Some(spot_send.time as i64),
-            ActionKind::ApproveAgent(approve_agent) => Some(approve_agent.nonce as i64),
-            ActionKind::ApproveBuilderFee(approve_builder_fee) => {
-                Some(approve_builder_fee.nonce as i64)
-            }
-            ActionKind::SendAsset(send_asset) => Some(send_asset.nonce as i64),
+            ActionKind::UsdSend(usd_send) => Some(usd_send.time),
+            ActionKind::Withdraw3(withdraw) => Some(withdraw.time),
+            ActionKind::SpotSend(spot_send) => Some(spot_send.time),
+            ActionKind::ApproveAgent(approve_agent) => Some(approve_agent.nonce),
+            ActionKind::ApproveBuilderFee(approve_builder_fee) => Some(approve_builder_fee.nonce),
+            ActionKind::SendAsset(send_asset) => Some(send_asset.nonce),
             _ => None,
         }
     }

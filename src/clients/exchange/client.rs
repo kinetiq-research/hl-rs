@@ -28,6 +28,10 @@ pub struct ExchangeClient {
 }
 
 impl ExchangeClient {
+    pub fn set_url(&mut self, base_url: BaseUrl) {
+        self.http_client.base_url = base_url.get_url();
+    }
+
     pub fn builder(base_url: BaseUrl) -> ExchangeClientBuilder {
         ExchangeClientBuilder::new(base_url)
     }

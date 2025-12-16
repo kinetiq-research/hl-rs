@@ -160,8 +160,8 @@ impl ExchangeClient {
             action,
             signature,
             nonce,
-            // vault_address: self.vault_address,
-            // expires_after: self.expires_after,
+            vault_address: self.vault_address,
+            expires_after: self.expires_after.map(|e| e as i64),
         };
 
         let res = serde_json::to_string(&exchange_payload)
@@ -195,6 +195,8 @@ pub struct ExchangePayload {
     #[serde(serialize_with = "crate::exchange::action::serialize_sig")]
     pub signature: Signature,
     pub nonce: i64,
-    // vault_address: Option<Address>,
-    // expires_after: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vault_address: Option<Address>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expires_after: Option<i64>,
 }

@@ -2,10 +2,12 @@ use alloy::{
     primitives::{Address, Signature, B256},
     signers::{local::PrivateKeySigner, SignerSync},
 };
-use serde::{ser::SerializeStruct, Deserialize, Serializer, Serialize};
+use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
 
 use crate::{
-    Error, exchange::{self, ActionKind, ExchangeClient}, utils::{recover_action, sign_l1_action}
+    exchange::{self, ActionKind, ExchangeClient},
+    utils::{recover_action, sign_l1_action},
+    Error,
 };
 
 pub fn serialize_sig<S>(sig: &Signature, s: S) -> std::result::Result<S::Ok, S::Error>
@@ -101,6 +103,6 @@ impl Action {
 
 impl SignedAction {
     pub fn recover_user(&self, exchange_client: &ExchangeClient) -> Result<Address, Error> {
-        recover_action(exchange_client, &self.signature, &self)
+        recover_action(exchange_client, &self)
     }
 }

@@ -66,7 +66,6 @@ pub fn sign_typed_data<T: Eip712>(payload: &T, wallet: &PrivateKeySigner) -> Res
 
 pub fn recover_action(
     exchange_client: &ExchangeClient,
-    signature: &Signature,
     signed_action: &SignedAction,
 ) -> Result<Address> {
     let is_l1_action = signed_action.action.is_l1_action();
@@ -99,7 +98,7 @@ pub fn recover_action(
         SigningData::TypedData { hash } => hash,
     };
 
-    signature
+    signed_action.signature
         .recover_address_from_prehash(&hash)
         .map_err(|e| Error::RecoverAddressFailure(e.to_string()))
 }

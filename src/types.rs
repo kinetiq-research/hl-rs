@@ -10,6 +10,8 @@ pub enum BaseUrl {
     Localhost,
     Testnet,
     Mainnet,
+    #[cfg(feature="enclave")]
+    Enclave(String),
 }
 
 impl BaseUrl {

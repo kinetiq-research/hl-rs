@@ -27,7 +27,7 @@ where
 /// necessary metadata (timestamp, vault address, signing data) but has
 /// not yet been signed.
 ///
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Action {
     pub action: ActionKind,
     pub nonce: u64,

@@ -5,7 +5,7 @@ use alloy::{
 use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
 
 use crate::{
-    exchange::{self, ActionKind, ExchangeClient},
+    exchange::{ActionKind, ExchangeClient},
     utils::{recover_action, sign_l1_action},
     Error,
 };

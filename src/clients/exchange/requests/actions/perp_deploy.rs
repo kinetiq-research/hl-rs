@@ -1,4 +1,3 @@
-use alloy::primitives::Address;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -101,7 +100,7 @@ pub struct SetSubDeployers {
 #[serde(rename_all = "camelCase")]
 pub struct SubDeployer {
     pub variant: Variant, // corresponds to a variant of PerpDeployAction. For example, "haltTrading" or "setOracle"
-    pub user: Address,
+    pub user: String,
     pub allowed: bool,
 }
 

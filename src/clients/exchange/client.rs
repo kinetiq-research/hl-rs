@@ -1,8 +1,6 @@
 use alloy::{primitives::Address, signers::local::PrivateKeySigner};
 use alloy_signer::Signature;
-use log::trace;
 use serde::{Deserialize, Serialize};
-use tracing::debug;
 
 use crate::{
     exchange::{
@@ -175,7 +173,6 @@ impl ExchangeClient {
             .map_err(|e| crate::Error::JsonParse(e.to_string()))?;
 
         let output = self.http_client.post("/exchange", res).await?;
-        debug!(output, "Send action output");
 
         let raw_response: crate::exchange::responses::ExchangeResponseStatusRaw =
             serde_json::from_str(&output).map_err(|e| crate::Error::JsonParse(e.to_string()))?;

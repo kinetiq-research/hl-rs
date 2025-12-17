@@ -81,7 +81,7 @@ pub struct ExchangeResponse {
     pub data: Option<ExchangeDataStatuses>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 #[serde(tag = "status", content = "response")]
 pub enum ExchangeResponseStatus {

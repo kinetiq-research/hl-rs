@@ -81,7 +81,7 @@ pub struct HaltTrading {
 #[serde(rename_all = "camelCase")]
 pub struct SetFeeRecipient {
     pub dex: String,
-    pub fee_recipient: Address,
+    pub fee_recipient: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

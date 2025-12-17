@@ -8,7 +8,7 @@ use alloy::{
 
 use crate::{
     eip712::Eip712,
-    exchange::{Action, ActionKind, SignedAction, SigningData},
+    exchange::{SignedAction, SigningData},
     Error, ExchangeClient, Result,
 };
 
@@ -108,7 +108,7 @@ mod tests {
     use std::str::FromStr;
 
     use super::*;
-    use crate::{BaseUrl, exchange::{builder::BuildAction, requests::{UsdSend, Withdraw3}}};
+    use crate::{BaseUrl, exchange::{builder::BuildAction, requests::{UsdSend, Withdraw3}, ActionKind}};
 
     fn get_wallet() -> Result<PrivateKeySigner> {
         let priv_key = "e908f86dbb4d55ac876378565aafeabc187f6690f046459397b17d9b9a19688e";
@@ -196,6 +196,95 @@ mod tests {
         let recovered_address = signed_action.recover_user(&exchange_client)?;
 
         assert_eq!(recovered_address, expected_address);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_sign_register_asset_l1_action() -> Result<()> {
+        use crate::exchange::{
+            requests::{PerpDeploy, RegisterAsset, RegisterAssetRequest, PerpDexSchemaInput},
+            ActionKind,
+        };
+        
+        // Use the same wallet key as Python SDK test
+        let priv_key = "0x0123456789012345678901234567890123456789012345678901234567890123";
+        let wallet = priv_key
+            .parse::<PrivateKeySigner>()
+            .map_err(|e| Error::Wallet(e.to_string()))?;
+
+        let exchange_client = ExchangeClient::builder(BaseUrl::Testnet).build().await.unwrap();
+
+        // Create RegisterAsset action with same parameters as Python SDK test (without schema)
+        let register_asset_no_schema = RegisterAsset {
+            max_gas: Some(1000000000000),
+            asset_request: RegisterAssetRequest {
+                coin: "ddd:TEST0".to_string(),
+                sz_decimals: 2,
+                oracle_px: "10.0".to_string(),
+                margin_table_id: 10,
+                only_isolated: true,
+            },
+            dex: "ddd".to_string(),
+            schema: None,
+        };
+
+        // Build action with nonce=0 (same as Python SDK test)
+        let action_kind = ActionKind::PerpDeploy(PerpDeploy::RegisterAsset(register_asset_no_schema));
+        let action = action_kind.build_l1_action(&exchange_client, 0, None, None)?;
+
+        // Sign the action
+        let signed_action = action.sign(&wallet)?;
+
+        // Expected signature from Python SDK test (testnet, without schema)
+        // R: 0x90ce842264d3024c2fcd76cec1283c9afc76e0b67d27018d90dd2d52f37ddb83
+        // S: 0x66c30d2676f5c057eda65bc7e8633ace0b3a24d9a4f6a03fed462035b0e018e7
+        // V: 28
+        // Full signature string: 0x90ce842264d3024c2fcd76cec1283c9afc76e0b67d27018d90dd2d52f37ddb8366c30d2676f5c057eda65bc7e8633ace0b3a24d9a4f6a03fed462035b0e018e71c
+        let expected_sig_no_schema = "0x90ce842264d3024c2fcd76cec1283c9afc76e0b67d27018d90dd2d52f37ddb8366c30d2676f5c057eda65bc7e8633ace0b3a24d9a4f6a03fed462035b0e018e71c";
+        
+        // Compare the full signature string
+        assert_eq!(
+            signed_action.signature.to_string(),
+            expected_sig_no_schema,
+            "Signature mismatch for RegisterAsset l1_action without schema"
+        );
+
+        // Test with schema
+        let wallet_address_lower = wallet.address().to_string().to_lowercase();
+        let register_asset_with_schema = RegisterAsset {
+            max_gas: Some(1000000000000),
+            asset_request: RegisterAssetRequest {
+                coin: "ddd:TEST0".to_string(),
+                sz_decimals: 2,
+                oracle_px: "10.0".to_string(),
+                margin_table_id: 10,
+                only_isolated: true,
+            },
+            dex: "ddd".to_string(),
+            schema: Some(PerpDexSchemaInput {
+                full_name: "Test DEX".to_string(),
+                collateral_token: 1452,
+                oracle_updater: Some(wallet_address_lower),
+            }),
+        };
+
+        let action_kind_with_schema = ActionKind::PerpDeploy(PerpDeploy::RegisterAsset(register_asset_with_schema));
+        let action_with_schema = action_kind_with_schema.build_l1_action(&exchange_client, 0, None, None)?;
+        let signed_action_with_schema = action_with_schema.sign(&wallet)?;
+
+        // Expected signature from Python SDK test (testnet, with schema)
+        // R: 0xa52d17bc32add97d991798ac20d224501c8b01b82e07e336bd98049b905702cc
+        // S: 0x329653c8eaed0c2e28241112a9a9fe0965a27540a25c725992d452c2b5fc17c3
+        // V: 27
+        // Full signature string: 0xa52d17bc32add97d991798ac20d224501c8b01b82e07e336bd98049b905702cc329653c8eaed0c2e28241112a9a9fe0965a27540a25c725992d452c2b5fc17c31b
+        let expected_sig_with_schema = "0xa52d17bc32add97d991798ac20d224501c8b01b82e07e336bd98049b905702cc329653c8eaed0c2e28241112a9a9fe0965a27540a25c725992d452c2b5fc17c31b";
+        
+        assert_eq!(
+            signed_action_with_schema.signature.to_string(),
+            expected_sig_with_schema,
+            "Signature mismatch for RegisterAsset l1_action with schema"
+        );
+
         Ok(())
     }
 }

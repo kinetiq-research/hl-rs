@@ -189,6 +189,7 @@ impl<'de> Deserialize<'de> for PerpDeploy {
                 let mut set_fee_recipient: Option<SetFeeRecipient> = None;
                 let mut set_open_interest_caps: Option<SetOpenInterestCaps> = None;
                 let mut insert_margin_table: Option<InsertMarginTable> = None;
+                let mut set_sub_deployers: Option<SetSubDeployers> = None;
 
                 while let Some(key) = map.next_key::<String>()? {
                     match key.as_str() {
@@ -218,6 +219,9 @@ impl<'de> Deserialize<'de> for PerpDeploy {
                         }
                         "insertMarginTable" => {
                             insert_margin_table = Some(map.next_value()?);
+                        }
+                        "setSubDeployers" => {
+                            set_sub_deployers = Some(map.next_value()?);
                         }
                         _ => {
                             let _ = map.next_value::<serde::de::IgnoredAny>()?;
@@ -250,6 +254,8 @@ impl<'de> Deserialize<'de> for PerpDeploy {
                     Ok(PerpDeploy::SetOpenInterestCaps(v))
                 } else if let Some(v) = insert_margin_table {
                     Ok(PerpDeploy::InsertMarginTable(v))
+                } else if let Some(v) = set_sub_deployers {
+                    Ok(PerpDeploy::SetSubDeployers(v))
                 } else {
                     Err(de::Error::missing_field(
                         "one of the perpDeploy action fields",

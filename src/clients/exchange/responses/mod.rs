@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{Error, error::ApiError};
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(tag = "status", content = "response")]
 pub enum ExchangeResponseStatusRaw {
     #[serde(rename = "ok")]
@@ -78,10 +78,11 @@ pub struct ExchangeDataStatuses {
 pub struct ExchangeResponse {
     #[serde(rename = "type")]
     pub response_type: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub data: Option<ExchangeDataStatuses>,
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 #[serde(tag = "status", content = "response")]
 pub enum ExchangeResponseStatus {

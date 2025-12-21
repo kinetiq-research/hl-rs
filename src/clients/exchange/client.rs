@@ -180,7 +180,7 @@ impl ExchangeClient {
         raw_response.into_result()
     }
 
-    pub(crate) fn is_mainnet(&self) -> bool {
+    pub fn is_mainnet(&self) -> bool {
         self.http_client.is_mainnet()
     }
 

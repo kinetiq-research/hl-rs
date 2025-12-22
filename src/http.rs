@@ -26,6 +26,9 @@ async fn parse_response(response: Response) -> Result<String> {
     if status_code < 400 {
         return Ok(text);
     }
+    
+    tracing::debug!(target: "hl_rs::http_client", status_code=status_code, body=text, "Error response received");
+    
     let error_data = serde_json::from_str::<ErrorData>(&text);
     if (400..500).contains(&status_code) {
         let client_error = match error_data {
@@ -55,10 +58,15 @@ impl HttpClient {
     #[tracing::instrument(skip(self, data))]
     pub async fn post<T: Serialize>(&self, url_path: &'static str, data: T) -> Result<String> {
         let full_url = format!("{}{url_path}", self.base_url);
+        
+        // Serialize the payload for logging
+        let payload_json = serde_json::to_string(&data)
+            .unwrap_or_else(|_| "<serialization failed>".to_string());
+        tracing::debug!(target: "hl_rs::http_client", url=full_url, payload=payload_json, "Sending POST request");
+        
         let res = self
             .client
-            .post(full_url)
-            .header("Content-Type", "application/json")
+            .post(&full_url)
             .json(&data)
             .send()
             .await

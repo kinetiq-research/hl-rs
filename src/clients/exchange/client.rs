@@ -169,12 +169,8 @@ impl ExchangeClient {
             expires_after: self.expires_after,
         };
 
-        tracing::debug!(target: "exchange_client", payload=?exchange_payload, "Serializing payload");
-        let res = serde_json::to_string(&exchange_payload)
-            .map_err(|e| crate::Error::JsonParse(e.to_string()))?;
-
-        tracing::debug!(target: "exchange_client", payload=res, "Sending payload");
-        let output = self.http_client.post("/exchange", res).await?;
+        tracing::debug!(target: "exchange_client", payload=?exchange_payload, "Sending payload");
+        let output = self.http_client.post("/exchange", exchange_payload).await?;
         tracing::debug!(target: "exchange_client", res=output, "Exchange Response");
 
         let raw_response: crate::exchange::responses::ExchangeResponseStatusRaw =

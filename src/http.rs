@@ -1,5 +1,5 @@
 use reqwest::{Client, Response};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{BaseUrl, Error, prelude::Result};
 
@@ -52,18 +52,18 @@ async fn parse_response(response: Response) -> Result<String> {
 }
 
 impl HttpClient {
-    #[tracing::instrument(skip(self))]
-    pub async fn post(&self, url_path: &'static str, data: String) -> Result<String> {
+    #[tracing::instrument(skip(self, data))]
+    pub async fn post<T: Serialize>(&self, url_path: &'static str, data: T) -> Result<String> {
         let full_url = format!("{}{url_path}", self.base_url);
         let res = self
             .client
             .post(full_url)
             .header("Content-Type", "application/json")
-            .body(data)
+            .json(&data)
             .send()
             .await
             .map_err(|e| Error::GenericRequest(e.to_string()))?;
-        tracing::debug!(target: "http_client", res=?res, "Response");
+        tracing::debug!(target: "hl_rs::http_client", res=?res, "Response");
         parse_response(res).await
     }
 

@@ -169,13 +169,19 @@ impl ExchangeClient {
             expires_after: self.expires_after,
         };
 
+        tracing::debug!(target: "exchange_client", payload=?exchange_payload, "Serializing payload");
         let res = serde_json::to_string(&exchange_payload)
             .map_err(|e| crate::Error::JsonParse(e.to_string()))?;
 
+        tracing::debug!(target: "exchange_client", payload=res, "Sending payload");
         let output = self.http_client.post("/exchange", res).await?;
+        tracing::debug!(target: "exchange_client", res=output, "Exchange Response");
 
         let raw_response: crate::exchange::responses::ExchangeResponseStatusRaw =
-            serde_json::from_str(&output).map_err(|e| crate::Error::JsonParse(e.to_string()))?;
+            serde_json::from_str(&output).map_err(|e| {
+                tracing::error!(target: "exchange_client", error=?e, "Error parsing response");
+                crate::Error::JsonParse(e.to_string())
+            })?;
 
         raw_response.into_result()
     }
@@ -193,7 +199,7 @@ impl ExchangeClient {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ExchangePayload {
     pub action: ActionKind,

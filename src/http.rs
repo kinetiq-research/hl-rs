@@ -52,20 +52,18 @@ async fn parse_response(response: Response) -> Result<String> {
 }
 
 impl HttpClient {
+    #[tracing::instrument(skip(self))]
     pub async fn post(&self, url_path: &'static str, data: String) -> Result<String> {
         let full_url = format!("{}{url_path}", self.base_url);
-        let req = self
+        let res = self
             .client
             .post(full_url)
             .header("Content-Type", "application/json")
             .body(data)
-            .build()
-            .map_err(|e| Error::GenericRequest(e.to_string()))?;
-        let res = self
-            .client
-            .execute(req)
+            .send()
             .await
             .map_err(|e| Error::GenericRequest(e.to_string()))?;
+        tracing::debug!(target: "http_client", res=?res, "Response");
         parse_response(res).await
     }
 

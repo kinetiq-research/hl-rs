@@ -1,6 +1,6 @@
 use alloy::{
     dyn_abi::Eip712Domain,
-    primitives::{B256, keccak256},
+    primitives::{keccak256, B256},
 };
 
 pub trait Eip712 {

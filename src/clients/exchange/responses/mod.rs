@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{Error, error::ApiError};
+use crate::{error::ApiError, Error};
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(tag = "status", content = "response")]
@@ -64,7 +64,7 @@ pub enum ExchangeDataStatus {
     Success,
     WaitingForFill,
     WaitingForTrigger,
-//    Error(String),
+    //    Error(String),
     Resting(RestingOrder),
     Filled(FilledOrder),
 }

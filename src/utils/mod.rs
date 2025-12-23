@@ -11,7 +11,7 @@ mod conversion;
 mod signing;
 
 pub use conversion::float_to_int_for_hashing;
-pub use signing::{sign_l1_action, sign_typed_data, recover_action};
+pub use signing::{recover_action, sign_l1_action, sign_typed_data};
 
 fn now_timestamp_ms() -> u64 {
     let now = Utc::now();
@@ -44,7 +44,11 @@ pub fn float_to_string_for_hashing(x: f64) -> String {
         x.pop();
     }
 
-    if x == "-0" { "0".to_string() } else { x }
+    if x == "-0" {
+        "0".to_string()
+    } else {
+        x
+    }
 }
 
 pub fn uuid_to_hex_string(uuid: Uuid) -> String {

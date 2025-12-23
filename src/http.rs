@@ -62,7 +62,7 @@ impl HttpClient {
         // Serialize the payload for logging
         let payload_json =
             serde_json::to_string(&data).map_err(|e| Error::SerializationFailure(e.to_string()))?;
-        tracing::debug!(target: "hl_rs::http_client", url=full_url, payload=payload_json, "Sending POST request");
+        tracing::trace!(target: "hl_rs::http_client", url=full_url, payload=payload_json, "Sending POST request");
 
         let res = self
             .client
@@ -71,7 +71,7 @@ impl HttpClient {
             .send()
             .await
             .map_err(|e| Error::GenericRequest(e.to_string()))?;
-        tracing::debug!(target: "hl_rs::http_client", res=?res, "Response");
+        tracing::trace!(target: "hl_rs::http_client", res=?res, "Raw Response");
         parse_response(res).await
     }
 

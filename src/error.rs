@@ -30,8 +30,6 @@ pub enum Error {
     Eip712(String),
     #[error("Json parse error: {0:?}")]
     JsonParse(String),
-    #[error("Serialization error: {0:?}")]
-    SerializationFailure(String),
     #[error("Generic parse error: {0:?}")]
     GenericParse(String),
     #[error("Wallet error: {0:?}")]

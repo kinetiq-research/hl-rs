@@ -1,7 +1,7 @@
 use reqwest::{Client, Response};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
-use crate::{prelude::Result, BaseUrl, Error};
+use crate::{BaseUrl, Error, prelude::Result};
 
 #[derive(Deserialize, Debug)]
 struct ErrorData {
@@ -26,9 +26,6 @@ async fn parse_response(response: Response) -> Result<String> {
     if status_code < 400 {
         return Ok(text);
     }
-
-    tracing::debug!(target: "hl_rs::http_client", status_code=status_code, body=text, "Error response received");
-
     let error_data = serde_json::from_str::<ErrorData>(&text);
     if (400..500).contains(&status_code) {
         let client_error = match error_data {
@@ -55,23 +52,20 @@ async fn parse_response(response: Response) -> Result<String> {
 }
 
 impl HttpClient {
-    #[tracing::instrument(skip(self, data))]
-    pub async fn post<T: Serialize>(&self, url_path: &'static str, data: T) -> Result<String> {
+    pub async fn post(&self, url_path: &'static str, data: String) -> Result<String> {
         let full_url = format!("{}{url_path}", self.base_url);
-
-        // Serialize the payload for logging
-        let payload_json =
-            serde_json::to_string(&data).map_err(|e| Error::SerializationFailure(e.to_string()))?;
-        tracing::trace!(target: "hl_rs::http_client", url=full_url, payload=payload_json, "Sending POST request");
-
+        let req = self
+            .client
+            .post(full_url)
+            .header("Content-Type", "application/json")
+            .body(data)
+            .build()
+            .map_err(|e| Error::GenericRequest(e.to_string()))?;
         let res = self
             .client
-            .post(&full_url)
-            .json(&data)
-            .send()
+            .execute(req)
             .await
             .map_err(|e| Error::GenericRequest(e.to_string()))?;
-        tracing::trace!(target: "hl_rs::http_client", res=?res, "Raw Response");
         parse_response(res).await
     }
 

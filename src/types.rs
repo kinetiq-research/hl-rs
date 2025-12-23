@@ -5,13 +5,11 @@ use serde::Deserialize;
 
 use crate::{LOCAL_API_URL, MAINNET_API_URL, TESTNET_API_URL};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum BaseUrl {
     Localhost,
     Testnet,
     Mainnet,
-    #[cfg(feature = "enclave")]
-    Enclave(String),
 }
 
 impl BaseUrl {
@@ -20,8 +18,6 @@ impl BaseUrl {
             BaseUrl::Localhost => LOCAL_API_URL.to_string(),
             BaseUrl::Mainnet => MAINNET_API_URL.to_string(),
             BaseUrl::Testnet => TESTNET_API_URL.to_string(),
-            #[cfg(feature = "enclave")]
-            BaseUrl::Enclave(url) => url.to_string(),
         }
     }
 }

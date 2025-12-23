@@ -28,10 +28,6 @@ pub struct ExchangeClient {
 }
 
 impl ExchangeClient {
-    pub fn set_url(&mut self, base_url: BaseUrl) {
-        self.http_client.base_url = base_url.get_url();
-    }
-
     pub fn builder(base_url: BaseUrl) -> ExchangeClientBuilder {
         ExchangeClientBuilder::new(base_url)
     }
@@ -150,7 +146,6 @@ impl ExchangeClient {
         ActionKind::PerpDeploy(PerpDeploy::SetOracle(oracle_params.into())).build(self)
     }
 
-    #[tracing::instrument(skip(self))]
     pub async fn send_action(
         &self,
         signed_action: SignedAction,
@@ -165,24 +160,22 @@ impl ExchangeClient {
             action,
             signature,
             nonce,
-            vault_address: self.vault_address,
-            expires_after: self.expires_after,
+            // vault_address: self.vault_address,
+            // expires_after: self.expires_after,
         };
 
-        tracing::debug!(target: "exchange_client", payload=?exchange_payload, "Sending payload");
-        let output = self.http_client.post("/exchange", exchange_payload).await?;
-        tracing::debug!(target: "exchange_client", res=output, "Exchange Response");
+        let res = serde_json::to_string(&exchange_payload)
+            .map_err(|e| crate::Error::JsonParse(e.to_string()))?;
+
+        let output = self.http_client.post("/exchange", res).await?;
 
         let raw_response: crate::exchange::responses::ExchangeResponseStatusRaw =
-            serde_json::from_str(&output).map_err(|e| {
-                tracing::error!(target: "exchange_client", error=?e, "Error parsing response");
-                crate::Error::JsonParse(e.to_string())
-            })?;
+            serde_json::from_str(&output).map_err(|e| crate::Error::JsonParse(e.to_string()))?;
 
         raw_response.into_result()
     }
 
-    pub fn is_mainnet(&self) -> bool {
+    pub(crate) fn is_mainnet(&self) -> bool {
         self.http_client.is_mainnet()
     }
 
@@ -195,15 +188,13 @@ impl ExchangeClient {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ExchangePayload {
     pub action: ActionKind,
     #[serde(serialize_with = "crate::exchange::action::serialize_sig")]
     pub signature: Signature,
-    pub nonce: u64,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub vault_address: Option<Address>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub expires_after: Option<u64>,
+    pub nonce: i64,
+    // vault_address: Option<Address>,
+    // expires_after: Option<i64>,
 }

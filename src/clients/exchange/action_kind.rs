@@ -1,13 +1,13 @@
-use alloy::primitives::{keccak256, Address, B256};
+use alloy::primitives::{Address, B256, keccak256};
 use serde::{Deserialize, Serialize, Serializer};
 
 use crate::{
+    Error, Result,
     exchange::requests::{
         ApproveAgent, ApproveBuilderFee, BulkCancel, BulkCancelCloid, BulkModify, BulkOrder,
         ClaimRewards, EvmUserModify, PerpDeploy, ScheduleCancel, SendAsset, SetReferrer, SpotSend,
         SpotUser, UpdateIsolatedMargin, UpdateLeverage, UsdSend, VaultTransfer, Withdraw3,
     },
-    Error, Result,
 };
 
 #[derive(Debug, Clone, Deserialize)]
@@ -64,9 +64,6 @@ impl Serialize for ActionKind {
                     }
                     PerpDeploy::InsertMarginTable(v) => {
                         state.serialize_field("insertMarginTable", v)?
-                    }
-                    PerpDeploy::SetSubDeployers(v) => {
-                        state.serialize_field("setSubDeployers", v)?
                     }
                 }
                 state.end()
@@ -126,9 +123,9 @@ impl Serialize for ActionKind {
 impl ActionKind {
     pub fn hash(
         &self,
-        timestamp: u64,
+        timestamp: i64,
         vault_address: Option<Address>,
-        expires_after: Option<u64>,
+        expires_after: Option<i64>,
     ) -> Result<B256> {
         let mut bytes =
             rmp_serde::to_vec_named(self).map_err(|e| Error::RmpParse(e.to_string()))?;

@@ -1,7 +1,7 @@
 use alloy::{
     dyn_abi::Eip712Domain,
-    primitives::{keccak256, Address, B256},
-    sol_types::{eip712_domain, SolValue},
+    primitives::{Address, B256, keccak256},
+    sol_types::{SolValue, eip712_domain},
 };
 use serde::{Deserialize, Serialize, Serializer};
 

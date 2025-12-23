@@ -42,10 +42,30 @@ pub struct SetFundingMultipliers {
     pub multipliers: Vec<(String, String)>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone)]
 pub struct SetMarginTableIds {
     pub ids: Vec<(String, i64)>,
+}
+
+impl Serialize for SetMarginTableIds {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        // Serialize directly as an array of arrays, not as an object
+        self.ids.serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for SetMarginTableIds {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        // Deserialize directly from an array of arrays
+        let ids = Vec::<(String, i64)>::deserialize(deserializer)?;
+        Ok(SetMarginTableIds { ids })
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

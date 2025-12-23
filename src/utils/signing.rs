@@ -6,7 +6,11 @@ use alloy::{
     sol_types::{eip712_domain, SolStruct},
 };
 
-use crate::{eip712::Eip712, exchange::ActionKind, Error, Result};
+use crate::{
+    eip712::Eip712,
+    exchange::{SignedAction, SigningData},
+    Error, ExchangeClient, Result,
+};
 
 sol! {
     #[derive(Debug)]
@@ -18,11 +22,23 @@ sol! {
 
 impl Eip712 for Agent {
     fn domain(&self) -> Eip712Domain {
-        eip712_domain! {
-            name: "Exchange",
-            version: "1",
-            chain_id: 1337,
-            verifying_contract: Address::ZERO,
+        #[cfg(feature = "enclave")]
+        {
+            eip712_domain! {
+                name: "LaunchEnclave",
+                version: "1",
+                chain_id: 1337,
+                verifying_contract: Address::ZERO,
+            }
+        }
+        #[cfg(not(feature = "enclave"))]
+        {
+            eip712_domain! {
+                name: "Exchange",
+                version: "1",
+                chain_id: 1337,
+                verifying_contract: Address::ZERO,
+            }
         }
     }
     fn struct_hash(&self) -> B256 {
@@ -48,15 +64,44 @@ pub fn sign_typed_data<T: Eip712>(payload: &T, wallet: &PrivateKeySigner) -> Res
         .map_err(|e| Error::SignatureFailure(e.to_string()))
 }
 
-pub fn recover_user_from_user_signed_action(
-    signature: &Signature,
-    action: &ActionKind,
+pub fn recover_action(
+    exchange_client: &ExchangeClient,
+    signed_action: &SignedAction,
 ) -> Result<Address> {
-    let hash = action.extract_eip712_hash()?;
-    let recovered = signature
+    let is_l1_action = signed_action.action.is_l1_action();
+    let action = if is_l1_action {
+        signed_action.action.clone().build_l1_action(
+            exchange_client,
+            signed_action.nonce,
+            signed_action.vault_address,
+            signed_action.expires_after,
+        )?
+    } else {
+        signed_action.action.clone().build_typed_data_action(
+            signed_action.nonce,
+            signed_action.vault_address,
+            signed_action.expires_after,
+        )?
+    };
+    let hash = match action.signing_data {
+        SigningData::L1 {
+            connection_id,
+            is_mainnet,
+        } => {
+            let source = if is_mainnet { "a" } else { "b" }.to_string();
+            let payload = Agent {
+                source,
+                connectionId: connection_id,
+            };
+            <Agent as Eip712>::eip712_signing_hash(&payload)
+        }
+        SigningData::TypedData { hash } => hash,
+    };
+
+    signed_action
+        .signature
         .recover_address_from_prehash(&hash)
-        .map_err(|e| Error::RecoverAddressFailure(e.to_string()))?;
-    Ok(recovered)
+        .map_err(|e| Error::RecoverAddressFailure(e.to_string()))
 }
 
 #[cfg(test)]
@@ -64,7 +109,14 @@ mod tests {
     use std::str::FromStr;
 
     use super::*;
-    use crate::exchange::requests::{UsdSend, Withdraw3};
+    use crate::{
+        exchange::{
+            builder::BuildAction,
+            requests::{UsdSend, Withdraw3},
+            ActionKind,
+        },
+        BaseUrl,
+    };
 
     fn get_wallet() -> Result<PrivateKeySigner> {
         let priv_key = "e908f86dbb4d55ac876378565aafeabc187f6690f046459397b17d9b9a19688e";
@@ -133,10 +185,14 @@ mod tests {
         Ok(())
     }
 
-    #[test]
-    fn test_recover_user_from_user_signed_action() -> Result<()> {
+    #[tokio::test]
+    async fn test_recover_action() -> Result<()> {
         let wallet = get_wallet()?;
         let expected_address = wallet.address();
+        let exchange_client = ExchangeClient::builder(BaseUrl::Testnet)
+            .build()
+            .await
+            .unwrap();
 
         let usd_send = UsdSend {
             signature_chain_id: 421614,
@@ -145,13 +201,109 @@ mod tests {
             amount: "1".to_string(),
             time: 1690393044548,
         };
+        let action = ActionKind::UsdSend(usd_send.clone())
+            .build(&exchange_client)
+            .unwrap();
 
-        let signature = sign_typed_data(&usd_send, &wallet)?;
-        let action = ActionKind::UsdSend(usd_send);
-        let recovered_address = recover_user_from_user_signed_action(&signature, &action)?;
+        let signed_action = action.sign(&wallet).unwrap();
+        let recovered_address = signed_action.recover_user(&exchange_client)?;
 
         assert_eq!(recovered_address, expected_address);
         Ok(())
     }
 
+    #[tokio::test]
+    async fn test_sign_register_asset_l1_action() -> Result<()> {
+        use crate::exchange::{
+            requests::{PerpDeploy, PerpDexSchemaInput, RegisterAsset, RegisterAssetRequest},
+            ActionKind,
+        };
+
+        // Use the same wallet key as Python SDK test
+        let priv_key = "0x0123456789012345678901234567890123456789012345678901234567890123";
+        let wallet = priv_key
+            .parse::<PrivateKeySigner>()
+            .map_err(|e| Error::Wallet(e.to_string()))?;
+
+        let exchange_client = ExchangeClient::builder(BaseUrl::Testnet)
+            .build()
+            .await
+            .unwrap();
+
+        // Create RegisterAsset action with same parameters as Python SDK test (without schema)
+        let register_asset_no_schema = RegisterAsset {
+            max_gas: Some(1000000000000),
+            asset_request: RegisterAssetRequest {
+                coin: "ddd:TEST0".to_string(),
+                sz_decimals: 2,
+                oracle_px: "10.0".to_string(),
+                margin_table_id: 10,
+                only_isolated: true,
+            },
+            dex: "ddd".to_string(),
+            schema: None,
+        };
+
+        // Build action with nonce=0 (same as Python SDK test)
+        let action_kind =
+            ActionKind::PerpDeploy(PerpDeploy::RegisterAsset(register_asset_no_schema));
+        let action = action_kind.build_l1_action(&exchange_client, 0, None, None)?;
+
+        // Sign the action
+        let signed_action = action.sign(&wallet)?;
+
+        // Expected signature from Python SDK test (testnet, without schema)
+        // R: 0x90ce842264d3024c2fcd76cec1283c9afc76e0b67d27018d90dd2d52f37ddb83
+        // S: 0x66c30d2676f5c057eda65bc7e8633ace0b3a24d9a4f6a03fed462035b0e018e7
+        // V: 28
+        // Full signature string: 0x90ce842264d3024c2fcd76cec1283c9afc76e0b67d27018d90dd2d52f37ddb8366c30d2676f5c057eda65bc7e8633ace0b3a24d9a4f6a03fed462035b0e018e71c
+        let expected_sig_no_schema = "0x90ce842264d3024c2fcd76cec1283c9afc76e0b67d27018d90dd2d52f37ddb8366c30d2676f5c057eda65bc7e8633ace0b3a24d9a4f6a03fed462035b0e018e71c";
+
+        // Compare the full signature string
+        assert_eq!(
+            signed_action.signature.to_string(),
+            expected_sig_no_schema,
+            "Signature mismatch for RegisterAsset l1_action without schema"
+        );
+
+        // Test with schema
+        let wallet_address_lower = wallet.address().to_string().to_lowercase();
+        let register_asset_with_schema = RegisterAsset {
+            max_gas: Some(1000000000000),
+            asset_request: RegisterAssetRequest {
+                coin: "ddd:TEST0".to_string(),
+                sz_decimals: 2,
+                oracle_px: "10.0".to_string(),
+                margin_table_id: 10,
+                only_isolated: true,
+            },
+            dex: "ddd".to_string(),
+            schema: Some(PerpDexSchemaInput {
+                full_name: "Test DEX".to_string(),
+                collateral_token: 1452,
+                oracle_updater: Some(wallet_address_lower),
+            }),
+        };
+
+        let action_kind_with_schema =
+            ActionKind::PerpDeploy(PerpDeploy::RegisterAsset(register_asset_with_schema));
+        let action_with_schema =
+            action_kind_with_schema.build_l1_action(&exchange_client, 0, None, None)?;
+        let signed_action_with_schema = action_with_schema.sign(&wallet)?;
+
+        // Expected signature from Python SDK test (testnet, with schema)
+        // R: 0xa52d17bc32add97d991798ac20d224501c8b01b82e07e336bd98049b905702cc
+        // S: 0x329653c8eaed0c2e28241112a9a9fe0965a27540a25c725992d452c2b5fc17c3
+        // V: 27
+        // Full signature string: 0xa52d17bc32add97d991798ac20d224501c8b01b82e07e336bd98049b905702cc329653c8eaed0c2e28241112a9a9fe0965a27540a25c725992d452c2b5fc17c31b
+        let expected_sig_with_schema = "0xa52d17bc32add97d991798ac20d224501c8b01b82e07e336bd98049b905702cc329653c8eaed0c2e28241112a9a9fe0965a27540a25c725992d452c2b5fc17c31b";
+
+        assert_eq!(
+            signed_action_with_schema.signature.to_string(),
+            expected_sig_with_schema,
+            "Signature mismatch for RegisterAsset l1_action with schema"
+        );
+
+        Ok(())
+    }
 }

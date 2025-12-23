@@ -24,10 +24,7 @@ impl InfoClient {
         &self,
         info_request: InfoRequest,
     ) -> Result<T> {
-        let data =
-            serde_json::to_string(&info_request).map_err(|e| Error::JsonParse(e.to_string()))?;
-
-        let return_data = self.http_client.post("/info", data).await?;
+        let return_data = self.http_client.post("/info", &info_request).await?;
         serde_json::from_str(&return_data).map_err(|e| Error::JsonParse(e.to_string()))
     }
 

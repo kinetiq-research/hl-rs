@@ -1,4 +1,3 @@
-use alloy::primitives::Address;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -43,10 +42,30 @@ pub struct SetFundingMultipliers {
     pub multipliers: Vec<(String, String)>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone)]
 pub struct SetMarginTableIds {
     pub ids: Vec<(String, i64)>,
+}
+
+impl Serialize for SetMarginTableIds {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        // Serialize directly as an array of arrays, not as an object
+        self.ids.serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for SetMarginTableIds {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        // Deserialize directly from an array of arrays
+        let ids = Vec::<(String, i64)>::deserialize(deserializer)?;
+        Ok(SetMarginTableIds { ids })
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -81,13 +100,41 @@ pub struct HaltTrading {
 #[serde(rename_all = "camelCase")]
 pub struct SetFeeRecipient {
     pub dex: String,
-    pub fee_recipient: Address,
+    pub fee_recipient: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SetOpenInterestCaps {
     pub caps: Vec<(String, String)>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SetSubDeployers {
+    pub dex: String,
+    pub sub_deployers: Vec<SubDeployer>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SubDeployer {
+    pub variant: Variant, // corresponds to a variant of PerpDeployAction. For example, "haltTrading" or "setOracle"
+    pub user: String,
+    pub allowed: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub enum Variant {
+    RegisterAsset,
+    SetOracle,
+    SetFundingMultipliers,
+    HaltTrading,
+    SetMarginTableIds,
+    SetFeeRecipient,
+    SetOpenInterestCaps,
+    InsertMarginTable,
 }
 
 /// Wrapper that serializes with type: "perpDeploy"
@@ -102,6 +149,7 @@ pub enum PerpDeploy {
     SetFeeRecipient(SetFeeRecipient),
     SetOpenInterestCaps(SetOpenInterestCaps),
     InsertMarginTable(InsertMarginTable),
+    SetSubDeployers(SetSubDeployers),
 }
 
 impl Serialize for PerpDeploy {
@@ -125,6 +173,7 @@ impl Serialize for PerpDeploy {
                 state.serialize_field("setOpenInterestCaps", v)?;
             }
             PerpDeploy::InsertMarginTable(v) => state.serialize_field("insertMarginTable", v)?,
+            PerpDeploy::SetSubDeployers(v) => state.serialize_field("setSubDeployers", v)?,
         }
         state.end()
     }
@@ -160,6 +209,7 @@ impl<'de> Deserialize<'de> for PerpDeploy {
                 let mut set_fee_recipient: Option<SetFeeRecipient> = None;
                 let mut set_open_interest_caps: Option<SetOpenInterestCaps> = None;
                 let mut insert_margin_table: Option<InsertMarginTable> = None;
+                let mut set_sub_deployers: Option<SetSubDeployers> = None;
 
                 while let Some(key) = map.next_key::<String>()? {
                     match key.as_str() {
@@ -189,6 +239,9 @@ impl<'de> Deserialize<'de> for PerpDeploy {
                         }
                         "insertMarginTable" => {
                             insert_margin_table = Some(map.next_value()?);
+                        }
+                        "setSubDeployers" => {
+                            set_sub_deployers = Some(map.next_value()?);
                         }
                         _ => {
                             let _ = map.next_value::<serde::de::IgnoredAny>()?;
@@ -221,6 +274,8 @@ impl<'de> Deserialize<'de> for PerpDeploy {
                     Ok(PerpDeploy::SetOpenInterestCaps(v))
                 } else if let Some(v) = insert_margin_table {
                     Ok(PerpDeploy::InsertMarginTable(v))
+                } else if let Some(v) = set_sub_deployers {
+                    Ok(PerpDeploy::SetSubDeployers(v))
                 } else {
                     Err(de::Error::missing_field(
                         "one of the perpDeploy action fields",

@@ -2,11 +2,11 @@ use alloy::{
     primitives::{Address, Signature, B256},
     signers::{local::PrivateKeySigner, SignerSync},
 };
-use serde::{ser::SerializeStruct, Deserialize, Serializer};
+use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
 
 use crate::{
-    exchange::ActionKind,
-    utils::{recover_user_from_user_signed_action, sign_l1_action},
+    exchange::{ActionKind, ExchangeClient},
+    utils::{recover_action, sign_l1_action},
     Error,
 };
 
@@ -27,16 +27,17 @@ where
 /// necessary metadata (timestamp, vault address, signing data) but has
 /// not yet been signed.
 ///
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Action {
     pub action: ActionKind,
-    pub nonce: i64,
+    pub nonce: u64,
     pub vault_address: Option<Address>,
-    pub expires_after: Option<i64>,
+    pub expires_after: Option<u64>,
     pub signing_data: SigningData,
 }
 
 /// Enum representing data needed for signing an action.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum SigningData {
     /// L1 actions require a connection_id and network type.
     L1 {
@@ -51,13 +52,13 @@ pub enum SigningData {
 ///
 /// This action has been fully prepared and signed, and can be sent
 /// immediately to the exchange.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct SignedAction {
     pub action: ActionKind,
-    pub nonce: i64,
+    pub nonce: u64,
     pub signature: Signature,
     pub vault_address: Option<Address>,
-    pub expires_after: Option<i64>,
+    pub expires_after: Option<u64>,
 }
 
 impl Action {
@@ -101,7 +102,7 @@ impl Action {
 }
 
 impl SignedAction {
-    pub fn recover_user(&self) -> Result<Address, Error> {
-        recover_user_from_user_signed_action(&self.signature, &self.action)
+    pub fn recover_user(&self, exchange_client: &ExchangeClient) -> Result<Address, Error> {
+        recover_action(exchange_client, &self)
     }
 }

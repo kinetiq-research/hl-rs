@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{Error, error::ApiError};
+use crate::{error::ApiError, Error};
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(tag = "status", content = "response")]
 pub enum ExchangeResponseStatusRaw {
     #[serde(rename = "ok")]
@@ -64,7 +64,7 @@ pub enum ExchangeDataStatus {
     Success,
     WaitingForFill,
     WaitingForTrigger,
-//    Error(String),
+    //    Error(String),
     Resting(RestingOrder),
     Filled(FilledOrder),
 }
@@ -78,6 +78,7 @@ pub struct ExchangeDataStatuses {
 pub struct ExchangeResponse {
     #[serde(rename = "type")]
     pub response_type: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub data: Option<ExchangeDataStatuses>,
 }
 

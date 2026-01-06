@@ -68,6 +68,9 @@ impl Serialize for ActionKind {
                     PerpDeploy::SetSubDeployers(v) => {
                         state.serialize_field("setSubDeployers", v)?
                     }
+                    PerpDeploy::SetGrowthModes(v) => {
+                        state.serialize_field("setGrowthModes", v)?
+                    }
                 }
                 state.end()
             }

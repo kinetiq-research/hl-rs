@@ -56,7 +56,9 @@ macro_rules! flatten_vec {
             where
                 S: ::serde::Serializer,
             {
-                self.$field.serialize(serializer)
+                let mut data = self.$field.clone();
+                data.sort_by(|a, b| a.cmp(b));
+                data.serialize(serializer)
             }
         }
 
@@ -118,7 +120,7 @@ pub struct SetFeeRecipient {
 
 #[derive(Debug, Clone)]
 pub struct SetOpenInterestCaps {
-    pub caps: Vec<(String, u128)>,
+    pub caps: Vec<(String, u64)>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

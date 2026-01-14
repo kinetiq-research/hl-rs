@@ -142,13 +142,14 @@ mod tests {
 
         let usd_send = UsdSend {
             signature_chain_id: 421614,
-            hyperliquid_chain: "Testnet".to_string(),
+            hyperliquid_chain: BaseUrl::Testnet.get_hyperliquid_chain(),
             destination: "0x0D1d9635D0640821d15e323ac8AdADfA9c111414".to_string(),
             amount: "1".to_string(),
             time: 1690393044548,
         };
+
         let signing_data = SigningData::TypedData {
-            hash: usd_send.struct_hash(),
+            hash: usd_send.eip712_signing_hash(),
         };
 
         let expected_sig = "0x214d507bbdaebba52fa60928f904a8b2df73673e3baba6133d66fe846c7ef70451e82453a6d8db124e7ed6e60fa00d4b7c46e4d96cb2bd61fd81b6e8953cc9d21b";
@@ -163,13 +164,13 @@ mod tests {
 
         let usd_send = Withdraw3 {
             signature_chain_id: 421614,
-            hyperliquid_chain: "Testnet".to_string(),
+            hyperliquid_chain: BaseUrl::Testnet.get_hyperliquid_chain(),
             destination: "0x0D1d9635D0640821d15e323ac8AdADfA9c111414".to_string(),
             amount: "1".to_string(),
             time: 1690393044548,
         };
         let signing_data = SigningData::TypedData {
-            hash: usd_send.struct_hash(),
+            hash: usd_send.eip712_signing_hash(),
         };
 
         let expected_sig = "0xb3172e33d2262dac2b4cb135ce3c167fda55dafa6c62213564ab728b9f9ba76b769a938e9f6d603dae7154c83bf5a4c3ebab81779dc2db25463a3ed663c82ae41c";

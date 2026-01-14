@@ -3,26 +3,78 @@ use std::collections::HashMap;
 use alloy::primitives::B128;
 use serde::Deserialize;
 
-use crate::{LOCAL_API_URL, MAINNET_API_URL, TESTNET_API_URL};
+use crate::{MAINNET_API_URL, TESTNET_API_URL};
 
 #[derive(Debug, Clone)]
 pub enum BaseUrl {
-    Localhost,
     Testnet,
     Mainnet,
-    #[cfg(feature = "enclave")]
-    Enclave(String),
+    Custom {
+        url: String,
+        signing_chain: SigningChain,
+    },
 }
 
+#[derive(Debug, Clone)]
+pub enum SigningChain {
+    Mainnet,
+    Testnet,
+    /// Custom SigningChain for accepting core-style signatures without replay risks.
+    #[cfg(feature = "custom-signing-chain")]
+    Custom {
+        source: String,
+        hyperliquid_chain: String,
+    },
+}
+
+impl SigningChain {
+    pub(crate) fn get_source(&self) -> String {
+        match self {
+            SigningChain::Testnet => "b".to_string(),
+            SigningChain::Mainnet => "a".to_string(),
+            #[cfg(feature = "custom-signing-chain")]
+            SigningChain::Custom { source, .. } => source.to_owned(),
+        }
+    }
+
+    pub(crate) fn get_hyperliquid_chain(&self) -> String {
+        match self {
+            SigningChain::Testnet => "Testnet".to_string(),
+            SigningChain::Mainnet => "Mainnet".to_string(),
+            #[cfg(feature = "custom-signing-chain")]
+            SigningChain::Custom {
+                hyperliquid_chain, ..
+            } => hyperliquid_chain.to_owned(),
+        }
+    }
+}
 impl BaseUrl {
+    /// Get the url for the base url.
     pub fn get_url(&self) -> String {
         match self {
-            BaseUrl::Localhost => LOCAL_API_URL.to_string(),
+            BaseUrl::Custom { url, .. } => url.to_owned(),
             BaseUrl::Mainnet => MAINNET_API_URL.to_string(),
             BaseUrl::Testnet => TESTNET_API_URL.to_string(),
-            #[cfg(feature = "enclave")]
-            BaseUrl::Enclave(url) => url.to_string(),
         }
+    }
+
+    /// Get the signing chain for the base url.
+    pub fn get_signing_chain(&self) -> &SigningChain {
+        match self {
+            BaseUrl::Custom { signing_chain, .. } => signing_chain,
+            BaseUrl::Mainnet => &SigningChain::Mainnet,
+            BaseUrl::Testnet => &SigningChain::Testnet,
+        }
+    }
+
+    /// Get the source for signing l1 actions.
+    pub fn get_source(&self) -> String {
+        self.get_signing_chain().get_source()
+    }
+
+    /// Get the hyperliquid chain for signing user signed actions.
+    pub fn get_hyperliquid_chain(&self) -> String {
+        self.get_signing_chain().get_hyperliquid_chain()
     }
 }
 

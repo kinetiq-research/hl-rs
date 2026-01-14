@@ -11,7 +11,7 @@ mod conversion;
 mod signing;
 
 pub use conversion::float_to_int_for_hashing;
-pub use signing::{recover_action, sign_l1_action, sign_typed_data};
+pub use signing::{recover_action, SigningData};
 
 fn now_timestamp_ms() -> u64 {
     let now = Utc::now();

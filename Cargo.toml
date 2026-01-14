@@ -12,7 +12,7 @@ categories = ["api-bindings"]
 
 [features]
 default = []
-enclave = []
+custom-signing-chain = []
 
 [dependencies]
 alloy = "1.1.1"

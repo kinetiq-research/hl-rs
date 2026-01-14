@@ -1,4 +1,4 @@
-use alloy::{primitives::Address, signers::local::PrivateKeySigner};
+use alloy::primitives::Address;
 use alloy_signer::Signature;
 use serde::{Deserialize, Serialize};
 
@@ -19,8 +19,8 @@ use crate::{
 
 #[derive(Debug, Clone)]
 pub struct ExchangeClient {
+    pub(crate) base_url: BaseUrl,
     pub(crate) http_client: HttpClient,
-    pub(crate) signer_private_key: Option<PrivateKeySigner>,
     pub(crate) meta: Option<Meta>,
     pub(crate) vault_address: Option<Address>,
     pub(crate) expires_after: Option<u64>,
@@ -28,8 +28,13 @@ pub struct ExchangeClient {
 }
 
 impl ExchangeClient {
+    pub fn base_url(&self) -> &BaseUrl {
+        &self.base_url
+    }
+
     pub fn set_url(&mut self, base_url: BaseUrl) {
-        self.http_client.base_url = base_url.get_url();
+        self.base_url = base_url;
+        self.http_client.base_url = self.base_url.get_url();
     }
 
     pub fn builder(base_url: BaseUrl) -> ExchangeClientBuilder {
@@ -182,16 +187,8 @@ impl ExchangeClient {
         raw_response.into_result()
     }
 
-    pub fn is_mainnet(&self) -> bool {
-        self.http_client.is_mainnet()
-    }
-
     pub(crate) fn hyperliquid_chain(&self) -> String {
-        if self.is_mainnet() {
-            "Mainnet".to_string()
-        } else {
-            "Testnet".to_string()
-        }
+        self.base_url.get_hyperliquid_chain()
     }
 }
 

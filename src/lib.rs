@@ -12,7 +12,7 @@ pub use clients::{
     exchange::{self, ExchangeClient},
     info::{self, InfoClient},
 };
-pub use consts::{EPSILON, LOCAL_API_URL, MAINNET_API_URL, TESTNET_API_URL};
+pub use consts::{EPSILON, MAINNET_API_URL, TESTNET_API_URL};
 pub use error::Error;
 pub use prelude::Result;
-pub use types::BaseUrl;
+pub use types::{BaseUrl, SigningChain};

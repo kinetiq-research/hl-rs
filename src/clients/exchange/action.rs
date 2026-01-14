@@ -1,12 +1,12 @@
 use alloy::{
-    primitives::{Address, Signature, B256},
-    signers::{local::PrivateKeySigner, SignerSync},
+    primitives::{Address, Signature},
+    signers::local::PrivateKeySigner,
 };
 use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
 
 use crate::{
     exchange::{ActionKind, ExchangeClient},
-    utils::{recover_action, sign_l1_action},
+    utils::{recover_action, SigningData},
     Error,
 };
 
@@ -36,18 +36,6 @@ pub struct Action {
     pub signing_data: SigningData,
 }
 
-/// Enum representing data needed for signing an action.
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub enum SigningData {
-    /// L1 actions require a connection_id and network type.
-    L1 {
-        connection_id: B256,
-        is_mainnet: bool,
-    },
-    /// Typed data actions require only the EIP-712 hash.
-    TypedData { hash: B256 },
-}
-
 /// Signed action ready to be sent to the Hyperliquid API.
 ///
 /// This action has been fully prepared and signed, and can be sent
@@ -64,27 +52,16 @@ pub struct SignedAction {
 impl Action {
     /// Sign action with the provided wallet.
     pub fn sign(self, wallet: &PrivateKeySigner) -> Result<SignedAction, Error> {
-        let signature = match self.signing_data {
-            SigningData::L1 {
-                connection_id,
-                is_mainnet,
-            } => sign_l1_action(wallet, connection_id, is_mainnet)?,
-            SigningData::TypedData { hash } => wallet
-                .sign_hash_sync(&hash)
-                .map_err(|e| Error::SignatureFailure(e.to_string()))?,
-        };
-
         Ok(SignedAction {
             action: self.action,
             nonce: self.nonce,
-            signature,
+            signature: self.signing_data.sign(wallet)?,
             vault_address: self.vault_address,
             expires_after: self.expires_after,
         })
     }
 
     /// Attach externally-provided signature to this action.
-    /// Use this when signing is done outside the SDK (e.g., using Nitro Enclave).
     pub fn with_signature(self, signature: Signature) -> SignedAction {
         SignedAction {
             action: self.action,
@@ -103,6 +80,6 @@ impl Action {
 
 impl SignedAction {
     pub fn recover_user(&self, exchange_client: &ExchangeClient) -> Result<Address, Error> {
-        recover_action(exchange_client, &self)
+        recover_action(exchange_client.base_url.get_signing_chain(), self)
     }
 }

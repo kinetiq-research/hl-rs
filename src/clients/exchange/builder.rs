@@ -2,9 +2,9 @@ use alloy::primitives::{Address, B256};
 
 use crate::{
     eip712::Eip712,
-    exchange::{Action, ActionKind, ExchangeClient, SigningData},
-    utils::next_nonce,
-    Error, Result,
+    exchange::{Action, ActionKind, ExchangeClient},
+    utils::{next_nonce, SigningData},
+    Error, Result, SigningChain,
 };
 
 pub trait BuildAction {
@@ -12,26 +12,20 @@ pub trait BuildAction {
 }
 
 impl BuildAction for ActionKind {
+    /// Building the action creates signing data
     fn build(self, exchange_client: &ExchangeClient) -> Result<Action> {
-        let vault_address = exchange_client.vault_address;
-        let expires_after = exchange_client.expires_after;
-        let is_l1_action = self.is_l1_action();
-
-        let timestamp = if is_l1_action {
+        let timestamp = if self.is_l1_action() {
             next_nonce()
         } else {
-            self.extract_timestamp().unwrap_or_else(|| next_nonce())
+            self.extract_timestamp().unwrap_or_else(next_nonce)
         };
 
-        let signing_data =
-            self.signing_data(exchange_client, timestamp, vault_address, expires_after)?;
-        Ok(Action {
-            action: self,
-            nonce: timestamp,
-            vault_address,
-            expires_after,
-            signing_data,
-        })
+        self.build_with_params(
+            timestamp,
+            exchange_client.vault_address,
+            exchange_client.expires_after,
+            exchange_client.base_url.get_signing_chain(),
+        )
     }
 }
 
@@ -57,10 +51,10 @@ impl ActionKind {
 
     pub fn signing_data(
         &self,
-        exchange_client: &ExchangeClient,
         timestamp: u64,
         vault_address: Option<Address>,
         expires_after: Option<u64>,
+        signing_chain: &SigningChain,
     ) -> Result<SigningData> {
         if self.is_l1_action() {
             // For perpDeploy, sign with vault_address=None even if it's set
@@ -69,10 +63,9 @@ impl ActionKind {
                 _ => vault_address,
             };
 
-            let connection_id = self.hash(timestamp, hash_vault_address, expires_after)?;
             Ok(SigningData::L1 {
-                connection_id,
-                is_mainnet: exchange_client.is_mainnet(),
+                connection_id: self.hash(timestamp, hash_vault_address, expires_after)?,
+                source: signing_chain.get_source(),
             })
         } else {
             let hash = self.extract_eip712_hash()?;
@@ -80,47 +73,20 @@ impl ActionKind {
         }
     }
 
-    pub fn build_l1_action(
+    pub fn build_with_params(
         self,
-        exchange_client: &ExchangeClient,
-        timestamp: u64,
+        nonce: u64,
         vault_address: Option<Address>,
         expires_after: Option<u64>,
+        signing_chain: &SigningChain,
     ) -> Result<Action> {
-        // For perpDeploy, sign with vault_address=None even if it's set
-        let hash_vault_address = match &self {
-            ActionKind::PerpDeploy(_) => None,
-            _ => vault_address,
-        };
-
-        let connection_id = self.hash(timestamp, hash_vault_address, expires_after)?;
-
+        let signing_data = self.signing_data(nonce, vault_address, expires_after, signing_chain)?;
         Ok(Action {
             action: self,
-            nonce: timestamp,
+            nonce,
             vault_address,
             expires_after,
-            signing_data: SigningData::L1 {
-                connection_id,
-                is_mainnet: exchange_client.is_mainnet(),
-            },
-        })
-    }
-
-    pub fn build_typed_data_action(
-        self,
-        timestamp: u64,
-        vault_address: Option<Address>,
-        expires_after: Option<u64>,
-    ) -> Result<Action> {
-        let hash = self.extract_eip712_hash()?;
-
-        Ok(Action {
-            action: self,
-            nonce: timestamp,
-            vault_address,
-            expires_after,
-            signing_data: SigningData::TypedData { hash },
+            signing_data,
         })
     }
 

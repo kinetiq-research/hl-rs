@@ -39,11 +39,11 @@ impl ExchangeResponseStatusRaw {
     }
 }
 
-fn extract_address_from_error(msg: &str) -> Option<String> {
-    msg.split_whitespace()
-        .find(|s| s.starts_with("0x") && s.len() == 42)
-        .map(|s| s.to_string())
-}
+//fn extract_address_from_error(msg: &str) -> Option<String> {
+//    msg.split_whitespace()
+//        .find(|s| s.starts_with("0x") && s.len() == 42)
+//        .map(|s| s.to_string())
+//}
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct RestingOrder {

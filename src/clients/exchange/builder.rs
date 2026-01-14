@@ -17,7 +17,7 @@ impl BuildAction for ActionKind {
         let timestamp = if self.is_l1_action() {
             next_nonce()
         } else {
-            self.extract_timestamp().unwrap_or_else(|| next_nonce())
+            self.extract_timestamp().unwrap_or_else(next_nonce)
         };
 
         self.build_with_params(

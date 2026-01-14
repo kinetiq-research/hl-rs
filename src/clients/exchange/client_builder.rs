@@ -82,7 +82,7 @@ impl ExchangeClientBuilder {
             http_client,
             base_url: self.base_url,
             vault_address: self.vault_address,
-            meta: Some(meta),
+            //meta: Some(meta),
             expires_after: self.expires_after,
             coin_to_asset,
         })

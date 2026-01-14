@@ -12,7 +12,7 @@ use crate::{
     },
     http::HttpClient,
     prelude::Result,
-    types::{CoinToAsset, Meta},
+    types::CoinToAsset,
     utils::next_nonce,
     BaseUrl,
 };
@@ -21,7 +21,7 @@ use crate::{
 pub struct ExchangeClient {
     pub(crate) base_url: BaseUrl,
     pub(crate) http_client: HttpClient,
-    pub(crate) meta: Option<Meta>,
+    //pub(crate) meta: Option<Meta>,
     pub(crate) vault_address: Option<Address>,
     pub(crate) expires_after: Option<u64>,
     pub(crate) coin_to_asset: CoinToAsset,
@@ -51,7 +51,7 @@ impl ExchangeClient {
             hyperliquid_chain: self.hyperliquid_chain(),
             agent_address,
             agent_name: Some(agent_name.into()),
-            nonce: next_nonce() as u64,
+            nonce: next_nonce(),
         };
 
         ActionKind::ApproveAgent(approve_agent).build(self)
@@ -67,7 +67,7 @@ impl ExchangeClient {
             hyperliquid_chain: self.hyperliquid_chain(),
             destination: destination.to_string(),
             amount: amount.into(),
-            time: next_nonce() as u64,
+            time: next_nonce(),
         };
 
         ActionKind::UsdSend(usd_send).build(self)

@@ -80,6 +80,6 @@ impl Action {
 
 impl SignedAction {
     pub fn recover_user(&self, exchange_client: &ExchangeClient) -> Result<Address, Error> {
-        recover_action(exchange_client.base_url.get_signing_chain(), &self)
+        recover_action(exchange_client.base_url.get_signing_chain(), self)
     }
 }

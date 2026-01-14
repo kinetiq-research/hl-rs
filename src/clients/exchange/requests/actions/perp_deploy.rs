@@ -48,7 +48,6 @@ pub struct SetMarginTableIds {
 }
 /// Implements Serialize and Deserialize for a struct by flattening a Vec field as the whole struct.
 /// Usage: flatten_vec!(StructName, field_name);
-#[macro_export]
 macro_rules! flatten_vec {
     ($struct_name:ident, $field:ident) => {
         impl ::serde::Serialize for $struct_name {

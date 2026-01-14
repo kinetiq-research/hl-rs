@@ -46,33 +46,48 @@ pub struct SetFundingMultipliers {
 pub struct SetMarginTableIds {
     pub ids: Vec<(String, i64)>,
 }
+/// Implements Serialize and Deserialize for a struct by flattening a Vec field as the whole struct.
+/// Usage: flatten_vec!(StructName, field_name);
+#[macro_export]
+macro_rules! flatten_vec {
+    ($struct_name:ident, $field:ident) => {
+        impl ::serde::Serialize for $struct_name {
+            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where
+                S: ::serde::Serializer,
+            {
+                let mut data = self.$field.clone();
+                data.sort_by(|a, b| a.cmp(b));
+                data.serialize(serializer)
+            }
+        }
 
-impl Serialize for SetMarginTableIds {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        // Serialize directly as an array of arrays, not as an object
-        self.ids.serialize(serializer)
-    }
+        impl<'de> ::serde::Deserialize<'de> for $struct_name {
+            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+            where
+                D: ::serde::Deserializer<'de>,
+            {
+                let vec_data = Vec::deserialize(deserializer)?;
+                Ok($struct_name { $field: vec_data })
+            }
+        }
+    };
 }
 
-impl<'de> Deserialize<'de> for SetMarginTableIds {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        // Deserialize directly from an array of arrays
-        let ids = Vec::<(String, i64)>::deserialize(deserializer)?;
-        Ok(SetMarginTableIds { ids })
-    }
-}
+flatten_vec!(SetMarginTableIds, ids);
+flatten_vec!(SetOpenInterestCaps, caps);
+flatten_vec!(SetGrowthModes, modes);
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct InsertMarginTable {
     pub dex: String,
     pub margin_table: RawMarginTable,
+}
+
+#[derive(Debug, Clone)]
+pub struct SetGrowthModes {
+    pub modes: Vec<(String, bool)>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -103,10 +118,9 @@ pub struct SetFeeRecipient {
     pub fee_recipient: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone)]
 pub struct SetOpenInterestCaps {
-    pub caps: Vec<(String, String)>,
+    pub caps: Vec<(String, u64)>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -135,6 +149,7 @@ pub enum Variant {
     SetFeeRecipient,
     SetOpenInterestCaps,
     InsertMarginTable,
+    SetGrowthModes,
 }
 
 /// Wrapper that serializes with type: "perpDeploy"
@@ -150,6 +165,7 @@ pub enum PerpDeploy {
     SetOpenInterestCaps(SetOpenInterestCaps),
     InsertMarginTable(InsertMarginTable),
     SetSubDeployers(SetSubDeployers),
+    SetGrowthModes(SetGrowthModes),
 }
 
 impl Serialize for PerpDeploy {
@@ -174,6 +190,7 @@ impl Serialize for PerpDeploy {
             }
             PerpDeploy::InsertMarginTable(v) => state.serialize_field("insertMarginTable", v)?,
             PerpDeploy::SetSubDeployers(v) => state.serialize_field("setSubDeployers", v)?,
+            PerpDeploy::SetGrowthModes(v) => state.serialize_field("setGrowthModes", v)?,
         }
         state.end()
     }
@@ -210,7 +227,7 @@ impl<'de> Deserialize<'de> for PerpDeploy {
                 let mut set_open_interest_caps: Option<SetOpenInterestCaps> = None;
                 let mut insert_margin_table: Option<InsertMarginTable> = None;
                 let mut set_sub_deployers: Option<SetSubDeployers> = None;
-
+                let mut set_growth_mode: Option<SetGrowthModes> = None;
                 while let Some(key) = map.next_key::<String>()? {
                     match key.as_str() {
                         "type" => {
@@ -242,6 +259,9 @@ impl<'de> Deserialize<'de> for PerpDeploy {
                         }
                         "setSubDeployers" => {
                             set_sub_deployers = Some(map.next_value()?);
+                        }
+                        "setGrowthModes" => {
+                            set_growth_mode = Some(map.next_value()?);
                         }
                         _ => {
                             let _ = map.next_value::<serde::de::IgnoredAny>()?;
@@ -276,6 +296,8 @@ impl<'de> Deserialize<'de> for PerpDeploy {
                     Ok(PerpDeploy::InsertMarginTable(v))
                 } else if let Some(v) = set_sub_deployers {
                     Ok(PerpDeploy::SetSubDeployers(v))
+                } else if let Some(v) = set_growth_mode {
+                    Ok(PerpDeploy::SetGrowthModes(v))
                 } else {
                     Err(de::Error::missing_field(
                         "one of the perpDeploy action fields",

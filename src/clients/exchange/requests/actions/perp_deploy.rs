@@ -155,7 +155,7 @@ pub enum Variant {
     SetOpenInterestCaps,
     InsertMarginTable,
     SetGrowthModes,
-    SetFundingInterestRates
+    SetFundingInterestRates,
 }
 
 /// Wrapper that serializes with type: "perpDeploy"
@@ -198,7 +198,9 @@ impl Serialize for PerpDeploy {
             PerpDeploy::InsertMarginTable(v) => state.serialize_field("insertMarginTable", v)?,
             PerpDeploy::SetSubDeployers(v) => state.serialize_field("setSubDeployers", v)?,
             PerpDeploy::SetGrowthModes(v) => state.serialize_field("setGrowthModes", v)?,
-            PerpDeploy::SetFundingInterestRates(v) => state.serialize_field("setFundingInterestRates", v)?,
+            PerpDeploy::SetFundingInterestRates(v) => {
+                state.serialize_field("setFundingInterestRates", v)?
+            }
         }
         state.end()
     }
@@ -226,50 +228,47 @@ impl<'de> Deserialize<'de> for PerpDeploy {
                 A: serde::de::MapAccess<'de>,
             {
                 let mut type_val: Option<String> = None;
-                let mut register_asset: Option<RegisterAsset> = None;
-                let mut set_oracle: Option<SetOracle> = None;
-                let mut set_funding_multipliers: Option<SetFundingMultipliers> = None;
-                let mut halt_trading: Option<HaltTrading> = None;
-                let mut set_margin_table_ids: Option<SetMarginTableIds> = None;
-                let mut set_fee_recipient: Option<SetFeeRecipient> = None;
-                let mut set_open_interest_caps: Option<SetOpenInterestCaps> = None;
-                let mut insert_margin_table: Option<InsertMarginTable> = None;
-                let mut set_sub_deployers: Option<SetSubDeployers> = None;
-                let mut set_growth_mode: Option<SetGrowthModes> = None;
+                let mut perp_deploy = None;
+
                 while let Some(key) = map.next_key::<String>()? {
                     match key.as_str() {
                         "type" => {
                             type_val = Some(map.next_value()?);
                         }
                         "registerAsset" => {
-                            register_asset = Some(map.next_value()?);
+                            perp_deploy = Some(PerpDeploy::RegisterAsset(map.next_value()?));
                         }
                         "setOracle" => {
-                            set_oracle = Some(map.next_value()?);
+                            perp_deploy = Some(PerpDeploy::SetOracle(map.next_value()?));
                         }
                         "setFundingMultipliers" => {
-                            set_funding_multipliers = Some(map.next_value()?);
+                            perp_deploy =
+                                Some(PerpDeploy::SetFundingMultipliers(map.next_value()?));
                         }
                         "haltTrading" => {
-                            halt_trading = Some(map.next_value()?);
+                            perp_deploy = Some(PerpDeploy::HaltTrading(map.next_value()?));
                         }
                         "setMarginTableIds" => {
-                            set_margin_table_ids = Some(map.next_value()?);
+                            perp_deploy = Some(PerpDeploy::SetMarginTableIds(map.next_value()?));
                         }
                         "setFeeRecipient" => {
-                            set_fee_recipient = Some(map.next_value()?);
+                            perp_deploy = Some(PerpDeploy::SetFeeRecipient(map.next_value()?));
                         }
                         "setOpenInterestCaps" => {
-                            set_open_interest_caps = Some(map.next_value()?);
+                            perp_deploy = Some(PerpDeploy::SetOpenInterestCaps(map.next_value()?));
                         }
                         "insertMarginTable" => {
-                            insert_margin_table = Some(map.next_value()?);
+                            perp_deploy = Some(PerpDeploy::InsertMarginTable(map.next_value()?));
                         }
                         "setSubDeployers" => {
-                            set_sub_deployers = Some(map.next_value()?);
+                            perp_deploy = Some(PerpDeploy::SetSubDeployers(map.next_value()?));
                         }
                         "setGrowthModes" => {
-                            set_growth_mode = Some(map.next_value()?);
+                            perp_deploy = Some(PerpDeploy::SetGrowthModes(map.next_value()?));
+                        }
+                        "setFundingInterestRates" => {
+                            perp_deploy =
+                                Some(PerpDeploy::SetFundingInterestRates(map.next_value()?));
                         }
                         _ => {
                             let _ = map.next_value::<serde::de::IgnoredAny>()?;
@@ -286,31 +285,13 @@ impl<'de> Deserialize<'de> for PerpDeploy {
                     }
                 }
 
-                if let Some(v) = register_asset {
-                    Ok(PerpDeploy::RegisterAsset(v))
-                } else if let Some(v) = set_oracle {
-                    Ok(PerpDeploy::SetOracle(v))
-                } else if let Some(v) = set_funding_multipliers {
-                    Ok(PerpDeploy::SetFundingMultipliers(v))
-                } else if let Some(v) = halt_trading {
-                    Ok(PerpDeploy::HaltTrading(v))
-                } else if let Some(v) = set_margin_table_ids {
-                    Ok(PerpDeploy::SetMarginTableIds(v))
-                } else if let Some(v) = set_fee_recipient {
-                    Ok(PerpDeploy::SetFeeRecipient(v))
-                } else if let Some(v) = set_open_interest_caps {
-                    Ok(PerpDeploy::SetOpenInterestCaps(v))
-                } else if let Some(v) = insert_margin_table {
-                    Ok(PerpDeploy::InsertMarginTable(v))
-                } else if let Some(v) = set_sub_deployers {
-                    Ok(PerpDeploy::SetSubDeployers(v))
-                } else if let Some(v) = set_growth_mode {
-                    Ok(PerpDeploy::SetGrowthModes(v))
-                } else {
-                    Err(de::Error::missing_field(
-                        "one of the perpDeploy action fields",
-                    ))
+                if let Some(v) = perp_deploy {
+                    return Ok(v);
                 }
+
+                Err(de::Error::missing_field(
+                    "one of the perpDeploy action fields",
+                ))
             }
         }
 

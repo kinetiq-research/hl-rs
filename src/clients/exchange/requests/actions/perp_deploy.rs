@@ -43,6 +43,11 @@ pub struct SetFundingMultipliers {
 }
 
 #[derive(Debug, Clone)]
+pub struct SetFundingInterestRates {
+    pub rates: Vec<(String, String)>,
+}
+
+#[derive(Debug, Clone)]
 pub struct SetMarginTableIds {
     pub ids: Vec<(String, i64)>,
 }
@@ -75,6 +80,7 @@ macro_rules! flatten_vec {
 
 flatten_vec!(SetMarginTableIds, ids);
 flatten_vec!(SetOpenInterestCaps, caps);
+flatten_vec!(SetFundingInterestRates, rates);
 flatten_vec!(SetGrowthModes, modes);
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -149,6 +155,7 @@ pub enum Variant {
     SetOpenInterestCaps,
     InsertMarginTable,
     SetGrowthModes,
+    SetFundingInterestRates
 }
 
 /// Wrapper that serializes with type: "perpDeploy"
@@ -158,6 +165,7 @@ pub enum PerpDeploy {
     RegisterAsset(RegisterAsset),
     SetOracle(SetOracle),
     SetFundingMultipliers(SetFundingMultipliers),
+    SetFundingInterestRates(SetFundingInterestRates),
     HaltTrading(HaltTrading),
     SetMarginTableIds(SetMarginTableIds),
     SetFeeRecipient(SetFeeRecipient),
@@ -190,6 +198,7 @@ impl Serialize for PerpDeploy {
             PerpDeploy::InsertMarginTable(v) => state.serialize_field("insertMarginTable", v)?,
             PerpDeploy::SetSubDeployers(v) => state.serialize_field("setSubDeployers", v)?,
             PerpDeploy::SetGrowthModes(v) => state.serialize_field("setGrowthModes", v)?,
+            PerpDeploy::SetFundingInterestRates(v) => state.serialize_field("setFundingInterestRates", v)?,
         }
         state.end()
     }

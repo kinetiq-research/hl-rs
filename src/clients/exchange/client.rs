@@ -24,7 +24,7 @@ pub struct ExchangeClient {
     //pub(crate) meta: Option<Meta>,
     pub(crate) vault_address: Option<Address>,
     pub(crate) expires_after: Option<u64>,
-    pub(crate) coin_to_asset: CoinToAsset,
+    pub(crate) coin_to_asset: Option<CoinToAsset>,
 }
 
 impl ExchangeClient {

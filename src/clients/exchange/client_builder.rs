@@ -63,26 +63,23 @@ impl ExchangeClientBuilder {
             client: Client::default(),
             base_url: self.base_url.get_url(),
         };
-        let info_client = if let Some(client) = self.info_client.take() {
-            client
-        } else {
-            InfoClient::builder(self.base_url.clone()).build()?
-        };
 
-        let meta = if let Some(meta) = self.meta.take() {
-            meta
+        let coin_to_asset = if let Some(client) = self.info_client.take() {
+            let meta = self.meta.take().unwrap_or(
+                InfoClient::builder(self.base_url.clone())
+                    .build()?
+                    .meta()
+                    .await?,
+            );
+            Some(Self::derive_coin_to_asset_from_meta(meta, &client).await?)
         } else {
-            info_client.meta().await?
+            None
         };
-
-        let coin_to_asset =
-            Self::derive_coin_to_asset_from_meta(meta.clone(), &info_client).await?;
 
         Ok(ExchangeClient {
             http_client,
             base_url: self.base_url,
             vault_address: self.vault_address,
-            //meta: Some(meta),
             expires_after: self.expires_after,
             coin_to_asset,
         })

@@ -218,11 +218,6 @@ mod tests {
             .parse::<PrivateKeySigner>()
             .map_err(|e| Error::Wallet(e.to_string()))?;
 
-        let exchange_client = ExchangeClient::builder(BaseUrl::Testnet)
-            .build()
-            .await
-            .unwrap();
-
         // Create RegisterAsset action with same parameters as Python SDK test (without schema)
         let register_asset_no_schema = RegisterAsset {
             max_gas: Some(1000000000000),

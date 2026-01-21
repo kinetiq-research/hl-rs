@@ -58,7 +58,7 @@ impl HttpClient {
     #[tracing::instrument(skip(self, data))]
     pub async fn post<T: Serialize>(&self, url_path: &'static str, data: T) -> Result<String> {
         let full_url = format!("{}{url_path}", self.base_url);
-
+        println!("Full URL: {}", full_url);
         // Serialize the payload for logging
         let payload_json =
             serde_json::to_string(&data).map_err(|e| Error::SerializationFailure(e.to_string()))?;

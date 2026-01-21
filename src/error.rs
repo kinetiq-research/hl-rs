@@ -70,6 +70,8 @@ pub enum Error {
     RecoverAddressFailure(String),
     #[error("Vault address not found")]
     VaultAddressNotFound,
+    #[error("Asset info not loaded into Exchange Client")]
+    AssetInfoNotLoaded,
 }
 
 #[derive(Error, Debug, Clone)]

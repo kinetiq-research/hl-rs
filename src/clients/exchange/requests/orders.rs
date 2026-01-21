@@ -98,8 +98,6 @@ pub struct ClientOrderRequest {
 
 impl ClientOrderRequest {
     pub fn convert(self, exchange_client: &ExchangeClient) -> Result<OrderRequest> {
-        let coin_to_asset = exchange_client.coin_to_asset.as_map();
-
         let order_type = match self.order_type {
             ClientOrder::Limit(limit) => Order::Limit(Limit { tif: limit.tif }),
             ClientOrder::Trigger(trigger) => Order::Trigger(Trigger {
@@ -108,7 +106,15 @@ impl ClientOrderRequest {
                 tpsl: trigger.tpsl,
             }),
         };
-        let &asset = coin_to_asset.get(&self.asset).ok_or(Error::AssetNotFound)?;
+
+        let asset = exchange_client
+            .coin_to_asset
+            .as_ref()
+            .ok_or(Error::AssetInfoNotLoaded)?
+            .as_map()
+            .get(&self.asset)
+            .cloned()
+            .ok_or(Error::AssetNotFound)?;
 
         let cloid = self.cloid.map(uuid_to_hex_string);
 

@@ -32,3 +32,10 @@ thiserror = "2.0.17"
 tokio = { version = "1.48.0", features = ["macros", "rt-multi-thread"] }
 tracing = "0.1.43"
 uuid = { version = "1.18.1", features = ["v4"] }
+derive_builder = "0.20.2"
+rust_decimal = { version = "1.36.0", features = ["serde"] }
+rust_decimal_macros = "1.36.0"
+hl-rs-derive = { path = "hl-rs-derive" }
+
+[workspace]
+members = ["hl-rs-derive"]

@@ -75,8 +75,9 @@ impl Serialize for ActionKind {
                 }
                 state.end()
             }
+            // Serialize using internally-tagged format to match Deserialize
+            // Format: {"type": "spotSend", "signatureChainId": ..., "field2": ..., ...}
             _ => {
-                let mut map = serde_json::Map::new();
                 let (type_name, value) = match self {
                     ActionKind::UsdSend(v) => ("usdSend", serde_json::to_value(v).unwrap()),
                     ActionKind::UpdateLeverage(v) => {
@@ -116,11 +117,16 @@ impl Serialize for ActionKind {
                     }
                     ActionKind::PerpDeploy(_) => unreachable!(),
                 };
+
+                // Create internally-tagged format: merge "type" field into the value object
+                let mut map = match value {
+                    serde_json::Value::Object(m) => m,
+                    _ => serde_json::Map::new(),
+                };
                 map.insert(
                     "type".to_string(),
                     serde_json::Value::String(type_name.to_string()),
                 );
-                map.insert(type_name.to_string(), value);
                 map.serialize(serializer)
             }
         }

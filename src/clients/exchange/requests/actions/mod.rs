@@ -3,7 +3,7 @@ use alloy::{
     primitives::{keccak256, Address, B256},
     sol_types::{eip712_domain, SolValue},
 };
-use serde::{Deserialize, Serialize, Serializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::{
     eip712::Eip712,
@@ -32,10 +32,19 @@ where
     s.serialize_str(&format!("0x{val:x}"))
 }
 
+fn deserialize_hex<'de, D>(d: D) -> Result<u64, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s = String::deserialize(d)?;
+    let s = s.strip_prefix("0x").unwrap_or(&s);
+    u64::from_str_radix(s, 16).map_err(serde::de::Error::custom)
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct UsdSend {
-    #[serde(serialize_with = "serialize_hex")]
+    #[serde(serialize_with = "serialize_hex", deserialize_with = "deserialize_hex")]
     pub signature_chain_id: u64,
     pub hyperliquid_chain: String,
     pub destination: String,
@@ -108,7 +117,7 @@ pub struct BulkCancelCloid {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ApproveAgent {
-    #[serde(serialize_with = "serialize_hex")]
+    #[serde(serialize_with = "serialize_hex", deserialize_with = "deserialize_hex")]
     pub signature_chain_id: u64,
     pub hyperliquid_chain: String,
     pub agent_address: Address,
@@ -138,7 +147,7 @@ impl Eip712 for ApproveAgent {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Withdraw3 {
-    #[serde(serialize_with = "serialize_hex")]
+    #[serde(serialize_with = "serialize_hex", deserialize_with = "deserialize_hex")]
     pub signature_chain_id: u64,
     pub hyperliquid_chain: String,
     pub destination: String,
@@ -168,7 +177,7 @@ impl Eip712 for Withdraw3 {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SpotSend {
-    #[serde(serialize_with = "serialize_hex")]
+    #[serde(serialize_with = "serialize_hex", deserialize_with = "deserialize_hex")]
     pub signature_chain_id: u64,
     pub hyperliquid_chain: String,
     pub destination: String,
@@ -213,7 +222,7 @@ pub struct ClassTransfer {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SendAsset {
-    #[serde(serialize_with = "serialize_hex")]
+    #[serde(serialize_with = "serialize_hex", deserialize_with = "deserialize_hex")]
     pub signature_chain_id: u64,
     pub hyperliquid_chain: String,
     pub destination: String,
@@ -271,7 +280,7 @@ pub struct EvmUserModify {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ApproveBuilderFee {
-    #[serde(serialize_with = "serialize_hex")]
+    #[serde(serialize_with = "serialize_hex", deserialize_with = "deserialize_hex")]
     pub signature_chain_id: u64,
     pub hyperliquid_chain: String,
     pub builder: Address,

@@ -10,6 +10,16 @@ use crate::{
     Error, Result,
 };
 
+/// Helper for serializing with internally-tagged format matching official SDK
+/// This produces identical MessagePack bytes to derived #[serde(tag = "type")]
+#[derive(Serialize)]
+struct TaggedOrder<'a> {
+    #[serde(rename = "type")]
+    action_type: &'a str,
+    #[serde(flatten)]
+    inner: &'a BulkOrder,
+}
+
 #[derive(Debug, Clone, Deserialize)]
 #[serde(tag = "type")]
 #[serde(rename_all = "camelCase")]
@@ -86,7 +96,11 @@ impl Serialize for ActionKind {
                     ActionKind::UpdateIsolatedMargin(v) => {
                         ("updateIsolatedMargin", serde_json::to_value(v).unwrap())
                     }
-                    ActionKind::Order(v) => ("order", serde_json::to_value(v).unwrap()),
+                    // Order uses TaggedOrder to match official SDK's MessagePack serialization
+                    // This is critical for correct connection_id hash computation
+                    ActionKind::Order(v) => {
+                        return TaggedOrder { action_type: "order", inner: v }.serialize(serializer);
+                    }
                     ActionKind::Cancel(v) => ("cancel", serde_json::to_value(v).unwrap()),
                     ActionKind::CancelByCloid(v) => {
                         ("cancelByCloid", serde_json::to_value(v).unwrap())

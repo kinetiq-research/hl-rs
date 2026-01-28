@@ -122,6 +122,7 @@ pub struct SetOpenInterestCaps {
     pub caps: Vec<(String, u64)>,
 }
 
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SetSubDeployers {

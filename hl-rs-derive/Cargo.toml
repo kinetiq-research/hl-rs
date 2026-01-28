@@ -12,3 +12,4 @@ proc-macro2 = "1.0.101"
 quote = "1.0.40"
 syn = { version = "2.0.106", features = ["full", "extra-traits"] }
 heck = "0.5.0"
+alloy-dyn-abi = { version = "1.5.2", features = ["eip712"] }

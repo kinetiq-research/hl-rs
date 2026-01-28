@@ -14,15 +14,24 @@ fn has_nonce_field(fields: &syn::FieldsNamed) -> bool {
         .any(|field| field.ident.as_ref().is_some_and(|ident| ident == "nonce"))
 }
 
-fn build_l1_action_impl(ident: &syn::Ident, action_type_lit: &syn::LitStr) -> TokenStream2 {
+fn build_l1_action_impl(
+    ident: &syn::Ident,
+    action_type_lit: &syn::LitStr,
+    payload_key_lit: &syn::LitStr,
+) -> TokenStream2 {
     quote! {
         impl crate::exchange::action_v2::L1Action for #ident {
             const ACTION_TYPE: &'static str = #action_type_lit;
+            const PAYLOAD_KEY: &'static str = #payload_key_lit;
         }
 
         impl crate::exchange::action_v2::Action for #ident {
-            fn action_type(&self) -> &'static str {
+            fn action_type() -> &'static str {
                 <Self as crate::exchange::action_v2::L1Action>::ACTION_TYPE
+            }
+
+            fn payload_key() -> &'static str {
+                <Self as crate::exchange::action_v2::L1Action>::PAYLOAD_KEY
             }
 
             fn signing_hash(
@@ -36,8 +45,12 @@ fn build_l1_action_impl(ident: &syn::Ident, action_type_lit: &syn::LitStr) -> To
                         meta.vault_address
                     };
 
+
+
+                let wrapper = crate::exchange::action_v2::L1ActionWrapper { action: self };
+                println!("wrapper: {:#?}", serde_json::to_string_pretty(&wrapper).unwrap());
                 let connection_id = crate::exchange::action_v2::compute_l1_hash(
-                    self,
+                    &wrapper,
                     meta.nonce,
                     vault_for_hash,
                     meta.expires_after,
@@ -58,7 +71,7 @@ fn build_l1_action_impl(ident: &syn::Ident, action_type_lit: &syn::LitStr) -> To
                 let envelope = (
                     payload_multi_sig_user.to_string().to_lowercase(),
                     outer_signer.to_string().to_lowercase(),
-                    self,
+                    crate::exchange::action_v2::L1ActionWrapper { action: self },
                 );
 
                 let vault_for_hash =
@@ -100,7 +113,7 @@ fn build_l1_action_impl(ident: &syn::Ident, action_type_lit: &syn::LitStr) -> To
 pub(crate) fn derive_l1_action(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
-    let (action_type_override, _) = match parse_action_attrs(&input.attrs) {
+    let (action_type_override, payload_key_override, _) = match parse_action_attrs(&input.attrs) {
         Ok(parsed) => parsed,
         Err(err) => return err.to_compile_error().into(),
     };
@@ -129,5 +142,8 @@ pub(crate) fn derive_l1_action(input: TokenStream) -> TokenStream {
         action_type_override.unwrap_or_else(|| ident.to_string().to_lower_camel_case());
     let action_type_lit = LitStr::new(&action_type_value, ident.span());
 
-    build_l1_action_impl(ident, &action_type_lit).into()
+    let payload_key_value = payload_key_override.unwrap_or_else(|| action_type_value.clone());
+    let payload_key_lit = LitStr::new(&payload_key_value, ident.span());
+
+    build_l1_action_impl(ident, &action_type_lit, &payload_key_lit).into()
 }

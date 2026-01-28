@@ -13,17 +13,19 @@ use alloy::{
     sol,
     sol_types::{eip712_domain, SolStruct},
 };
-use derive_builder::Builder;
-use hl_rs_derive::{L1Action, UserSignedAction};
 use reqwest::Client;
-use rust_decimal::Decimal;
 use serde::{
     de::DeserializeOwned,
-    ser::{SerializeMap, SerializeStruct},
+    ser::{Error as SerError, SerializeMap, SerializeStruct},
     Deserialize, Deserializer, Serialize, Serializer,
 };
 
 use crate::{http::HttpClient, BaseUrl, Error, SigningChain};
+
+mod action_v2_impls;
+pub use action_v2_impls::*;
+mod perp_deploy_v2;
+pub use perp_deploy_v2::*;
 
 // ============================================================================
 // Core Types
@@ -37,20 +39,6 @@ pub struct SigningMeta<'a> {
     pub expires_after: Option<u64>,
     pub signing_chain: &'a SigningChain,
 }
-
-macro_rules! impl_action_kind {
-    ($($action:ident),*) => {
-        #[derive(Debug, Clone)]
-        pub enum ActionKind {
-            $(
-                $action($action),
-            )*
-        }
-    };
-}
-
-// Use to convert serialized SignedAction<T> to a concrete type.
-impl_action_kind!(UsdSend, EnableBigBlocks);
 
 // EIP-712 Agent struct for L1 action signing
 sol! {
@@ -100,12 +88,43 @@ pub trait L1Action: Serialize + Clone + Send + Sync + 'static {
     /// Action type name for API serialization (e.g., "order", "updateLeverage")
     const ACTION_TYPE: &'static str;
 
+    /// Key to serialize action payload to.
+    const PAYLOAD_KEY: &'static str;
+
     /// Whether to exclude vault_address from the hash (default: false)
     /// Override to `true` for actions like PerpDeploy
     const EXCLUDE_VAULT_FROM_HASH: bool = false;
 }
 
 /// Compute the L1 action hash (MessagePack + metadata)
+pub(crate) struct L1ActionWrapper<'a, T: Action + Serialize> {
+    pub action: &'a T,
+}
+
+impl<'a, T: Action + Serialize> Serialize for L1ActionWrapper<'a, T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let payload = serde_json::to_value(self.action).map_err(S::Error::custom)?;
+
+        let mut map = serializer.serialize_map(Some(2))?;
+        map.serialize_entry("type", T::action_type())?;
+        if T::payload_key() == T::action_type() {
+            let payload = payload
+                .as_object()
+                .cloned()
+                .ok_or_else(|| S::Error::custom("action payload must be object"))?;
+            for (key, value) in payload {
+                map.serialize_entry(&key, &value)?;
+            }
+        } else {
+            map.serialize_entry(T::payload_key(), &payload)?;
+        }
+        map.end()
+    }
+}
+
 fn compute_l1_hash<T: Serialize>(
     action: &T,
     nonce: u64,
@@ -194,8 +213,23 @@ impl SigningChain {
 /// This trait is implemented for action types via the provided macros.
 /// Client code uses this trait for a uniform API.
 pub trait Action: Serialize + Send + Sync {
-    /// Action type name for API serialization
-    fn action_type(&self) -> &'static str;
+    /// Action type name for 'type' tag serialization
+    fn action_type() -> &'static str;
+
+    /// Key to serialize action payload to.
+    fn payload_key() -> &'static str {
+        Self::action_type()
+    }
+
+    /// Whether the action is user-signed (EIP-712).
+    fn is_user_signed() -> bool {
+        false
+    }
+
+    /// Whether the user-signed payload uses `time` (vs `nonce`).
+    fn uses_time() -> bool {
+        false
+    }
 
     /// Build the signing hash from action and metadata
     fn signing_hash(&self, meta: &SigningMeta) -> Result<B256, Error>;
@@ -228,6 +262,7 @@ pub struct PreparedAction<A: Action> {
     pub nonce: u64,
     pub vault_address: Option<Address>,
     pub expires_after: Option<u64>,
+    signing_chain: SigningChain,
     signing_hash: B256,
 }
 
@@ -249,6 +284,7 @@ impl<A: Action> PreparedAction<A> {
             vault_address: self.vault_address,
             expires_after: self.expires_after,
             signature,
+            signing_chain: Some(self.signing_chain),
         })
     }
 
@@ -260,6 +296,7 @@ impl<A: Action> PreparedAction<A> {
             vault_address: self.vault_address,
             expires_after: self.expires_after,
             signature,
+            signing_chain: Some(self.signing_chain),
         }
     }
 }
@@ -269,7 +306,7 @@ impl<A: Action> PreparedAction<A> {
 /// Serializes to the exchange API format:
 /// ```json
 /// {
-///   "action": { "type": "actionType", "actionType": { ...payload... } },
+///   "action": { "type": "actionType", ...payload...  },
 ///   "nonce": 12345,
 ///   "signature": { "r": "0x...", "s": "0x...", "v": 27 },
 ///   "vaultAddress": "0x...",  // optional
@@ -280,9 +317,10 @@ impl<A: Action> PreparedAction<A> {
 pub struct SignedAction<T: Action> {
     pub action: T,
     pub nonce: u64,
+    pub signature: Signature,
     pub vault_address: Option<Address>,
     pub expires_after: Option<u64>,
-    pub signature: Signature,
+    pub signing_chain: Option<SigningChain>,
 }
 
 impl<T: Action> SignedAction<T> {
@@ -292,69 +330,174 @@ impl<T: Action> SignedAction<T> {
     }
 }
 
-impl<T: Action> Serialize for SignedAction<T> {
+fn build_action_value<T: Action + Serialize>(
+    action: &T,
+    signing_chain: Option<&SigningChain>,
+) -> Result<serde_json::Value, String> {
+    let payload_value = serde_json::to_value(action).map_err(|e| e.to_string())?;
+    let mut payload = payload_value;
+
+    if T::is_user_signed() {
+        let signing_chain = signing_chain
+            .ok_or_else(|| "signing_chain must be set for user-signed actions".to_string())?;
+        let obj = payload
+            .as_object_mut()
+            .ok_or_else(|| "action payload must be object".to_string())?;
+        obj.insert(
+            "signatureChainId".to_string(),
+            serde_json::Value::String(format!(
+                "0x{:x}",
+                signing_chain.signature_chain_id()
+            )),
+        );
+        obj.insert(
+            "hyperliquidChain".to_string(),
+            serde_json::Value::String(signing_chain.get_hyperliquid_chain()),
+        );
+        if T::uses_time() && obj.contains_key("nonce") && !obj.contains_key("time") {
+            if let Some(nonce_value) = obj.remove("nonce") {
+                obj.insert("time".to_string(), nonce_value);
+            }
+        }
+    }
+
+    let mut action_obj = serde_json::Map::new();
+    action_obj.insert(
+        "type".to_string(),
+        serde_json::Value::String(T::action_type().to_string()),
+    );
+
+    if T::payload_key() == T::action_type() {
+        let payload = payload
+            .as_object()
+            .cloned()
+            .ok_or_else(|| "action payload must be object".to_string())?;
+        for (key, value) in payload {
+            action_obj.insert(key, value);
+        }
+    } else {
+        action_obj.insert(T::payload_key().to_string(), payload);
+    }
+
+    Ok(serde_json::Value::Object(action_obj))
+}
+
+struct SigSer<'a>(&'a Signature);
+
+impl<'a> Serialize for SigSer<'a> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
-        // Count fields: action, nonce, signature, plus optionals
-        let mut field_count = 3;
-        if self.vault_address.is_some() {
-            field_count += 1;
-        }
-        if self.expires_after.is_some() {
-            field_count += 1;
-        }
-
-        let mut map = serializer.serialize_map(Some(field_count))?;
-
-        // Serialize action with type tag
-        map.serialize_entry("action", &ActionWrapper::from(&self.action))?;
-
-        // Serialize nonce
-        map.serialize_entry("nonce", &self.nonce)?;
-
-        // Serialize signature
-        let sig_value = serialize_sig_value(&self.signature)
-            .map_err(|e| serde::ser::Error::custom(e.to_string()))?;
-        map.serialize_entry("signature", &sig_value)?;
-
-        // Serialize optional fields
-        if let Some(vault) = &self.vault_address {
-            map.serialize_entry("vaultAddress", &vault.to_string())?;
-        }
-        if let Some(expires) = &self.expires_after {
-            map.serialize_entry("expiresAfter", expires)?;
-        }
-
-        map.end()
+        serialize_sig(self.0, serializer)
     }
 }
 
-/// Helper for serializing action with type tag
-struct ActionWrapper<'a, T: Serialize> {
-    action_type: &'a str,
-    action: &'a T,
-}
+fn deserialize_action<'de, D, T>(deserializer: D) -> Result<T, D::Error>
+where
+    D: Deserializer<'de>,
+    T: Action + DeserializeOwned,
+{
+    let value = serde_json::Value::deserialize(deserializer)?;
+    let obj = value
+        .as_object()
+        .ok_or_else(|| serde::de::Error::custom("action must be object"))?;
 
-impl<'a, T: Action + Serialize> From<&'a T> for ActionWrapper<'a, T> {
-    fn from(action: &'a T) -> Self {
-        Self {
-            action_type: action.action_type(),
-            action: &action,
-        }
+    let action_type = obj
+        .get("type")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| serde::de::Error::custom("missing action type"))?;
+
+    if action_type != T::action_type() {
+        return Err(serde::de::Error::custom(format!(
+            "invalid action type: {}",
+            action_type
+        )));
     }
+    let action_payload = if T::payload_key() == T::action_type() {
+        let mut payload = obj.clone();
+        payload.remove("type");
+        if T::is_user_signed()
+            && T::uses_time()
+            && payload.contains_key("time")
+            && !payload.contains_key("nonce")
+        {
+            if let Some(time_value) = payload.get("time").cloned() {
+                payload.insert("nonce".to_string(), time_value);
+            }
+        }
+        serde_json::Value::Object(payload)
+    } else {
+        let payload = obj
+            .get(T::payload_key())
+            .ok_or_else(|| serde::de::Error::custom("missing action payload"))?;
+        if T::is_user_signed() {
+            let mut payload = payload
+                .as_object()
+                .cloned()
+                .ok_or_else(|| serde::de::Error::custom("action payload must be object"))?;
+            if T::uses_time() && payload.contains_key("time") && !payload.contains_key("nonce") {
+                if let Some(time_value) = payload.get("time").cloned() {
+                    payload.insert("nonce".to_string(), time_value);
+                }
+            }
+            serde_json::Value::Object(payload)
+        } else {
+            payload.clone()
+        }
+    };
+
+    serde_json::from_value(action_payload).map_err(serde::de::Error::custom)
 }
 
-impl<'a, T: Serialize> Serialize for ActionWrapper<'a, T> {
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[serde(bound(deserialize = "T: Action + DeserializeOwned"))]
+struct SignedActionHelper<T: Action> {
+    #[serde(deserialize_with = "deserialize_action")]
+    action: T,
+    nonce: u64,
+    #[serde(deserialize_with = "deserialize_sig")]
+    signature: Signature,
+    vault_address: Option<Address>,
+    expires_after: Option<u64>,
+}
+
+impl<T: Action + Serialize> Serialize for SignedAction<T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(2))?;
-        map.serialize_entry("type", self.action_type)?;
-        map.serialize_entry(self.action_type, self.action)?;
-        map.end()
+        let action_value = build_action_value(&self.action, self.signing_chain.as_ref())
+            .map_err(SerError::custom)?;
+        let mut state = serializer.serialize_struct("SignedAction", 5)?;
+        state.serialize_field("action", &action_value)?;
+        state.serialize_field("nonce", &self.nonce)?;
+        state.serialize_field("signature", &SigSer(&self.signature))?;
+        if let Some(vault_address) = &self.vault_address {
+            state.serialize_field("vaultAddress", vault_address)?;
+        }
+        if let Some(expires_after) = &self.expires_after {
+            state.serialize_field("expiresAfter", expires_after)?;
+        }
+        state.end()
+    }
+}
+
+impl<'de, T: Action + DeserializeOwned> Deserialize<'de> for SignedAction<T> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let helper = SignedActionHelper::deserialize(deserializer)?;
+        Ok(SignedAction {
+            action: helper.action,
+            nonce: helper.nonce,
+            signature: helper.signature,
+            vault_address: helper.vault_address,
+            expires_after: helper.expires_after,
+            signing_chain: None,
+        })
     }
 }
 
@@ -367,10 +510,6 @@ where
     state.serialize_field("s", &format!("0x{:064x}", sig.s()))?;
     state.serialize_field("v", &(27 + sig.v() as u64))?;
     state.end()
-}
-
-fn serialize_sig_value(sig: &Signature) -> Result<serde_json::Value, serde_json::Error> {
-    serialize_sig(sig, serde_json::value::Serializer)
 }
 
 pub fn deserialize_sig<'de, D>(deserializer: D) -> Result<Signature, D::Error>
@@ -415,58 +554,17 @@ where
     Ok(Signature::new(r, s, v != 0))
 }
 
+pub(crate) fn ser_lowercase<S>(address: &Address, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    serializer.serialize_str(&address.to_string().to_lowercase())
+}
+
 impl<T: Action + DeserializeOwned> SignedAction<T> {
     /// Deserialize from the exchange API format
     pub fn from_json(json: &str) -> Result<Self, Error> {
-        #[derive(Deserialize)]
-        #[serde(rename_all = "camelCase")]
-        struct RawSignedAction {
-            action: serde_json::Value,
-            nonce: u64,
-            #[serde(deserialize_with = "deserialize_sig")]
-            signature: Signature,
-            vault_address: Option<String>,
-            expires_after: Option<u64>,
-        }
-
-        let raw: RawSignedAction =
-            serde_json::from_str(json).map_err(|e| Error::JsonParse(e.to_string()))?;
-
-        // Extract action type and payload
-        let action_obj = raw
-            .action
-            .as_object()
-            .ok_or_else(|| Error::JsonParse("action must be object".to_string()))?;
-
-        let action_type = action_obj
-            .get("type")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| Error::JsonParse("missing action type".to_string()))?;
-
-        let action_payload = action_obj
-            .get(action_type)
-            .ok_or_else(|| Error::JsonParse("missing action payload".to_string()))?;
-
-        let action: T = serde_json::from_value(action_payload.clone())
-            .map_err(|e| Error::JsonParse(e.to_string()))?;
-
-        // Signature already deserialized via helper
-        let signature = raw.signature;
-
-        // Parse vault address
-        let vault_address = raw
-            .vault_address
-            .map(|s| s.parse::<Address>())
-            .transpose()
-            .map_err(|e| Error::GenericParse(e.to_string()))?;
-
-        Ok(SignedAction {
-            action,
-            nonce: raw.nonce,
-            vault_address,
-            expires_after: raw.expires_after,
-            signature,
-        })
+        serde_json::from_str(json).map_err(|e| Error::JsonParse(e.to_string()))
     }
 }
 
@@ -498,12 +596,33 @@ impl<T: Action + DeserializeOwned> SignedAction<T> {
 /// # Ok(())
 /// # }
 /// ```
+///
+/// # Example (perpDeploy setSubDeployers)
+/// ```no_run
+/// use std::str::FromStr;
+///
+/// use alloy::primitives::Address;
+/// use alloy::signers::local::PrivateKeySigner;
+/// use hl_rs::exchange::action_v2::{ExchangeActionV2Client, PerpDeployAction, SetSubDeployers, SubDeployer, Variant};
+/// use hl_rs::BaseUrl;
+///
+/// # async fn run() -> Result<(), hl_rs::Error> {
+/// let wallet = PrivateKeySigner::from_str("0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")?;
+/// let client = ExchangeActionV2Client::new(BaseUrl::Testnet).with_signer(wallet);
+///
+/// let sub_deployer = SubDeployer::enable(Address::ZERO, Variant::SetOracle);
+/// let action = PerpDeployAction::set_sub_deployers("km", vec![sub_deployer]);
+/// let _response = client.execute_action(action).await?;
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Debug, Clone)]
 pub struct ExchangeActionV2Client {
     base_url: BaseUrl,
     http_client: HttpClient,
     vault_address: Option<Address>,
     expires_after: Option<u64>,
+    signer_private_key: Option<PrivateKeySigner>,
 }
 
 impl ExchangeActionV2Client {
@@ -518,6 +637,7 @@ impl ExchangeActionV2Client {
             http_client,
             vault_address: None,
             expires_after: None,
+            signer_private_key: None,
         }
     }
 
@@ -528,6 +648,10 @@ impl ExchangeActionV2Client {
 
     pub fn with_expires_after(mut self, expires_after: u64) -> Self {
         self.expires_after = Some(expires_after);
+        self
+    }
+    pub fn with_signer(mut self, signer_private_key: PrivateKeySigner) -> Self {
+        self.signer_private_key = Some(signer_private_key);
         self
     }
 
@@ -548,7 +672,7 @@ impl ExchangeActionV2Client {
         self.prepare_action(action)?.sign(wallet)
     }
 
-    pub async fn send_action<A: Action + Serialize>(
+    pub async fn send_signed_action<A: Action + Serialize>(
         &self,
         signed_action: SignedAction<A>,
     ) -> Result<crate::exchange::responses::ExchangeResponse, Error> {
@@ -558,79 +682,16 @@ impl ExchangeActionV2Client {
         raw.into_result()
     }
 
-    pub async fn execute_action<A: Action + Serialize>(
+    pub async fn send_action<A: Action + Serialize>(
         &self,
         action: A,
-        wallet: &PrivateKeySigner,
     ) -> Result<crate::exchange::responses::ExchangeResponse, Error> {
         let prepared = self.prepare_action(action)?;
-        let signed = prepared.sign(wallet)?;
-        self.send_action(signed).await
+        let signed = prepared.sign(self.signer_private_key.as_ref().unwrap())?;
+        let ser_signed = serde_json::to_string_pretty(&signed).unwrap();
+        self.send_signed_action(signed).await
     }
 }
-
-// ============================================================================
-// Example Action Implementations
-// ============================================================================
-
-/// Enable big blocks mode for EVM user (L1 Action example)
-#[derive(Debug, Clone, Serialize, Deserialize, Builder, L1Action)]
-#[action(action_type = "evmUserModify")]
-#[serde(rename_all = "camelCase")]
-#[builder(setter(into))]
-pub struct EnableBigBlocks {
-    pub using_big_blocks: bool,
-    #[builder(default)]
-    pub nonce: Option<u64>,
-}
-
-impl EnableBigBlocks {
-    pub fn builder() -> EnableBigBlocksBuilder {
-        EnableBigBlocksBuilder::default()
-    }
-
-    pub fn enable() -> Self {
-        Self {
-            using_big_blocks: true,
-            nonce: None,
-        }
-    }
-
-    pub fn disable() -> Self {
-        Self {
-            using_big_blocks: false,
-            nonce: None,
-        }
-    }
-}
-
-/// USDC transfer between Hyperliquid accounts (UserSignedAction example)
-#[derive(Debug, Clone, Serialize, Deserialize, Builder, UserSignedAction)]
-#[action(types = "UsdSend(string hyperliquidChain,string destination,string amount,uint64 nonce)")]
-#[serde(rename_all = "camelCase")]
-#[builder(setter(into))]
-pub struct UsdSend {
-    pub destination: Address,
-    pub amount: Decimal,
-    #[builder(default)]
-    pub nonce: Option<u64>,
-}
-
-impl UsdSend {
-    pub fn builder() -> UsdSendBuilder {
-        UsdSendBuilder::default()
-    }
-
-    pub fn new(destination: Address, amount: Decimal) -> Self {
-        Self {
-            destination,
-            amount,
-            nonce: None,
-        }
-    }
-}
-
-// UserSignedAction + Action impls derived via macro.
 
 // ============================================================================
 // Helper Functions
@@ -668,6 +729,7 @@ pub fn prepare_action<A: Action>(
         nonce,
         vault_address,
         expires_after,
+        signing_chain: signing_chain.clone(),
         signing_hash,
     })
 }
@@ -675,12 +737,14 @@ pub fn prepare_action<A: Action>(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use super::perp_deploy_v2::SetOpenInterestCaps;
     use rust_decimal_macros::dec;
+    use serde_json::json;
 
     #[test]
     fn test_enable_big_blocks_serialization() {
-        let action = EnableBigBlocks::enable();
-        let signing_chain = SigningChain::Testnet;
+        let action = ToggleBigBlocks::enable();
+        let signing_chain = SigningChain::Mainnet;
 
         let prepared = prepare_action(action, &signing_chain, None, None).unwrap();
 
@@ -718,7 +782,75 @@ mod tests {
         let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
         let action_obj = parsed.get("action").unwrap();
         assert_eq!(action_obj.get("type").unwrap(), "usdSend");
-        assert!(action_obj.get("usdSend").is_some());
+        assert_eq!(action_obj.get("hyperliquidChain").unwrap(), "Testnet");
+        assert_eq!(action_obj.get("signatureChainId").unwrap(), "0x66eee");
+        assert!(action_obj.get("destination").is_some());
+        assert!(action_obj.get("amount").is_some());
+        assert!(action_obj.get("time").is_some());
+    }
+
+    #[test]
+    fn test_usd_send_signing_hardcoded() {
+        let wallet: PrivateKeySigner =
+            "e908f86dbb4d55ac876378565aafeabc187f6690f046459397b17d9b9a19688e"
+                .parse()
+                .unwrap();
+        let destination =
+            "0x0d1d9635d0640821d15e323ac8adadfa9c111414".parse().unwrap();
+        let action = UsdSend {
+            destination,
+            amount: dec!(1.0),
+            nonce: Some(1700000000000),
+        };
+        let signing_chain = SigningChain::Testnet;
+        let meta = SigningMeta {
+            nonce: 0,
+            vault_address: None,
+            expires_after: None,
+            signing_chain: &signing_chain,
+        };
+
+        let signing_hash = action.signing_hash(&meta).unwrap();
+        let signature = wallet.sign_hash_sync(&signing_hash).unwrap();
+        let actual_sig = signature.to_string();
+
+        let expected_sig = "0xd4ad4602ed7f14be3960934f4e2ed205f0f24539fc467a606999719a0f13c384521699107322321581048d35fed5d3272eb913377a42940299922c9a854fad281b";
+        assert_eq!(actual_sig, expected_sig);
+        assert_eq!(
+            format!("{:#x}", signature.r()).to_lowercase(),
+            "0xd4ad4602ed7f14be3960934f4e2ed205f0f24539fc467a606999719a0f13c384"
+        );
+        assert_eq!(
+            format!("{:#x}", signature.s()).to_lowercase(),
+            "0x521699107322321581048d35fed5d3272eb913377a42940299922c9a854fad28"
+        );
+        let v = if signature.v() { 28 } else { 27 };
+        assert_eq!(v, 27);
+    }
+
+    #[test]
+    fn test_perp_deploy_v2_set_open_interest_caps_serialization_matches_docs() {
+        let action = SetOpenInterestCaps {
+            caps: vec![("BTC".to_string(), 1_000_000), ("ETH".to_string(), 500_000)],
+            nonce: None,
+        };
+        let signing_chain = SigningChain::Testnet;
+        let prepared = prepare_action(action, &signing_chain, None, None).unwrap();
+        let sig = Signature::new(U256::from(3), U256::from(4), true);
+        let signed = prepared.with_signature(sig);
+
+        let parsed = serde_json::to_value(&signed).unwrap();
+        let action_obj = parsed.get("action").unwrap();
+        assert_eq!(
+            action_obj,
+            &json!({
+                "type": "perpDeploy",
+                "setOpenInterestCaps": [
+                    ["BTC", 1_000_000],
+                    ["ETH", 500_000]
+                ]
+            })
+        );
     }
 
     #[test]
@@ -750,28 +882,28 @@ mod tests {
         }
 
         // Test EnableBigBlocks
-        let enable_blocks = EnableBigBlocks::enable();
+        let enable_blocks = ToggleBigBlocks::enable();
         let prepared = prepare_action(enable_blocks, &signing_chain, None, None).unwrap();
         let sig = Signature::new(U256::from(3), U256::from(4), true);
         let signed = prepared.with_signature(sig);
 
         let kind = signed.extract_action_kind();
         match kind {
-            ActionKind::EnableBigBlocks(extracted) => {
+            ActionKind::ToggleBigBlocks(extracted) => {
                 assert!(extracted.using_big_blocks);
             }
             _ => panic!("Expected ActionKind::EnableBigBlocks"),
         }
 
         // Also test disable variant
-        let disable_blocks = EnableBigBlocks::disable();
+        let disable_blocks = ToggleBigBlocks::disable();
         let prepared = prepare_action(disable_blocks, &signing_chain, None, None).unwrap();
         let sig = Signature::new(U256::from(5), U256::from(6), false);
         let signed = prepared.with_signature(sig);
 
         let kind = signed.extract_action_kind();
         match kind {
-            ActionKind::EnableBigBlocks(extracted) => {
+            ActionKind::ToggleBigBlocks(extracted) => {
                 assert!(!extracted.using_big_blocks);
             }
             _ => panic!("Expected ActionKind::EnableBigBlocks"),
@@ -818,7 +950,7 @@ mod tests {
         assert_eq!(deserialized.expires_after, None);
 
         // Test EnableBigBlocks roundtrip
-        let enable_blocks = EnableBigBlocks::enable();
+        let enable_blocks = ToggleBigBlocks::enable();
         let prepared = prepare_action(enable_blocks, &signing_chain, None, None).unwrap();
         let nonce = prepared.nonce;
 
@@ -828,7 +960,7 @@ mod tests {
         let json = serde_json::to_string(&signed).unwrap();
         println!("Serialized EnableBigBlocks: {}", json);
 
-        let deserialized: SignedAction<EnableBigBlocks> = SignedAction::from_json(&json).unwrap();
+        let deserialized: SignedAction<ToggleBigBlocks> = SignedAction::from_json(&json).unwrap();
 
         assert!(deserialized.action.using_big_blocks);
         assert_eq!(deserialized.nonce, nonce);
@@ -853,6 +985,113 @@ mod tests {
         assert_eq!(deserialized.vault_address, Some(vault));
     }
 
+    //#[test]
+    //fn test_perp_deploy_register_asset_serialization_matches_docs() {
+    //    let action = PerpDeployAction::new(RegisterAsset {
+    //        max_gas: None,
+    //        asset_request: RegisterAssetRequest {
+    //            coin: "BTC".to_string(),
+    //            sz_decimals: 8,
+    //            oracle_px: "100".to_string(),
+    //            margin_table_id: 1,
+    //            only_isolated: true,
+    //        },
+    //        dex: "HL".to_string(),
+    //        schema: Some(PerpDexSchemaInput {
+    //            full_name: "Hyperliquid".to_string(),
+    //            collateral_token: 1,
+    //            oracle_updater: Some("0x0000000000000000000000000000000000000000".to_string()),
+    //        }),
+    //    });
+
+    //    let signing_chain = SigningChain::Testnet;
+    //    let prepared = prepare_action(action, &signing_chain, None, None).unwrap();
+    //    let sig = Signature::new(U256::from(1), U256::from(2), false);
+    //    let signed = prepared.with_signature(sig);
+
+    //    let parsed = serde_json::to_value(&signed).unwrap();
+    //    let action_obj = parsed.get("action").unwrap();
+    //    assert_eq!(
+    //        action_obj,
+    //        &json!({
+    //            "type": "perpDeploy",
+    //            "registerAsset": {
+    //                "maxGas": null,
+    //                "assetRequest": {
+    //                    "coin": "BTC",
+    //                    "szDecimals": 8,
+    //                    "oraclePx": "100",
+    //                    "marginTableId": 1,
+    //                    "onlyIsolated": true
+    //                },
+    //                "dex": "HL",
+    //                "schema": {
+    //                    "fullName": "Hyperliquid",
+    //                    "collateralToken": 1,
+    //                    "oracleUpdater": "0x0000000000000000000000000000000000000000"
+    //                }
+    //            }
+    //        })
+    //    );
+    //}
+
+    //#[test]
+    //fn test_perp_deploy_set_open_interest_caps_serialization_matches_docs() {
+    //    let action = PerpDeployAction::new(SetOpenInterestCaps {
+    //        caps: vec![("BTC".to_string(), 1_000_000), ("ETH".to_string(), 500_000)],
+    //    });
+
+    //    let signing_chain = SigningChain::Testnet;
+    //    let prepared = prepare_action(action, &signing_chain, None, None).unwrap();
+    //    let sig = Signature::new(U256::from(3), U256::from(4), true);
+    //    let signed = prepared.with_signature(sig);
+
+    //    let parsed = serde_json::to_value(&signed).unwrap();
+    //    let action_obj = parsed.get("action").unwrap();
+    //    assert_eq!(
+    //        action_obj,
+    //        &json!({
+    //            "type": "perpDeploy",
+    //            "setOpenInterestCaps": [
+    //                ["BTC", 1_000_000],
+    //                ["ETH", 500_000]
+    //            ]
+    //        })
+    //    );
+    //}
+
+    //#[test]
+    //fn test_perp_deploy_set_sub_deployers_serialization_matches_docs() {
+    //    let action = PerpDeployAction::set_sub_deployers(
+    //        "HL",
+    //        vec![SubDeployer {
+    //            variant: Variant::SetOracle,
+    //            user: Address::ZERO,
+    //            allowed: true,
+    //        }],
+    //    );
+
+    //    let signing_chain = SigningChain::Testnet;
+    //    let prepared = prepare_action(action, &signing_chain, None, None).unwrap();
+    //    let sig = Signature::new(U256::from(5), U256::from(6), false);
+    //    let signed = prepared.with_signature(sig);
+
+    //    let parsed = serde_json::to_value(&signed).unwrap();
+    //    let action_obj = parsed.get("action").unwrap();
+    //    assert_eq!(
+    //        action_obj,
+    //        &json!({
+    //            "type": "perpDeploy",
+    //            "setSubDeployers": {
+    //                "dex": "HL",
+    //                "subDeployers": [
+    //                    { "variant": "setOracle", "user": "0x0000000000000000000000000000000000000000", "allowed": true }
+    //                ]
+    //            }
+    //        })
+    //    );
+    //}
+
     #[test]
     fn test_multisig_signing_hash_consistent_l1() {
         let signing_chain = SigningChain::Testnet;
@@ -863,7 +1102,7 @@ mod tests {
             signing_chain: &signing_chain,
         };
 
-        let action = EnableBigBlocks::enable();
+        let action = ToggleBigBlocks::enable();
         let payload_multi_sig_user = Address::repeat_byte(0x11);
         let outer_signer = Address::repeat_byte(0x22);
 
@@ -903,5 +1142,10 @@ mod tests {
             .unwrap();
 
         assert_eq!(hash1, hash2);
+    }
+
+    #[test]
+    fn test_dec_ser() {
+        assert_eq!("10000.5".to_string(), dec!(10_000.5).to_string());
     }
 }

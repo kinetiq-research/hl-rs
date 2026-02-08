@@ -144,6 +144,7 @@ impl_action_kind![
     SetOracle,
     SetFeeRecipient,
     SetFundingMultipliers,
+    SetFundingInterestRates,
     SetMarginTableIds,
     InsertMarginTable,
     SetSubDeployers,

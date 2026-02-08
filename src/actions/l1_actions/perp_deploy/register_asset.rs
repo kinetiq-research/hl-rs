@@ -85,7 +85,7 @@ pub struct RegisterAsset {
     /// The DEX name to register the asset on.
     pub dex: String,
     /// Schema for new DEX creation (required when creating a new DEX).
-    #[serde(skip_serializing_if = "Option::is_none")]
+    /// Note: This field is always serialized (even as null) to match the Hyperliquid API.
     pub schema: Option<PerpDexSchema>,
     #[serde(skip_serializing)]
     pub nonce: Option<u64>,

@@ -40,3 +40,23 @@ hl-rs-derive = { path = "hl-rs-derive" }
 
 [workspace]
 members = ["hl-rs-derive"]
+
+[[example]]
+name = "perp-deploy-register-asset-existing-dex"
+path = "examples/perp-deploy-register-asset-existing-dex/src/main.rs"
+
+[[example]]
+name = "perp-deploy-enable-growth-mode"
+path = "examples/perp-deploy-enable-growth-mode/src/main.rs"
+
+[[example]]
+name = "perp-deploy-set-oi-caps"
+path = "examples/perp-deploy-set-oi-caps/src/main.rs"
+
+[[example]]
+name = "perp-deploy-set-funding-interest-rates"
+path = "examples/perp-deploy-set-funding-interest-rates/src/main.rs"
+
+[[example]]
+name = "perp-deploy-toggle-trading"
+path = "examples/perp-deploy-toggle-trading/src/main.rs"

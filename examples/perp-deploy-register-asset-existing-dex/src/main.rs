@@ -1,51 +1,33 @@
-use std::{collections::HashMap, str::FromStr};
+use std::str::FromStr;
 
 use alloy::signers::local::PrivateKeySigner;
-use hl_rs::{
-    exchange::types::{DexParams, RegisterAssetParams},
-    BaseUrl, ExchangeClient,
-};
+use hl_rs::{actions::RegisterAsset, AssetRequest, BaseUrl, ExchangeClient};
+use rust_decimal_macros::dec;
 
 #[tokio::main]
 async fn main() {
     dotenv::dotenv().unwrap();
 
-    let agent_private_key = std::env::var("AGENT_PRIVATE_KEY").unwrap();
-    let agent_wallet = PrivateKeySigner::from_str(&agent_private_key).unwrap();
+    let url = BaseUrl::Testnet;
+    let dex_name = "dddd";
 
-    println!(
-        "{}",
-        format!(
-            "Registering asset for agent with address {}",
-            agent_wallet.address()
-        )
-    );
+    let asset_request = AssetRequest {
+        coin: "TSLA".to_string(),
+        sz_decimals: 3,
+        oracle_px: dec!(0.1),
+        margin_table_id: 12,
+        only_isolated: false,
+    };
 
-    let exchange_client = ExchangeClient::builder(BaseUrl::Testnet)
-        .vault_address(agent_wallet.address())
-        .build()
-        .await
-        .unwrap();
+    let action = RegisterAsset::new(dex_name, asset_request).use_reserve_ticker();
 
-    let signed_action = exchange_client
-        .register_asset_on_existing_dex(
-            "EXAMPLE",
-            RegisterAssetParams {
-                max_gas: Some(1000000000000),
-                ticker: "EXAMPLE:ASSET".to_string(),
-                size_decimals: 2,
-                oracle_price: 10.0,
-                margin_table_id: 10,
-                only_isolated: false,
-            },
-        )
-        .unwrap()
-        .sign(&agent_wallet)
-        .unwrap();
+    let private_key = std::env::var("PRIVATE_KEY").unwrap();
+    let wallet = PrivateKeySigner::from_str(&private_key).unwrap();
+    println!("wallet: {}", wallet.address());
 
-    let payload = serde_json::to_string(&signed_action.action).unwrap();
+    let client = ExchangeClient::new(url).with_signer(wallet);
 
-    let register_asset_result = signed_action.send().await;
+    let register_asset_result = client.send_action(action).await.unwrap();
 
     println!("Register asset result: {:?}", register_asset_result);
 }

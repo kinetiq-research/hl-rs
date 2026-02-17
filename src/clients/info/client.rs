@@ -4,12 +4,12 @@ use serde::Deserialize;
 use crate::{
     error::ApiError,
     http::HttpClient,
-    info::{client_builder::InfoClientBuilder, types::InfoRequest},
-    prelude::{Error, Result},
-    types::{
-        Meta, PerpDeployAuctionStatus, PerpDex, PerpDexStatus, SpotMeta, UserRoleResponse,
-        UserStakingSummary,
+    info::{
+        client_builder::InfoClientBuilder,
+        types::{InfoRequest, UserRoleResponse},
     },
+    prelude::{Error, Result},
+    types::{Meta, PerpDeployAuctionStatus, PerpDex, PerpDexStatus, SpotMeta, UserStakingSummary},
     BaseUrl,
 };
 

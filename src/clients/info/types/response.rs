@@ -308,3 +308,15 @@ pub struct Leverage {
     pub value: u32,
     pub raw_usd: Option<String>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UserRoleResponse {
+    pub role: String,
+    #[serde(default)]
+    pub data: Option<UserRoleData>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UserRoleData {
+    pub user: Address,
+}

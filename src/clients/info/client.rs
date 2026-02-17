@@ -6,7 +6,10 @@ use crate::{
     http::HttpClient,
     info::{client_builder::InfoClientBuilder, types::InfoRequest},
     prelude::{Error, Result},
-    types::{Meta, PerpDeployAuctionStatus, PerpDex, PerpDexStatus, SpotMeta, UserStakingSummary},
+    types::{
+        Meta, PerpDeployAuctionStatus, PerpDex, PerpDexStatus, SpotMeta, UserRoleResponse,
+        UserStakingSummary,
+    },
     BaseUrl,
 };
 
@@ -81,6 +84,13 @@ impl InfoClient {
     pub async fn perp_deploy_auction_status(&self) -> Result<PerpDeployAuctionStatus> {
         self.send_request(InfoRequest::PerpDeployAuctionStatus)
             .await
+    }
+
+    pub async fn user_role(&self, user: &Address) -> Result<UserRoleResponse> {
+        self.send_request(InfoRequest::UserRole {
+            user: user.to_owned(),
+        })
+        .await
     }
 }
 

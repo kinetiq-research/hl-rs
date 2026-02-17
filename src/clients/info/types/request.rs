@@ -77,6 +77,9 @@ pub enum InfoRequest {
         dex: String,
     },
     PerpDeployAuctionStatus,
+    UserRole {
+        user: Address,
+    },
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]

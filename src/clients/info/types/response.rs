@@ -310,13 +310,26 @@ pub struct Leverage {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UserRoleResponse {
-    pub role: String,
-    #[serde(default)]
-    pub data: Option<UserRoleData>,
+#[serde(tag = "role", content = "data")]
+pub enum UserRoleResponse {
+    #[serde(rename = "user")]
+    User,
+    #[serde(rename = "agent")]
+    Agent(AgentRoleData),
+    #[serde(rename = "vault")]
+    Vault,
+    #[serde(rename = "subAccount")]
+    SubAccount(SubAccountRoleData),
+    #[serde(rename = "missing")]
+    Missing,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UserRoleData {
+pub struct AgentRoleData {
     pub user: Address,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SubAccountRoleData {
+    pub master: Address,
 }

@@ -8,18 +8,18 @@ use rust_decimal_macros::dec;
 async fn main() {
     dotenv::dotenv().unwrap();
 
-    let url = BaseUrl::Testnet;
-    let dex_name = "dddd";
+    let url = BaseUrl::Mainnet;
+    let dex_name = "km";
 
     let asset_request = AssetRequest {
-        coin: "TSLA".to_string(),
+        coin: "MU".to_string(),
         sz_decimals: 3,
-        oracle_px: dec!(0.1),
-        margin_table_id: 12,
-        only_isolated: false,
+        oracle_px: dec!(411.66),
+        margin_table_id: 10,
+        only_isolated: true,
     };
 
-    let action = RegisterAsset::new(dex_name, asset_request).use_reserve_ticker();
+    let action = RegisterAsset::new(dex_name, asset_request);
 
     let private_key = std::env::var("PRIVATE_KEY").unwrap();
     let wallet = PrivateKeySigner::from_str(&private_key).unwrap();

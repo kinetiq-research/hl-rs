@@ -23,8 +23,8 @@ async fn main() {
     );
 
     // Option 2: Set rate using target APY (more intuitive)
-    // This converts a 5% APY to the corresponding 8-hour rate
-    let action = SetFundingInterestRates::from_target_apy(dex_name, "TSLA", 5.0);
+    // This converts a 5% APY to the corresponding 8-hour rate, given a 1.0x funding scale.
+    let action = SetFundingInterestRates::from_target_apy(dex_name, "US500", 5.0);
 
     let private_key = std::env::var("PRIVATE_KEY").unwrap();
     let wallet = PrivateKeySigner::from_str(&private_key).unwrap();

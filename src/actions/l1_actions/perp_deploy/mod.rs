@@ -28,6 +28,14 @@ pub use set_sub_deployers::{SetSubDeployers, SubDeployer, SubDeployerVariant};
 mod set_growth_modes;
 pub use set_growth_modes::SetGrowthModes;
 
+mod set_margin_modes;
+pub use set_margin_modes::{MarginMode, SetMarginModes};
+
+mod set_perp_annotation;
+pub use set_perp_annotation::{
+    SetPerpAnnotation, SetPerpAnnotationBuildError, SetPerpAnnotationBuilder,
+};
+
 mod register_asset;
 pub use register_asset::{AssetRequest, PerpDexSchema, RegisterAsset};
 

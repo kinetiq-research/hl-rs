@@ -15,7 +15,7 @@ async fn main() {
     let action = SetGrowthModes::new(
         dex_name,
         vec![
-            ("TSLA", true), // Enable growth mode for TSLA
+            ("US500", true), // Enable growth mode for TSLA
         ],
     );
 

@@ -1,20 +1,17 @@
 use std::str::FromStr;
 
 use alloy::signers::local::PrivateKeySigner;
-use hl_rs::{BaseUrl, ExchangeClient, ToggleTrading};
+use hl_rs::{BaseUrl, ExchangeClient, MarginMode, SetMarginModes};
 
 #[tokio::main]
 async fn main() {
     dotenv::dotenv().unwrap();
 
     let url = BaseUrl::Testnet;
-    let dex_name = "dddd";
+    let dex_name = "slob";
 
-    // Resume (enable) trading for an asset
-    let action = ToggleTrading::resume(dex_name, "US500");
-
-    // To halt (disable) trading instead, use:
-    // let action = ToggleTrading::halt(dex_name, "TSLA");
+    // Set margin modes for assets (StrictIsolated or NoCross)
+    let action = SetMarginModes::new(dex_name, vec![("TEST2", MarginMode::Normal)]);
 
     let private_key = std::env::var("PRIVATE_KEY").unwrap();
     let wallet = PrivateKeySigner::from_str(&private_key).unwrap();
@@ -24,5 +21,5 @@ async fn main() {
 
     let result = client.send_action(action).await.unwrap();
 
-    println!("Toggle trading result: {:?}", result);
+    println!("Set margin modes result: {:?}", result);
 }

@@ -149,6 +149,8 @@ impl_action_kind![
     InsertMarginTable,
     SetSubDeployers,
     SetGrowthModes,
+    SetMarginModes,
+    SetPerpAnnotation,
     // Sum types: spotDeploy (action_type = "spotDeploy", payload_key varies)
     RegisterToken,
     Genesis,

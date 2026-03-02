@@ -56,7 +56,7 @@ impl SetFundingInterestRates {
     /// # Arguments
     /// * `dex_name` - Name of the perp DEX
     /// * `rates` - Vec of (asset, interest_rate) tuples.
-    ///             Interest rates must be in range [-0.01, 0.01].
+    ///   Interest rates must be in range [-0.01, 0.01].
     ///
     /// # Example
     ///

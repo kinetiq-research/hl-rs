@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use alloy::signers::local::PrivateKeySigner;
-use hl_rs::{BaseUrl, ExchangeClient, ToggleTrading};
+use hl_rs::{BaseUrl, ExchangeClient, SetMarginTableIds};
 
 #[tokio::main]
 async fn main() {
@@ -9,12 +9,12 @@ async fn main() {
 
     let url = BaseUrl::Testnet;
     let dex_name = "dddd";
+    let coin = "BOOF";
+    let margin_table_id = 20; //20x max leverage cap
 
-    // Resume (enable) trading for an asset
-    let action = ToggleTrading::resume(dex_name, "US500");
-
-    // To halt (disable) trading instead, use:
-    // let action = ToggleTrading::halt(dex_name, "TSLA");
+    // Set margin table IDs for assets
+    // IDs reference margin tables previously inserted via InsertMarginTable
+    let action = SetMarginTableIds::new(dex_name, vec![(coin, margin_table_id)]);
 
     let private_key = std::env::var("PRIVATE_KEY").unwrap();
     let wallet = PrivateKeySigner::from_str(&private_key).unwrap();
@@ -24,5 +24,5 @@ async fn main() {
 
     let result = client.send_action(action).await.unwrap();
 
-    println!("Toggle trading result: {:?}", result);
+    println!("Set margin table IDs result: {:?}", result);
 }

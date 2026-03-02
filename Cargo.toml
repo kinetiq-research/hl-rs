@@ -67,6 +67,9 @@ path = "examples/perp_deploy/toggle_trading.rs"
 [[example]]
 name = "set_margin_table_ids"
 path = "examples/perp_deploy/set_margin_table_ids.rs"
+[[example]]
+name = "set_margin_modes"
+path = "examples/perp_deploy/set_margin_modes.rs"
 
 [workspace]
 members = ["hl-rs-derive"]

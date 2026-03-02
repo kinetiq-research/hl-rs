@@ -159,6 +159,10 @@ pub enum SubDeployerVariant {
     InsertMarginTable,
     /// Permission to set growth modes for assets.
     SetGrowthModes,
+    /// Permission to set margin modes for assets.
+    SetMarginModes,
+    /// Permission to set the category and description for assets.
+    SetPerpAnnotation,
 }
 
 impl SetSubDeployers {

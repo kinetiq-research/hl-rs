@@ -13,8 +13,14 @@ pub struct ModifyWire {
 }
 
 /// Batch modify orders action.
+///
+/// JSON and msgpack signing must match the official Python SDK:
+/// `{ "type": "batchModify", "modifies": [ { "oid", "order" }, ... ] }`.
+///
+/// `PAYLOAD_KEY` must **not** be `"modifies"`: the wire struct already has a `modifies` field. Using
+/// a different payload key nests the payload as `"modifies": { "modifies": [...] }`, which Hyperliquid
+/// rejects with HTTP 422 (`Failed to deserialize the JSON body into the target type`).
 #[derive(Serialize, Deserialize, Debug, Clone, L1Action)]
-#[action(action_type = "batchModify", payload_key = "modifies")]
 pub struct BatchModify {
     /// Modify requests
     pub modifies: Vec<ModifyWire>,

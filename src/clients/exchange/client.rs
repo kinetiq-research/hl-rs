@@ -129,7 +129,8 @@ impl ExchangeClient {
         action: A,
     ) -> Result<ExchangeResponse, Error> {
         let prepared = self.prepare_action(action)?;
-        let signed = prepared.sign(self.signer_private_key.as_ref().unwrap())?;
+        let signer = self.signer_private_key.as_ref().ok_or(Error::SignerNotSet)?;
+        let signed = prepared.sign(signer)?;
         self.send_signed_action(signed).await
     }
 }

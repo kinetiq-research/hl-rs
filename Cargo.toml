@@ -10,10 +10,14 @@ documentation = "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/
 keywords = ["hyperliquid", "hl", "sdk", "rust"]
 categories = ["api-bindings"]
 
+[workspace]
+members = ["hl-rs-derive"]
+
 [features]
 default = []
 custom-signing-chain = []
 integration-tests = []
+ws = ["dep:tokio-tungstenite", "dep:futures-util"]
 
 [dependencies]
 alloy = "1.1.1"
@@ -25,12 +29,12 @@ error-stack = "0.6.0"
 k256 = "0.13.4"
 lazy_static = "1.5.0"
 log = "0.4.28"
-reqwest = "0.12.24"
+reqwest = { version = "0.12.24", features = ["json"] }
 rmp-serde = "1.3.0"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
 thiserror = "2.0.17"
-tokio = { version = "1.48.0", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "1.48.0", features = ["macros", "net", "rt-multi-thread"] }
 tracing = "0.1.43"
 uuid = { version = "1.18.1", features = ["v4"] }
 derive_builder = "0.20.2"
@@ -38,8 +42,12 @@ rust_decimal = { version = "1.36.0", features = ["serde"] }
 rust_decimal_macros = "1.36.0"
 hl-rs-derive = { path = "hl-rs-derive" }
 
-# Perp / spot deploy examples live in subfolders; paths are explicit because Cargo
-# only auto-discovers examples/*.rs at the top level.
+# WebSocket (optional)
+tokio-tungstenite = { version = "0.24", features = ["rustls-tls-webpki-roots"], optional = true }
+futures-util = { version = "0.3", optional = true }
+
+# Perp deploy examples live in examples/perp_deploy/; paths are explicit
+# because Cargo only auto-discovers examples/*.rs at the top level.
 [[example]]
 name = "enable_growth_mode"
 path = "examples/perp_deploy/enable_growth_mode.rs"
@@ -116,6 +124,19 @@ path = "examples/spot_deploy/enable_quote_token.rs"
 [[example]]
 name = "spot_freeze_user"
 path = "examples/spot_deploy/freeze_user.rs"
+[[example]]
+name = "ws_trades"
+path = "examples/ws_trades.rs"
+required-features = ["ws"]
 
-[workspace]
-members = ["hl-rs-derive"]
+# Not under tests/*.rs so default `cargo test` without `ws` does not compile WS-only imports.
+[[test]]
+name = "ws_active_asset_ctx"
+path = "tests/integration/ws_active_asset_ctx.rs"
+required-features = ["ws"]
+
+[[test]]
+name = "ws_l2_book_snapshot"
+path = "tests/integration/ws_l2_book_snapshot.rs"
+required-features = ["ws"]
+

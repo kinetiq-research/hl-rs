@@ -69,7 +69,7 @@ impl HttpClient {
                 target: "hl_rs::http_client",
                 url_path,
                 has_register_asset = action.get("registerAsset").is_some(),
-                action_type = action.get("type").and_then(Value::as_str),
+                action_type = action.get("type").and_then(|value| value.as_str()),
                 action = ?action,
                 "Outbound exchange action payload"
             );

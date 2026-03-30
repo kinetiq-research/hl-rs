@@ -11,8 +11,9 @@ pub struct CancelByCloidWire {
 }
 
 /// Batch cancel orders by client order ID action.
+///
+/// Flattened like Python: `{ "type": "cancelByCloid", "cancels": [ ... ] }` (no double `cancels`).
 #[derive(Serialize, Deserialize, Debug, Clone, L1Action)]
-#[action(payload_key = "cancels")]
 pub struct CancelByCloid {
     /// Cancel requests
     pub cancels: Vec<CancelByCloidWire>,

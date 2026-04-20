@@ -128,6 +128,7 @@ impl_action_kind![
     SubAccountSpotTransfer,
     VaultTransfer,
     AgentEnableDexAbstraction,
+    FinalizeEvmContract,
     // Trading actions
     UpdateLeverage,
     UpdateIsolatedMargin,
@@ -158,4 +159,9 @@ impl_action_kind![
     RegisterSpot,
     RegisterHyperliquidity,
     SetDeployerFees,
+    RequestEvmContract,
+    EnableFreezePrivilege,
+    FreezeUser,
+    RevokeFreezePrivilege,
+    EnableQuoteToken,
 ];

@@ -18,11 +18,6 @@ async fn main() {
         .description("Xiaomi Corporation. Chinese consumer electronics and smart device manufacturer engaged in the design, development, and sale of smartphones, IoT devices, and lifestyle products, underpinned by an internet services ecosystem spanning advertising, fintech, and smart home platforms. Primary oracle pricing reference: 1810.HK")
         .build()
         .unwrap();
-    //    "km",
-    //    "USTECH",
-    //    "indices",
-    //    "Provides exposure to 100 of the largest non-financial companies listed on U.S. exchanges, with a concentration in technology, communications, and high-growth sectors. Please refer to km docs for further info on oracle reference pricing sources and design.",
-    //).display_name(Some("USTECH100"));
 
     let private_key = std::env::var("PRIVATE_KEY").unwrap();
     let wallet = PrivateKeySigner::from_str(&private_key).unwrap();

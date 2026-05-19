@@ -38,8 +38,8 @@ rust_decimal = { version = "1.36.0", features = ["serde"] }
 rust_decimal_macros = "1.36.0"
 hl-rs-derive = { path = "hl-rs-derive" }
 
-# Perp deploy examples live in examples/perp_deploy/; paths are explicit
-# because Cargo only auto-discovers examples/*.rs at the top level.
+# Perp / spot deploy examples live in subfolders; paths are explicit because Cargo
+# only auto-discovers examples/*.rs at the top level.
 [[example]]
 name = "enable_growth_mode"
 path = "examples/perp_deploy/enable_growth_mode.rs"
@@ -73,6 +73,43 @@ path = "examples/perp_deploy/set_margin_modes.rs"
 [[example]]
 name = "set_perp_annotation"
 path = "examples/perp_deploy/set_perp_annotation.rs"
+
+[[example]]
+name = "spot_register_token"
+path = "examples/spot_deploy/register_token.rs"
+[[example]]
+name = "spot_genesis"
+path = "examples/spot_deploy/genesis.rs"
+[[example]]
+name = "spot_user_genesis"
+path = "examples/spot_deploy/user_genesis.rs"
+[[example]]
+name = "spot_register_spot"
+path = "examples/spot_deploy/register_spot.rs"
+[[example]]
+name = "spot_register_hyperliquidity"
+path = "examples/spot_deploy/register_hyperliquidity.rs"
+[[example]]
+name = "spot_set_deployer_fees"
+path = "examples/spot_deploy/set_deployer_fees.rs"
+[[example]]
+name = "spot_request_evm_contract"
+path = "examples/spot_deploy/request_evm_contract.rs"
+[[example]]
+name = "spot_finalize_evm_contract"
+path = "examples/spot_deploy/finalize_evm_contract.rs"
+[[example]]
+name = "spot_enable_freeze_privilege"
+path = "examples/spot_deploy/enable_freeze_privilege.rs"
+[[example]]
+name = "spot_revoke_freeze_privilege"
+path = "examples/spot_deploy/revoke_freeze_privilege.rs"
+[[example]]
+name = "spot_enable_quote_token"
+path = "examples/spot_deploy/enable_quote_token.rs"
+[[example]]
+name = "spot_freeze_user"
+path = "examples/spot_deploy/freeze_user.rs"
 
 [workspace]
 members = ["hl-rs-derive"]

@@ -35,6 +35,7 @@ impl std::error::Error for SetPerpAnnotationBuildError {}
 /// assert_eq!(action.coin, "mydex:BTC");
 /// assert_eq!(action.category, "Crypto");
 /// assert_eq!(action.description, "Bitcoin perpetual");
+/// assert!(action.keywords.is_empty());
 /// ```
 ///
 /// Using the builder:
@@ -45,9 +46,13 @@ impl std::error::Error for SetPerpAnnotationBuildError {}
 /// let action = SetPerpAnnotation::builder("mydex", "BTC")
 ///     .category("Crypto")
 ///     .description("Bitcoin perpetual")
+///     .display_name("BTC Perp")
+///     .keywords(["perp", "crypto"])
 ///     .build()
 ///     .unwrap();
 /// assert_eq!(action.coin, "mydex:BTC");
+/// assert_eq!(action.display_name.as_deref(), Some("BTC Perp"));
+/// assert_eq!(action.keywords, vec!["perp".to_string(), "crypto".to_string()]);
 /// ```
 #[derive(Serialize, Deserialize, Debug, Clone, L1Action)]
 #[action(action_type = "perpDeploy", payload_key = "setPerpAnnotation")]
@@ -59,13 +64,19 @@ pub struct SetPerpAnnotation {
     pub category: String,
     /// Description text for the asset.
     pub description: String,
+    /// Optional display name for the asset ([HIP-3 docs](https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/hip-3-deployer-actions)).
+    pub display_name: Option<String>,
+    /// Search / filter keywords for the asset ([HIP-3 docs](https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/hip-3-deployer-actions)).
+    #[serde(default)]
+    pub keywords: Vec<String>,
     #[serde(skip_serializing)]
     pub nonce: Option<u64>,
 }
 
 /// Builder for [`SetPerpAnnotation`].
 ///
-/// All setter methods take `impl Into<String>`. [`build`](SetPerpAnnotationBuilder::build) returns
+/// String setters take `impl Into<String>`; use [`keywords`](SetPerpAnnotationBuilder::keywords) for
+/// the keyword list. [`build`](SetPerpAnnotationBuilder::build) returns
 /// an error if `dex` or `coin` were not set.
 ///
 /// # Example
@@ -76,6 +87,8 @@ pub struct SetPerpAnnotation {
 /// let action = SetPerpAnnotation::builder("mydex", "ETH")
 ///     .category("Crypto")
 ///     .description("Ethereum perpetual")
+///     .display_name("ETH")
+///     .keywords(Vec::<String>::new())
 ///     .build()
 ///     .unwrap();
 /// ```
@@ -97,6 +110,8 @@ pub struct SetPerpAnnotationBuilder {
     coin: Option<String>,
     category: String,
     description: String,
+    display_name: Option<String>,
+    keywords: Vec<String>,
 }
 
 impl SetPerpAnnotationBuilder {
@@ -107,6 +122,8 @@ impl SetPerpAnnotationBuilder {
             coin: Some(coin.into()),
             category: String::new(),
             description: String::new(),
+            display_name: None,
+            keywords: Vec::new(),
         }
     }
 
@@ -134,6 +151,24 @@ impl SetPerpAnnotationBuilder {
         self
     }
 
+    /// Set the display name (optional).
+    pub fn display_name(mut self, display_name: impl Into<String>) -> Self {
+        self.display_name = Some(display_name.into());
+        self
+    }
+
+    /// Set the full keyword list (replaces any previous keywords).
+    pub fn keywords(mut self, keywords: impl IntoIterator<Item = impl Into<String>>) -> Self {
+        self.keywords = keywords.into_iter().map(Into::into).collect();
+        self
+    }
+
+    /// Append a single keyword.
+    pub fn push_keyword(mut self, keyword: impl Into<String>) -> Self {
+        self.keywords.push(keyword.into());
+        self
+    }
+
     /// Build the action. Returns an error if `dex` or `coin` was not set.
     pub fn build(self) -> Result<SetPerpAnnotation, SetPerpAnnotationBuildError> {
         let dex = self.dex.ok_or(SetPerpAnnotationBuildError::MissingDex)?;
@@ -142,6 +177,8 @@ impl SetPerpAnnotationBuilder {
             coin: format!("{}:{}", dex.to_lowercase(), coin.to_uppercase()),
             category: self.category,
             description: self.description,
+            display_name: self.display_name,
+            keywords: self.keywords,
             nonce: None,
         })
     }
@@ -179,6 +216,8 @@ impl SetPerpAnnotation {
             ),
             category: category.into(),
             description: description.into(),
+            display_name: None,
+            keywords: Vec::new(),
             nonce: None,
         }
     }

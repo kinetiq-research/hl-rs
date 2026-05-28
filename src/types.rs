@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use alloy::primitives::B128;
 use serde::Deserialize;
 
-use crate::{MAINNET_API_URL, TESTNET_API_URL};
+use crate::{MAINNET_API_URL, MAINNET_WS_URL, TESTNET_API_URL, TESTNET_WS_URL};
 
 #[derive(Debug, Clone)]
 pub enum BaseUrl {
@@ -66,6 +66,21 @@ impl BaseUrl {
             BaseUrl::Custom { url, .. } => url.to_owned(),
             BaseUrl::Mainnet => MAINNET_API_URL.to_string(),
             BaseUrl::Testnet => TESTNET_API_URL.to_string(),
+        }
+    }
+
+    /// Get the WebSocket URL (https → wss, append /ws).
+    pub fn ws_url(&self) -> String {
+        match self {
+            BaseUrl::Custom { url, .. } => {
+                url.replace("https://", "wss://")
+                    .replace("http://", "ws://")
+                    .trim_end_matches('/')
+                    .to_string()
+                    + "/ws"
+            }
+            BaseUrl::Mainnet => MAINNET_WS_URL.to_string(),
+            BaseUrl::Testnet => TESTNET_WS_URL.to_string(),
         }
     }
 

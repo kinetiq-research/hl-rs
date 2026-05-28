@@ -190,11 +190,11 @@ pub enum Grouping {
 }
 
 /// Batch create orders action.
-/// Uses payload_key = "order" (same as action_type) so the action serializes flat:
-/// {"type": "order", "orders": [...], "grouping": "na"} per HL API spec.
+/// Uses payload_key = "order" (same as action_type). L1 signing prepends `"type": "order"`
+/// via [`L1ActionWrapper`](crate::actions::L1ActionWrapper); this impl must omit `type`
+/// to avoid duplicate map keys in msgpack (must match Python `msgpack.packb(action)`).
 ///
-/// Custom Serialize produces the full wire format with canonical key order
-/// (type, orders, grouping, builder) to match Python SDK msgpack hashing.
+/// Key order for hashing: type (from wrapper), orders, grouping, builder.
 #[derive(Deserialize, Debug, Clone, L1Action)]
 #[action(action_type = "order", payload_key = "order")]
 #[serde(rename_all = "camelCase")]
@@ -216,9 +216,8 @@ impl Serialize for BatchOrder {
         S: Serializer,
     {
         use serde::ser::SerializeMap;
-        let len = 3 + self.builder.is_some() as usize;
+        let len = 2 + self.builder.is_some() as usize;
         let mut map = serializer.serialize_map(Some(len))?;
-        map.serialize_entry("type", "order")?;
         map.serialize_entry("orders", &self.orders)?;
         map.serialize_entry("grouping", &self.grouping)?;
         if let Some(ref b) = self.builder {

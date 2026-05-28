@@ -15,6 +15,17 @@ use crate::{
     SigningChain,
 };
 
+/// Body hashed for L1 `connectionId` when `PAYLOAD_KEY == ACTION_TYPE` (Python `msgpack.packb(action)`).
+/// The official Python SDK always includes a top-level `"type"` key; derive-only action structs omit it
+/// and must not duplicate `type` in their own `Serialize` impl (see `BatchOrder`).
+#[derive(Serialize)]
+struct L1FlatSigningBody<'a, T: Serialize> {
+    #[serde(rename = "type")]
+    action_type: &'static str,
+    #[serde(flatten)]
+    body: &'a T,
+}
+
 /// Compute the L1 action hash (MessagePack + metadata)
 pub(crate) struct L1ActionWrapper<'a, T: Action + Serialize> {
     pub action: &'a T,
@@ -35,8 +46,12 @@ impl<'a, T: Action + Serialize> Serialize for L1ActionWrapper<'a, T> {
             return map.end();
         }
 
-        // Flattened payload: action produces full wire format {type, ...fields} with canonical key order
-        self.action.serialize(serializer)
+        // Flattened: match Python — `action` dict includes `"type"` then payload fields (camelCase).
+        L1FlatSigningBody {
+            action_type: T::ACTION_TYPE,
+            body: self.action,
+        }
+        .serialize(serializer)
     }
 }
 
@@ -355,9 +370,70 @@ mod tests {
 
     use super::*;
     use crate::actions::{
-        ActionKind, PreparedAction, SetOpenInterestCaps, SignedActionKind, ToggleBigBlocks, UsdSend,
+        ActionKind, BatchCancel, BatchModify, CancelByCloid, CancelWire,
+        LimitOrderType, OrderType, OrderWire, PreparedAction, SetOpenInterestCaps, SignedActionKind,
+        Tif, ToggleBigBlocks, UsdSend,
     };
     use crate::SigningChain;
+
+    /// Hyperliquid Python SDK (`bulk_modify_orders_new`) builds:
+    /// `{ "type": "batchModify", "modifies": [ { "oid", "order" }, ... ] }`.
+    /// A wrong `payload_key` double-nests `modifies` and the API returns HTTP 422.
+    #[test]
+    fn batch_modify_action_shape_matches_python_sdk() {
+        let order = OrderWire {
+            asset: 4,
+            is_buy: true,
+            limit_px: dec!(100.0),
+            size: dec!(0.01),
+            reduce_only: false,
+            order_type: OrderType::Limit(LimitOrderType { tif: Tif::Gtc }),
+            client_order_id: None,
+        };
+        let action = BatchModify::single(91_490_942, order);
+        let v = build_action_value(&action, None).expect("build_action_value");
+        let obj = v.as_object().expect("action object");
+        assert_eq!(obj.get("type").and_then(|x| x.as_str()), Some("batchModify"));
+        let modifies = obj.get("modifies").expect("top-level modifies");
+        assert!(
+            modifies.is_array(),
+            "expected `modifies` to be a JSON array (flat shape); got {modifies:?}"
+        );
+        let arr = modifies.as_array().unwrap();
+        assert_eq!(arr.len(), 1);
+        assert_eq!(arr[0].get("oid"), Some(&json!(91_490_942u64)));
+        assert!(arr[0].get("order").is_some());
+    }
+
+    #[test]
+    fn batch_cancel_action_shape_matches_python_sdk() {
+        let action = BatchCancel::new(vec![CancelWire { a: 110_000, o: 12_345 }]);
+        let v = build_action_value(&action, None).expect("build_action_value");
+        let obj = v.as_object().expect("action object");
+        assert_eq!(obj.get("type").and_then(|x| x.as_str()), Some("cancel"));
+        let cancels = obj.get("cancels").expect("top-level cancels");
+        assert!(
+            cancels.is_array(),
+            "expected `cancels` to be a JSON array; got {cancels:?}"
+        );
+        let arr = cancels.as_array().unwrap();
+        assert_eq!(arr.len(), 1);
+        assert_eq!(arr[0].get("a"), Some(&json!(110_000u32)));
+        assert_eq!(arr[0].get("o"), Some(&json!(12_345u64)));
+    }
+
+    #[test]
+    fn cancel_by_cloid_action_shape_matches_python_sdk() {
+        let action = CancelByCloid::single(110_000, "0x0123456789abcdef0123456789abcdef");
+        let v = build_action_value(&action, None).expect("build_action_value");
+        let obj = v.as_object().expect("action object");
+        assert_eq!(
+            obj.get("type").and_then(|x| x.as_str()),
+            Some("cancelByCloid")
+        );
+        let cancels = obj.get("cancels").expect("top-level cancels");
+        assert!(cancels.is_array(), "expected array; got {cancels:?}");
+    }
 
     #[test]
     fn test_enable_big_blocks_serialization() {
@@ -567,6 +643,24 @@ mod tests {
     #[test]
     fn test_dec_ser() {
         assert_eq!("10000.5".to_string(), dec!(10_000.5).to_string());
+    }
+
+    /// Reference: `hyperliquid.utils.signing.action_hash` uses `msgpack.packb(action)` on the full dict
+    /// including `"type"`. Generated via CPython `msgpack.packb` on the official SDK action shape.
+    #[test]
+    fn l1_flat_update_leverage_msgpack_matches_python_reference() {
+        use crate::actions::l1_actions::UpdateLeverage;
+
+        let action = UpdateLeverage::isolated(15, 3);
+        let wrapper = super::L1ActionWrapper { action: &action };
+        let got = rmp_serde::to_vec_named(&wrapper).unwrap();
+        const EXPECTED: &[u8] = &[
+            0x84, 0xa4, 0x74, 0x79, 0x70, 0x65, 0xae, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4c, 0x65,
+            0x76, 0x65, 0x72, 0x61, 0x67, 0x65, 0xa5, 0x61, 0x73, 0x73, 0x65, 0x74, 0x0f, 0xa7, 0x69,
+            0x73, 0x43, 0x72, 0x6f, 0x73, 0x73, 0xc2, 0xa8, 0x6c, 0x65, 0x76, 0x65, 0x72, 0x61, 0x67,
+            0x65, 0x03,
+        ];
+        assert_eq!(got.as_slice(), EXPECTED);
     }
 
     #[test]

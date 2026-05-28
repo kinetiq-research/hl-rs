@@ -11,8 +11,12 @@ pub struct CancelWire {
 }
 
 /// Batch cancel orders action.
+///
+/// Wire shape must match Python: `{ "type": "cancel", "cancels": [ { "a", "o" }, ... ] }`.
+/// - `payload_key = "cancels"` incorrectly nests as `"cancels": { "cancels": [...] }` → HTTP 422.
+/// - Default derive uses `type: "batchCancel"`; override with `action_type = "cancel"`.
 #[derive(Serialize, Deserialize, Debug, Clone, L1Action)]
-#[action(action_type = "cancel", payload_key = "cancels")]
+#[action(action_type = "cancel")]
 pub struct BatchCancel {
     /// Cancel requests
     pub cancels: Vec<CancelWire>,

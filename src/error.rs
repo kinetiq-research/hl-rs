@@ -5,6 +5,9 @@ pub enum Error {
     #[error(transparent)]
     Api(#[from] ApiError),
 
+    #[error("Signer not set. Call `ExchangeClientV2::with_signer(...)` before sending actions.")]
+    SignerNotSet,
+
     #[error(
         "Client error: status code: {status_code}, error code: {error_code:?}, error message: {error_message}, error data: {error_data:?}"
     )]
@@ -36,6 +39,15 @@ pub enum Error {
         rust_type: &'static str,
         abi_type: String,
     },
+    /// WebSocket connection failed.
+    #[error("WebSocket connect error: {0}")]
+    WsConnect(String),
+    /// WebSocket send failed.
+    #[error("WebSocket send error: {0}")]
+    WsSend(String),
+    /// WebSocket receive failed.
+    #[error("WebSocket receive error: {0}")]
+    WsReceive(String),
 }
 
 #[derive(Error, Debug, Clone)]

@@ -71,13 +71,13 @@ async fn test_update_isolated_margin_remove() {
 
 fn make_limit_order(asset: u32, is_buy: bool, price: &str, size: &str) -> OrderWire {
     OrderWire {
-        a: asset,
-        b: is_buy,
-        p: price.parse().unwrap(),
-        s: size.parse().unwrap(),
-        r: false,
-        t: OrderType::Limit(LimitOrderType { tif: Tif::Gtc }),
-        c: None,
+        asset,
+        is_buy,
+        limit_px: price.parse().unwrap(),
+        size: size.parse().unwrap(),
+        reduce_only: false,
+        order_type: OrderType::Limit(LimitOrderType { tif: Tif::Gtc }),
+        client_order_id: None,
     }
 }
 
@@ -90,17 +90,17 @@ fn make_trigger_order(
     tpsl: TpSl,
 ) -> OrderWire {
     OrderWire {
-        a: asset,
-        b: is_buy,
-        p: price.parse().unwrap(),
-        s: size.parse().unwrap(),
-        r: true, // Trigger orders are usually reduce-only
-        t: OrderType::Trigger(TriggerOrderType {
+        asset,
+        is_buy,
+        limit_px: price.parse().unwrap(),
+        size: size.parse().unwrap(),
+        reduce_only: true, // Trigger orders are usually reduce-only
+        order_type: OrderType::Trigger(TriggerOrderType {
             trigger_px: trigger_px.parse().unwrap(),
             is_market: true,
             tpsl,
         }),
-        c: None,
+        client_order_id: None,
     }
 }
 
@@ -131,7 +131,7 @@ async fn test_batch_order_multiple_limits() {
 #[tokio::test]
 async fn test_batch_order_with_cloid() {
     let mut order = make_limit_order(TEST_ASSET, true, "100.0", "0.01");
-    order.c = Some("test-cloid-12345".to_string());
+    order.client_order_id = Some("test-cloid-12345".to_string());
 
     let action = BatchOrder::new(vec![order]);
     log_action("BatchOrder (with cloid)", &action);
@@ -143,13 +143,13 @@ async fn test_batch_order_with_cloid() {
 #[tokio::test]
 async fn test_batch_order_ioc() {
     let order = OrderWire {
-        a: TEST_ASSET,
-        b: true,
-        p: "100.0".to_string(),
-        s: "0.01".to_string(),
-        r: false,
-        t: OrderType::Limit(LimitOrderType { tif: Tif::Ioc }),
-        c: None,
+        asset: TEST_ASSET,
+        is_buy: true,
+        limit_px: "100.0".parse().unwrap(),
+        size: "0.01".parse().unwrap(),
+        reduce_only: false,
+        order_type: OrderType::Limit(LimitOrderType { tif: Tif::Ioc }),
+        client_order_id: None,
     };
     let action = BatchOrder::new(vec![order]);
     log_action("BatchOrder (IOC)", &action);

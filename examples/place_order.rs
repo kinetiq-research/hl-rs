@@ -18,13 +18,13 @@ async fn main() {
     let asset: u32 = 10_000 + 1338; // USDH/USDC Spot Testnet
 
     let order = OrderWire {
-        a: asset,
-        b: false,      // buy
-        p: dec!(1),    // limit price
-        s: dec!(11.0), // size
-        r: false,      // not reduce-only
-        t: OrderType::Limit(LimitOrderType { tif: Tif::Gtc }),
-        c: None,
+        asset,
+        is_buy: false,
+        limit_px: dec!(1),
+        size: dec!(11.0),
+        reduce_only: false,
+        order_type: OrderType::Limit(LimitOrderType { tif: Tif::Gtc }),
+        client_order_id: None,
     };
 
     let action = BatchOrder::new(vec![order]);

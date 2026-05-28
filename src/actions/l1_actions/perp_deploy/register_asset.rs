@@ -2,7 +2,7 @@ use crate::actions::serialization::ser_lowercase;
 use alloy::primitives::Address;
 use hl_rs_derive::L1Action;
 use rust_decimal::Decimal;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
 
 /// Register a new asset on a perp DEX.
 ///
@@ -78,7 +78,6 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 pub struct RegisterAsset {
     /// Maximum gas for the operation (optional).
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub max_gas: Option<u64>,
     /// The asset registration request details.
     pub asset_request: AssetRequest,
@@ -159,12 +158,10 @@ pub struct PerpDexSchema {
     /// Full display name of the DEX.
     pub full_name: String,
     /// Collateral token identifier (e.g., "@1" for USDC).
+    #[serde(serialize_with = "serialize_collateral_token")]
     pub collateral_token: String,
     /// Optional oracle updater address. If None, the deployer is the oracle updater.
-    #[serde(
-        skip_serializing_if = "Option::is_none",
-        serialize_with = "serialize_optional_address"
-    )]
+    #[serde(serialize_with = "serialize_optional_address")]
     pub oracle_updater: Option<Address>,
 }
 
@@ -175,6 +172,17 @@ where
     match addr {
         Some(a) => ser_lowercase(a, serializer),
         None => serializer.serialize_none(),
+    }
+}
+
+fn serialize_collateral_token<S>(token: &str, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    if let Ok(index) = token.parse::<u32>() {
+        serializer.serialize_u32(index)
+    } else {
+        serializer.serialize_str(token)
     }
 }
 

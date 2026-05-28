@@ -73,6 +73,12 @@ path = "examples/perp_deploy/set_margin_modes.rs"
 [[example]]
 name = "set_perp_annotation"
 path = "examples/perp_deploy/set_perp_annotation.rs"
+[[example]]
+name = "register_spot"
+path = "examples/spot_deploy/register_spot.rs"
+[[example]]
+name = "register_hyperliquidity"
+path = "examples/spot_deploy/register_hyperliquidity.rs"
 
 [workspace]
 members = ["hl-rs-derive"]

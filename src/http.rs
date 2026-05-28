@@ -1,5 +1,6 @@
 use reqwest::{Client, Response};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 use crate::{prelude::Result, Error};
 
@@ -62,6 +63,17 @@ impl HttpClient {
         let payload_json =
             serde_json::to_string(&data).map_err(|e| Error::SerializationFailure(e.to_string()))?;
         tracing::trace!(target: "hl_rs::http_client", url=full_url, payload=payload_json, "Sending POST request");
+        if let Ok(payload_value) = serde_json::from_str::<Value>(&payload_json) {
+            let action = payload_value.get("action").cloned().unwrap_or(Value::Null);
+            tracing::trace!(
+                target: "hl_rs::http_client",
+                url_path,
+                has_register_asset = action.get("registerAsset").is_some(),
+                action_type = action.get("type").and_then(Value::as_str),
+                action = ?action,
+                "Outbound exchange action payload"
+            );
+        }
 
         let res = self
             .client

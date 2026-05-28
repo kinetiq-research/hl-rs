@@ -133,31 +133,39 @@ impl<'de> Deserialize<'de> for OrderType {
 }
 
 /// Wire format for a single order.
+///
+/// Field names match the Hyperliquid JSON/msgpack keys (`a`, `b`, …) via `rename`.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct OrderWire {
-    /// Asset index
-    pub a: u32,
-    /// Is buy order
-    pub b: bool,
-    /// Limit price
+    /// Asset index (wire `a`)
+    #[serde(rename = "a")]
+    pub asset: u32,
+    /// Buy side (wire `b`)
+    #[serde(rename = "b")]
+    pub is_buy: bool,
+    /// Limit price (wire `p`)
     #[serde(
+        rename = "p",
         serialize_with = "serialize_decimal_wire",
         deserialize_with = "deserialize_decimal_wire"
     )]
-    pub p: Decimal,
-    /// Size
+    pub limit_px: Decimal,
+    /// Size (wire `s`)
     #[serde(
+        rename = "s",
         serialize_with = "serialize_decimal_wire",
         deserialize_with = "deserialize_decimal_wire"
     )]
-    pub s: Decimal,
-    /// Reduce only
-    pub r: bool,
-    /// Order type
-    pub t: OrderType,
-    /// Client order ID (optional)
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub c: Option<String>,
+    pub size: Decimal,
+    /// Reduce only (wire `r`)
+    #[serde(rename = "r")]
+    pub reduce_only: bool,
+    /// Limit or trigger payload (wire `t`)
+    #[serde(rename = "t")]
+    pub order_type: OrderType,
+    /// Client order ID (wire `c`)
+    #[serde(rename = "c", skip_serializing_if = "Option::is_none")]
+    pub client_order_id: Option<String>,
 }
 
 /// Builder info for order attribution.

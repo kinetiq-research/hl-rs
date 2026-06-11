@@ -85,6 +85,9 @@ path = "examples/perp_deploy/set_perp_annotation.rs"
 name = "migrate_dex_quote_token"
 path = "examples/perp_deploy/migrate_dex_quote_token.rs"
 [[example]]
+name = "disable_dex"
+path = "examples/perp_deploy/disable_dex.rs"
+[[example]]
 name = "register_spot"
 path = "examples/spot_deploy/register_spot.rs"
 [[example]]

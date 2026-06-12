@@ -46,7 +46,7 @@ impl InfoClient {
         .await
     }
 
-    pub async fn perp_dexs(&self) -> Result<Vec<PerpDex>> {
+    pub async fn perp_dexs(&self) -> Result<Vec<Option<PerpDex>>> {
         use serde_json::Value;
 
         let response: Vec<Value> = self.send_request(InfoRequest::PerpDexs).await?;
@@ -64,12 +64,12 @@ impl InfoClient {
             return Err(Error::Api(ApiError::Other { message: error }));
         }
 
-        // Rest are DEX objects
-        let dexs: Vec<PerpDex> = response[1..]
-            .iter()
-            .map(|v| serde_json::from_value(v.clone()))
-            .collect::<std::result::Result<Vec<_>, serde_json::Error>>()
-            .map_err(|e| Error::JsonParse(e.to_string()))?;
+        let mut dexs: Vec<Option<PerpDex>> = vec![None];
+        for value in &response[1..] {
+            let dex: PerpDex = serde_json::from_value(value.clone())
+                .map_err(|e| Error::JsonParse(e.to_string()))?;
+            dexs.push(Some(dex));
+        }
 
         Ok(dexs)
     }

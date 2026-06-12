@@ -340,127 +340,6 @@ where
     }
 }
 
-/// Multisig inner-action wire order (type and chain fields first).
-/// Reference: hyperliquid-python-sdk `examples/multi_sig_usd_send.py` and issue #177.
-fn multisig_inner_wire_field_order(action_type: &str) -> &'static [&'static str] {
-    match action_type {
-        "spotSend" => &[
-            "type",
-            "signatureChainId",
-            "hyperliquidChain",
-            "destination",
-            "token",
-            "amount",
-            "time",
-        ],
-        "usdSend" | "withdraw3" => &[
-            "type",
-            "signatureChainId",
-            "hyperliquidChain",
-            "destination",
-            "amount",
-            "time",
-        ],
-        "sendAsset" => &[
-            "type",
-            "signatureChainId",
-            "hyperliquidChain",
-            "destination",
-            "sourceDex",
-            "destinationDex",
-            "token",
-            "amount",
-            "fromSubAccount",
-            "nonce",
-        ],
-        "usdClassTransfer" => &[
-            "type",
-            "signatureChainId",
-            "hyperliquidChain",
-            "amount",
-            "toPerp",
-            "nonce",
-        ],
-        "tokenDelegate" => &[
-            "type",
-            "signatureChainId",
-            "hyperliquidChain",
-            "validator",
-            "wei",
-            "isUndelegate",
-            "nonce",
-        ],
-        "convertToMultiSigUser" => &[
-            "type",
-            "signatureChainId",
-            "hyperliquidChain",
-            "signers",
-            "nonce",
-        ],
-        _ => &[],
-    }
-}
-
-/// Python SDK insertion order for regular signed-action wire payloads.
-fn user_signed_wire_field_order(action_type: &str) -> &'static [&'static str] {
-    match action_type {
-        "spotSend" => &[
-            "destination",
-            "amount",
-            "token",
-            "time",
-            "type",
-            "signatureChainId",
-            "hyperliquidChain",
-        ],
-        "usdSend" | "withdraw3" => &[
-            "destination",
-            "amount",
-            "time",
-            "type",
-            "signatureChainId",
-            "hyperliquidChain",
-        ],
-        "tokenDelegate" => &[
-            "validator",
-            "wei",
-            "isUndelegate",
-            "nonce",
-            "type",
-            "signatureChainId",
-            "hyperliquidChain",
-        ],
-        "usdClassTransfer" => &[
-            "type",
-            "amount",
-            "toPerp",
-            "nonce",
-            "signatureChainId",
-            "hyperliquidChain",
-        ],
-        "sendAsset" => &[
-            "destination",
-            "sourceDex",
-            "destinationDex",
-            "token",
-            "amount",
-            "fromSubAccount",
-            "nonce",
-            "type",
-            "signatureChainId",
-            "hyperliquidChain",
-        ],
-        "convertToMultiSigUser" => &[
-            "type",
-            "signers",
-            "nonce",
-            "signatureChainId",
-            "hyperliquidChain",
-        ],
-        _ => &[],
-    }
-}
-
 fn build_user_signed_wire_object_with_order<T: Action + Serialize>(
     action: &T,
     signing_chain: &SigningChain,
@@ -535,23 +414,7 @@ fn build_user_signed_wire_object<T: Action + Serialize>(
     action: &T,
     signing_chain: &SigningChain,
 ) -> Result<serde_json::Map<String, serde_json::Value>, String> {
-    build_user_signed_wire_object_with_order(
-        action,
-        signing_chain,
-        user_signed_wire_field_order(T::ACTION_TYPE),
-    )
-}
-
-/// Wire-format inner action for multisig payloads (distinct field order from regular actions).
-pub(crate) fn build_multisig_inner_action_value<T: Action + Serialize>(
-    action: &T,
-    signing_chain: &SigningChain,
-) -> Result<serde_json::Value, String> {
-    Ok(serde_json::Value::Object(build_user_signed_wire_object_with_order(
-        action,
-        signing_chain,
-        multisig_inner_wire_field_order(T::ACTION_TYPE),
-    )?))
+    build_user_signed_wire_object_with_order(action, signing_chain, T::user_signed_wire_keys())
 }
 
 impl<T: Action + DeserializeOwned> SignedAction<T> {
@@ -1011,7 +874,53 @@ mod tests {
     }
 
     #[test]
-    fn spot_send_regular_wire_order_matches_python_sdk() {
+    fn user_signed_wire_keys_match_types_string() {
+        use crate::actions::UserSignedAction;
+        use crate::{SendAsset, SpotTransfer, UsdClassTransfer};
+
+        assert_eq!(
+            SpotTransfer::WIRE_KEYS,
+            &[
+                "type",
+                "signatureChainId",
+                "hyperliquidChain",
+                "destination",
+                "token",
+                "amount",
+                "time",
+            ]
+        );
+        assert_eq!(
+            SendAsset::WIRE_KEYS,
+            &[
+                "type",
+                "signatureChainId",
+                "hyperliquidChain",
+                "destination",
+                "sourceDex",
+                "destinationDex",
+                "token",
+                "amount",
+                "fromSubAccount",
+                "nonce",
+            ]
+        );
+        assert_eq!(
+            UsdClassTransfer::WIRE_KEYS,
+            &[
+                "type",
+                "signatureChainId",
+                "hyperliquidChain",
+                "amount",
+                "toPerp",
+                "nonce",
+            ]
+        );
+    }
+
+    #[test]
+    fn spot_send_wire_order_matches_types_derived_keys() {
+        use crate::actions::UserSignedAction;
         use crate::SpotTransfer;
         use alloy::primitives::address;
 
@@ -1025,42 +934,10 @@ mod tests {
         let keys: Vec<_> = v.as_object().unwrap().keys().cloned().collect();
         assert_eq!(
             keys,
-            vec![
-                "destination".to_string(),
-                "amount".to_string(),
-                "token".to_string(),
-                "time".to_string(),
-                "type".to_string(),
-                "signatureChainId".to_string(),
-                "hyperliquidChain".to_string(),
-            ]
-        );
-    }
-
-    #[test]
-    fn spot_send_multisig_inner_wire_order_matches_python_examples() {
-        use crate::SpotTransfer;
-        use alloy::primitives::address;
-
-        let mut action = SpotTransfer::new(
-            address!("0x73c4c9fb0113f19d4d015e4ebb06ceaabc2b3cea"),
-            "HYPE:0x7317beb7cceed72ef0b346074cc8e7ab",
-            dec!(0.01),
-        );
-        action.nonce = Some(1_781_248_501_639);
-        let v = build_multisig_inner_action_value(&action, &SigningChain::Testnet).unwrap();
-        let keys: Vec<_> = v.as_object().unwrap().keys().cloned().collect();
-        assert_eq!(
-            keys,
-            vec![
-                "type".to_string(),
-                "signatureChainId".to_string(),
-                "hyperliquidChain".to_string(),
-                "destination".to_string(),
-                "token".to_string(),
-                "amount".to_string(),
-                "time".to_string(),
-            ]
+            SpotTransfer::WIRE_KEYS
+                .iter()
+                .map(|key| (*key).to_string())
+                .collect::<Vec<_>>()
         );
     }
 }

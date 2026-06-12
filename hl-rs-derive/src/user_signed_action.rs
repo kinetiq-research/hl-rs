@@ -200,11 +200,30 @@ fn build_struct_hash_tokens(
     Ok((tokens, has_nonce))
 }
 
+fn build_wire_keys(full_types_preimage: &str) -> Result<Vec<String>, syn::Error> {
+    let mut keys = vec![
+        "type".to_string(),
+        "signatureChainId".to_string(),
+        "hyperliquidChain".to_string(),
+    ];
+    for (_, name) in parse_types_params(full_types_preimage)? {
+        if matches!(
+            name.as_str(),
+            "hyperliquidChain" | "payloadMultiSigUser" | "outerSigner"
+        ) {
+            continue;
+        }
+        keys.push(name);
+    }
+    Ok(keys)
+}
+
 fn build_user_signed_action_impl(
     ident: &syn::Ident,
     action_type_lit: &syn::LitStr,
     types_lit: &syn::LitStr,
     multisig_types_lit: &syn::LitStr,
+    wire_key_lits: &[LitStr],
     struct_hash_tokens: &[TokenStream2],
     multisig_struct_hash_tokens: &[TokenStream2],
     uses_time: bool,
@@ -212,6 +231,7 @@ fn build_user_signed_action_impl(
     quote! {
         impl crate::actions::UserSignedAction for #ident {
             const ACTION_TYPE: &'static str = #action_type_lit;
+            const WIRE_KEYS: &'static [&'static str] = &[#(#wire_key_lits),*];
 
             fn struct_hash(&self, chain: &crate::SigningChain) -> Result<alloy::primitives::B256, crate::Error> {
                 use crate::ToAbiValue;
@@ -249,6 +269,10 @@ fn build_user_signed_action_impl(
 
             fn uses_time() -> bool {
                 #uses_time
+            }
+
+            fn user_signed_wire_keys() -> &'static [&'static str] {
+                <Self as crate::actions::UserSignedAction>::WIRE_KEYS
             }
 
             fn signing_hash(
@@ -355,11 +379,21 @@ pub(crate) fn derive_user_signed_action(input: TokenStream) -> TokenStream {
         .into();
     }
 
+    let wire_keys = match build_wire_keys(&full_types_preimage) {
+        Ok(keys) => keys,
+        Err(err) => return err.to_compile_error().into(),
+    };
+    let wire_key_lits: Vec<LitStr> = wire_keys
+        .iter()
+        .map(|key| LitStr::new(key, ident.span()))
+        .collect();
+
     build_user_signed_action_impl(
         ident,
         &action_type_lit,
         &types_lit,
         &multisig_types_lit,
+        &wire_key_lits,
         &struct_hash_tokens,
         &multisig_struct_hash_tokens,
         uses_time,

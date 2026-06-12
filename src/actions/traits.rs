@@ -44,6 +44,11 @@ pub trait UserSignedAction: Serialize + Send + Sync + 'static {
     /// Action type name for API serialization (e.g., "usdSend", "withdraw3")
     const ACTION_TYPE: &'static str;
 
+    /// Wire key order for action payloads, derived from `#[action(types)]`.
+    ///
+    /// Order is `type`, `signatureChainId`, `hyperliquidChain`, then EIP-712 fields.
+    const WIRE_KEYS: &'static [&'static str];
+
     /// Compute the EIP-712 struct hash (type-specific)
     ///
     /// # Errors
@@ -130,6 +135,11 @@ pub trait Action: Serialize + Send + Sync {
     /// Whether the user-signed payload uses `time` (vs `nonce`).
     fn uses_time() -> bool {
         false
+    }
+
+    /// Wire key order for user-signed flat action payloads. Empty for L1 actions.
+    fn user_signed_wire_keys() -> &'static [&'static str] {
+        &[]
     }
 
     /// Build the signing hash from action and metadata

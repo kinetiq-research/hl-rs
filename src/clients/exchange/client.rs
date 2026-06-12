@@ -10,8 +10,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::{
     actions::{
-        agent_signing_hash, build_action_value, build_multisig_inner_action_value,
-        compute_l1_hash,
+        agent_signing_hash, build_action_value, compute_l1_hash,
         multisig_outer_signing_hash_with_action, multisig_outer_signing_hash_with_payload_action,
         signature_chain_id_hex, Action, MultiSigAction, MultiSigPayload, SignedAction,
         SignedMultiSigAction, UserSignedAction,
@@ -249,12 +248,8 @@ impl ExchangeClient {
         let nonce = action.nonce().unwrap_or_else(Self::current_timestamp_ms);
         let action = action.with_nonce(nonce);
         let signing_chain = self.base_url.get_signing_chain().clone();
-        let wrapped_action_value = if A::is_user_signed() {
-            build_multisig_inner_action_value(&action, &signing_chain)
-        } else {
-            build_action_value(&action, Some(&signing_chain))
-        }
-        .map_err(Error::SerializationFailure)?;
+        let wrapped_action_value =
+            build_action_value(&action, Some(&signing_chain)).map_err(Error::SerializationFailure)?;
         let payload = MultiSigPayload {
             multi_sig_user,
             outer_signer,

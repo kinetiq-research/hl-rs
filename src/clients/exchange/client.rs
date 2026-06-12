@@ -137,6 +137,16 @@ impl ExchangeClient {
         raw.into_result()
     }
 
+    pub async fn send_signed_multisig_action(
+        &self,
+        signed_action: SignedMultiSigAction,
+    ) -> Result<ExchangeResponse, Error> {
+        let output = self.http_client.post("/exchange", signed_action).await?;
+        let raw: ExchangeResponseStatusRaw =
+            serde_json::from_str(&output).map_err(|e| Error::JsonParse(e.to_string()))?;
+        raw.into_result()
+    }
+
     pub async fn send_action<A: Action + Serialize>(
         &self,
         action: A,

@@ -11,7 +11,7 @@ use serde::{
 
 use crate::{actions::serialization::serialize_sig, Error, SigningChain};
 
-use super::{compute_l1_hash, Action, L1ActionWrapper};
+use super::{agent_signing_hash, build_action_value, compute_l1_hash, Action, L1ActionWrapper};
 
 /// Wrapper payload used by Hyperliquid `multiSig` actions.
 #[derive(Debug, Clone, Serialize)]
@@ -207,6 +207,105 @@ impl Serialize for SignedMultiSigAction {
             state.serialize_field("expiresAfter", &expires_after)?;
         }
         state.end()
+    }
+}
+
+/// Hashes required to sign a multisig action with an external signer (e.g. KMS/enclave).
+#[derive(Debug, Clone)]
+pub struct MultisigSigningHashes {
+    pub nonce: u64,
+    pub inner_signing_hash: B256,
+}
+
+fn current_timestamp_ms() -> u64 {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_millis() as u64
+}
+
+/// Compute the inner multisig signing hash for `(multiSigUser, outerSigner, action)`.
+pub fn multisig_inner_signing_hash<A: Action + Serialize>(
+    action: A,
+    multi_sig_user: Address,
+    outer_signer: Address,
+    signing_chain: &SigningChain,
+    expires_after: Option<u64>,
+) -> Result<(A, MultisigSigningHashes), Error> {
+    let nonce = action.nonce().unwrap_or_else(current_timestamp_ms);
+    let action = action.with_nonce(nonce);
+    let inner_payload = (
+        multi_sig_user.to_string().to_lowercase(),
+        outer_signer.to_string().to_lowercase(),
+        L1ActionWrapper { action: &action },
+    );
+    let connection_id = compute_l1_hash(&inner_payload, nonce, None, expires_after)?;
+    let inner_signing_hash = agent_signing_hash(connection_id, &signing_chain.get_source());
+    Ok((
+        action,
+        MultisigSigningHashes {
+            nonce,
+            inner_signing_hash,
+        },
+    ))
+}
+
+/// Build the wrapped `multiSig` action object with caller-provided inner signatures.
+pub fn build_multisig_action<A: Action + Serialize>(
+    action: &A,
+    multi_sig_user: Address,
+    outer_signer: Address,
+    inner_signatures: Vec<Signature>,
+    signing_chain: &SigningChain,
+) -> Result<MultiSigAction, Error> {
+    let wrapped_action_value = build_action_value(action, Some(signing_chain))
+        .map_err(Error::SerializationFailure)?;
+    Ok(MultiSigAction::new(
+        signature_chain_id_hex(signing_chain),
+        inner_signatures,
+        MultiSigPayload {
+            multi_sig_user,
+            outer_signer,
+            action: wrapped_action_value,
+        },
+    ))
+}
+
+/// Compute the outer multisig envelope signing hash.
+pub fn multisig_outer_signing_hash<A: Action + Serialize>(
+    action: &A,
+    multi_sig_user: Address,
+    outer_signer: Address,
+    wrapped_action: &MultiSigAction,
+    signing_chain: &SigningChain,
+    nonce: u64,
+    expires_after: Option<u64>,
+) -> Result<B256, Error> {
+    multisig_outer_signing_hash_with_action(
+        action,
+        multi_sig_user,
+        outer_signer,
+        wrapped_action.signature_chain_id.clone(),
+        wrapped_action.signatures.clone(),
+        signing_chain,
+        nonce,
+        expires_after,
+    )
+}
+
+/// Assemble a signed multisig action ready for `/exchange` submission.
+pub fn assemble_signed_multisig_action(
+    wrapped_action: MultiSigAction,
+    nonce: u64,
+    outer_signature: Signature,
+    expires_after: Option<u64>,
+) -> SignedMultiSigAction {
+    SignedMultiSigAction {
+        action: wrapped_action,
+        nonce,
+        signature: outer_signature,
+        expires_after,
     }
 }
 

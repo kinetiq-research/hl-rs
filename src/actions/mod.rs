@@ -19,7 +19,11 @@ mod user_signed_actions;
 
 pub use core::{PreparedAction, SignedAction, SignedActionKind};
 pub use l1_actions::*;
-pub use multisig::{MultiSigAction, MultiSigPayload, MultiSigSigningPayload, SignedMultiSigAction};
+pub use multisig::{
+    assemble_signed_multisig_action, build_multisig_action, multisig_inner_signing_hash,
+    multisig_outer_signing_hash, MultiSigAction, MultiSigPayload, MultisigSigningHashes,
+    MultiSigSigningPayload, SignedMultiSigAction,
+};
 pub use traits::{Action, L1Action, UserSignedAction};
 pub use user_signed_actions::*;
 

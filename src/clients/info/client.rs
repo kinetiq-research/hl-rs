@@ -6,7 +6,7 @@ use crate::{
     http::HttpClient,
     info::{
         client_builder::InfoClientBuilder,
-        types::{InfoRequest, UserRoleResponse},
+        types::{InfoRequest, UserRoleResponse, UserToMultiSigSignersResponse},
     },
     prelude::{Error, Result},
     types::{Meta, PerpDeployAuctionStatus, PerpDex, PerpDexStatus, SpotMeta, UserStakingSummary},
@@ -64,12 +64,13 @@ impl InfoClient {
             return Err(Error::Api(ApiError::Other { message: error }));
         }
 
-        // Rest are DEX objects
-        let dexs: Vec<PerpDex> = response[1..]
-            .iter()
-            .map(|v| serde_json::from_value(v.clone()))
-            .collect::<std::result::Result<Vec<_>, serde_json::Error>>()
-            .map_err(|e| Error::JsonParse(e.to_string()))?;
+        let mut dexs = Vec::with_capacity(response.len().saturating_sub(1));
+        for (i, value) in response[1..].iter().enumerate() {
+            let mut dex: PerpDex = serde_json::from_value(value.clone())
+                .map_err(|e| Error::JsonParse(e.to_string()))?;
+            dex.id = (i as u32) + 1;
+            dexs.push(dex);
+        }
 
         Ok(dexs)
     }
@@ -88,6 +89,19 @@ impl InfoClient {
 
     pub async fn user_role(&self, user: &Address) -> Result<UserRoleResponse> {
         self.send_request(InfoRequest::UserRole {
+            user: user.to_owned(),
+        })
+        .await
+    }
+
+    /// Returns multisig signer configuration for a user, if the user is multisig-enabled.
+    ///
+    /// The API may return `null` when the user is not a multisig user, which maps to `None`.
+    pub async fn user_to_multisig_signers(
+        &self,
+        user: &Address,
+    ) -> Result<Option<UserToMultiSigSignersResponse>> {
+        self.send_request(InfoRequest::UserToMultiSigSigners {
             user: user.to_owned(),
         })
         .await
@@ -131,6 +145,10 @@ mod tests {
         let info_client = InfoClient::builder(BaseUrl::Testnet).build().unwrap();
         let perp_dexs = info_client.perp_dexs().await.unwrap();
         println!("{:?}", perp_dexs);
+
+        for (i, dex) in perp_dexs.iter().enumerate() {
+            assert_eq!(dex.id, (i as u32) + 1, "dex ids must be sequential starting at 1");
+        }
     }
 
     #[tokio::test]
@@ -145,5 +163,17 @@ mod tests {
         let info_client = InfoClient::builder(BaseUrl::Testnet).build().unwrap();
         let perp_deploy_auction_status = info_client.perp_deploy_auction_status().await.unwrap();
         println!("{:?}", perp_deploy_auction_status);
+    }
+
+    #[tokio::test]
+    async fn test_user_to_multisig_signers() {
+        let info_client = InfoClient::builder(BaseUrl::Testnet).build().unwrap();
+        let user_to_multisig_signers = info_client
+            .user_to_multisig_signers(
+                &Address::from_str("0x2C8b738ED0735943CAB99BDBc5dC299813c08E91").unwrap(),
+            )
+            .await
+            .unwrap();
+        println!("{:?}", user_to_multisig_signers);
     }
 }

@@ -11,6 +11,7 @@ use serde_json::Value;
 
 mod core;
 mod l1_actions;
+mod multisig;
 mod serialization;
 mod signing;
 mod traits;
@@ -18,9 +19,15 @@ mod user_signed_actions;
 
 pub use core::{PreparedAction, SignedAction, SignedActionKind};
 pub use l1_actions::*;
+pub use multisig::{
+    assemble_signed_multisig_action, build_multisig_action, multisig_inner_signing_hash,
+    multisig_inner_user_signed_signing_hash, multisig_outer_signing_hash, MultiSigAction,
+    MultiSigPayload, MultisigSigningHashes, MultiSigSigningPayload, SignedMultiSigAction,
+};
 pub use traits::{Action, L1Action, UserSignedAction};
 pub use user_signed_actions::*;
 
+pub(crate) use serialization::{build_action_value, build_multisig_inner_action_value};
 pub(crate) use serialization::L1ActionWrapper;
 pub(crate) use signing::{agent_signing_hash, compute_l1_hash, SigningMeta};
 
@@ -144,10 +151,13 @@ impl_action_kind![
     ToggleTrading,
     SetOracle,
     SetFeeRecipient,
+    SetFeeScale,
     SetFundingMultipliers,
     SetFundingInterestRates,
     SetMarginTableIds,
     InsertMarginTable,
+    MigrateDexQuoteToken,
+    DisableDex,
     SetSubDeployers,
     SetGrowthModes,
     SetMarginModes,

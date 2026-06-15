@@ -5,6 +5,9 @@
 use alloy::{primitives::Address, signers::local::PrivateKeySigner};
 use reqwest::Client;
 use serde::Serialize;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::{
     actions::{Action, SignedAction},
@@ -64,6 +67,7 @@ pub struct ExchangeClient {
     vault_address: Option<Address>,
     expires_after: Option<u64>,
     signer_private_key: Option<PrivateKeySigner>,
+    nonce_counter: Arc<AtomicU64>,
 }
 
 impl ExchangeClient {
@@ -79,6 +83,7 @@ impl ExchangeClient {
             vault_address: None,
             expires_after: None,
             signer_private_key: None,
+            nonce_counter: Arc::new(AtomicU64::new(Self::current_timestamp_ms())),
         }
     }
 
@@ -110,7 +115,7 @@ impl ExchangeClient {
         action: A,
         wallet: &PrivateKeySigner,
     ) -> Result<SignedAction<A>, Error> {
-        self.prepare_action(action)?.sign(wallet)
+        self.prepare_action(self.ensure_action_nonce(action))?.sign(wallet)
     }
 
     pub async fn send_signed_action<A: Action + Serialize>(
@@ -128,9 +133,44 @@ impl ExchangeClient {
         &self,
         action: A,
     ) -> Result<ExchangeResponse, Error> {
-        let prepared = self.prepare_action(action)?;
+        let prepared = self.prepare_action(self.ensure_action_nonce(action))?;
         let signer = self.signer_private_key.as_ref().ok_or(Error::SignerNotSet)?;
         let signed = prepared.sign(signer)?;
         self.send_signed_action(signed).await
+    }
+
+    /// Ensure the action carries a nonce before signing. If the caller already
+    /// set one, respect it; otherwise assign a strictly-monotonic nonce so
+    /// rapid-fire actions (e.g. UpdateLeverage then an order) never collide.
+    fn ensure_action_nonce<A: Action>(&self, action: A) -> A {
+        if action.nonce().is_some() {
+            action
+        } else {
+            action.with_nonce(self.next_nonce())
+        }
+    }
+
+    /// Monotonic nonce: current ms, bumped by 1 if we'd otherwise repeat or go
+    /// backwards within the same millisecond. Lock-free via a CAS loop.
+    fn next_nonce(&self) -> u64 {
+        let now = Self::current_timestamp_ms();
+        loop {
+            let last = self.nonce_counter.load(Ordering::Relaxed);
+            let next = if now > last { now } else { last + 1 };
+            if self
+                .nonce_counter
+                .compare_exchange(last, next, Ordering::SeqCst, Ordering::Relaxed)
+                .is_ok()
+            {
+                return next;
+            }
+        }
+    }
+
+    fn current_timestamp_ms() -> u64 {
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_millis() as u64
     }
 }

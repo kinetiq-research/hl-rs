@@ -9,7 +9,10 @@ use serde::{Deserialize, Serialize};
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum Subscription {
     #[serde(rename = "allMids")]
-    AllMids { dex: Option<String> },
+    AllMids {
+        #[serde(skip_serializing_if = "Option::is_none")]
+        dex: Option<String>,
+    },
 
     Notification { user: String },
 
@@ -24,7 +27,11 @@ pub enum Subscription {
     },
 
     #[serde(rename = "clearinghouseState")]
-    ClearinghouseState { user: String, dex: Option<String> },
+    ClearinghouseState {
+        user: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        dex: Option<String>,
+    },
 
     #[serde(rename = "openOrders")]
     OpenOrders { user: String, dex: Option<String> },

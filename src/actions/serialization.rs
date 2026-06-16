@@ -663,6 +663,27 @@ mod tests {
         assert_eq!(got.as_slice(), EXPECTED);
     }
 
+    /// Hardening: wider integers must pick the same minimal msgpack width as the
+    /// Python SDK. asset=300 -> uint16 (cd 01 2c), leverage=200 -> uint8 (cc c8).
+    /// The reference above only uses single-byte fixints, so this guards the
+    /// uint8/uint16 paths where rmp-serde and Python could otherwise disagree.
+    /// Generated via CPython `msgpack.packb` on the official SDK action shape.
+    #[test]
+    fn l1_flat_update_leverage_wide_ints_msgpack_matches_python_reference() {
+        use crate::actions::l1_actions::UpdateLeverage;
+
+        let action = UpdateLeverage::cross(300, 200);
+        let wrapper = super::L1ActionWrapper { action: &action };
+        let got = rmp_serde::to_vec_named(&wrapper).unwrap();
+        const EXPECTED: &[u8] = &[
+            0x84, 0xa4, 0x74, 0x79, 0x70, 0x65, 0xae, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4c, 0x65,
+            0x76, 0x65, 0x72, 0x61, 0x67, 0x65, 0xa5, 0x61, 0x73, 0x73, 0x65, 0x74, 0xcd, 0x01, 0x2c,
+            0xa7, 0x69, 0x73, 0x43, 0x72, 0x6f, 0x73, 0x73, 0xc3, 0xa8, 0x6c, 0x65, 0x76, 0x65, 0x72,
+            0x61, 0x67, 0x65, 0xcc, 0xc8,
+        ];
+        assert_eq!(got.as_slice(), EXPECTED);
+    }
+
     #[test]
     fn test_signed_action_kind_deserializes_user_signed_action() {
         let dest = Address::repeat_byte(0xAB);

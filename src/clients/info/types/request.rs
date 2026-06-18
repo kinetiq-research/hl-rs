@@ -32,7 +32,13 @@ pub enum InfoRequest {
         user: Address,
         oid: u64,
     },
-    Meta,
+    Meta {
+        /// Optional builder-dex name. `None` → native perp meta (`{"type":"meta"}`);
+        /// `Some("hyna")` → that HIP-3 dex's perp meta (`{"type":"meta","dex":"hyna"}`),
+        /// whose `universe` carries the dex's perp assets for asset-id resolution.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        dex: Option<String>,
+    },
     MetaAndAssetCtxs,
     SpotMeta,
     SpotMetaAndAssetCtxs,

@@ -32,7 +32,18 @@ impl InfoClient {
     }
 
     pub async fn meta(&self) -> Result<Meta> {
-        self.send_request(InfoRequest::Meta).await
+        self.send_request(InfoRequest::Meta { dex: None }).await
+    }
+
+    /// Perp meta for a builder-deployed (HIP-3) dex — `{"type":"meta","dex":<dex>}`.
+    /// Its `universe` lists the dex's perp assets, which (with the dex's index in
+    /// `perp_dexs()`) resolve the numeric builder asset id for orders on e.g.
+    /// `hyna:SOL`.
+    pub async fn meta_for_dex(&self, dex: &str) -> Result<Meta> {
+        self.send_request(InfoRequest::Meta {
+            dex: Some(dex.to_string()),
+        })
+        .await
     }
 
     pub async fn spot_meta(&self) -> Result<SpotMeta> {

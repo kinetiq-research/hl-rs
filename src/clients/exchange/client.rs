@@ -209,7 +209,8 @@ impl ExchangeClient {
             outer_signer.to_string().to_lowercase(),
             crate::actions::L1ActionWrapper { action: &action },
         );
-        let connection_id = compute_l1_hash(&inner_payload, nonce, None, self.expires_after)?;
+        let connection_id =
+            compute_l1_hash(&inner_payload, nonce, self.vault_address, self.expires_after)?;
         let signing_hash = agent_signing_hash(connection_id, &signing_chain.get_source());
 
         let signer = self
@@ -269,6 +270,7 @@ impl ExchangeClient {
             &wrapped_action,
             &signing_chain,
             nonce,
+            self.vault_address,
             self.expires_after,
         )?;
 
@@ -284,6 +286,7 @@ impl ExchangeClient {
             wrapped_action,
             nonce,
             signature,
+            self.vault_address,
             self.expires_after,
         ))
     }
@@ -397,6 +400,7 @@ mod tests {
             outer_signer,
             &BaseUrl::Testnet.get_signing_chain(),
             None,
+            None,
         )
         .unwrap();
         let sig_from_hash = signer.sign_hash_sync(&hashes.inner_signing_hash).unwrap();
@@ -461,6 +465,7 @@ mod tests {
             &wrapped,
             &signing_chain,
             nonce,
+            None,
             None,
         )
         .unwrap();

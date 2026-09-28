@@ -171,6 +171,7 @@ impl_action_kind![
     SetGrowthModes,
     SetMarginModes,
     SetPerpAnnotation,
+    PerpSetDeployerFees,
     // Sum types: spotDeploy (action_type = "spotDeploy", payload_key varies)
     RegisterToken,
     Genesis,

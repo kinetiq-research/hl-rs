@@ -12,9 +12,9 @@ use alloy::primitives::{address, Address};
 
 use hl_rs::{
     actions::{
-        AssetRequest, InsertMarginTable, PerpDexSchema, RegisterAsset, SetFeeRecipient,
-        SetFundingMultipliers, SetGrowthModes, SetMarginTableIds, SetOpenInterestCaps, SetOracle,
-        SetSubDeployers, SubDeployerVariant, ToggleTrading,
+        AssetRequest, DeployerFeeConfig, InsertMarginTable, PerpDexSchema, PerpSetDeployerFees,
+        RegisterAsset, SetFeeRecipient, SetFundingMultipliers, SetGrowthModes, SetMarginTableIds,
+        SetOpenInterestCaps, SetOracle, SetSubDeployers, SubDeployerVariant, ToggleTrading,
     },
     ExchangeClient,
 };
@@ -244,6 +244,22 @@ async fn test_set_funding_multipliers() {
 
     let result = send_action(action).await;
     log_response("SetFundingMultipliers", &result);
+}
+
+// ============================================================================
+// PerpSetDeployerFees
+// ============================================================================
+
+#[tokio::test]
+async fn test_set_deployer_fees() {
+    let action = PerpSetDeployerFees::new(
+        test_dex::PERP_DEX,
+        vec![(test_dex::TEST_COIN, DeployerFeeConfig::new("1.0", false))],
+    );
+    log_action("PerpSetDeployerFees", &action);
+
+    let result = send_action(action).await;
+    log_response("PerpSetDeployerFees", &result);
 }
 
 // ============================================================================

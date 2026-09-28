@@ -51,6 +51,9 @@ pub use migrate_dex_quote_token::MigrateDexQuoteToken;
 mod disable_dex;
 pub use disable_dex::DisableDex;
 
+mod set_deployer_fees;
+pub use set_deployer_fees::{DeployerFeeConfig, PerpSetDeployerFees};
+
 #[macro_export]
 macro_rules! flatten_vec {
     ($struct_name:ident, $field:ident) => {

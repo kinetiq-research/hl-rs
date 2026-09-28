@@ -45,6 +45,7 @@ impl LimitOrderType {
         Self { tif: Tif::Ioc }
     }
 
+    /// Add-liquidity-only (post-only) — canceled instead of taking liquidity.
     pub const fn alo() -> Self {
         Self { tif: Tif::Alo }
     }
@@ -57,7 +58,8 @@ pub enum Tif {
     Gtc,
     /// Immediate-or-cancel
     Ioc,
-    /// All-or-nothing (fill completely or cancel)
+    /// Add liquidity only (post-only): the order is canceled instead of
+    /// immediately matching against resting liquidity.
     Alo,
     /// Front-running protection
     FrontendMarket,

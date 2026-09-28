@@ -19,6 +19,9 @@ pub use set_funding_multipliers::SetFundingMultipliers;
 mod set_funding_interest_rates;
 pub use set_funding_interest_rates::SetFundingInterestRates;
 
+mod set_funding_clamps;
+pub use set_funding_clamps::SetFundingClamps;
+
 mod set_margin_table_ids;
 pub use set_margin_table_ids::SetMarginTableIds;
 
@@ -47,6 +50,9 @@ pub use migrate_dex_quote_token::MigrateDexQuoteToken;
 
 mod disable_dex;
 pub use disable_dex::DisableDex;
+
+mod set_deployer_fees;
+pub use set_deployer_fees::{DeployerFeeConfig, PerpSetDeployerFees};
 
 #[macro_export]
 macro_rules! flatten_vec {

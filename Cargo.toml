@@ -61,6 +61,9 @@ path = "examples/perp_deploy/register_asset_new_dex.rs"
 name = "set_funding_interest_rates"
 path = "examples/perp_deploy/set_funding_interest_rates.rs"
 [[example]]
+name = "set_funding_clamps"
+path = "examples/perp_deploy/set_funding_clamps.rs"
+[[example]]
 name = "set_oi_caps"
 path = "examples/perp_deploy/set_oi_caps.rs"
 [[example]]
@@ -87,6 +90,9 @@ path = "examples/perp_deploy/migrate_dex_quote_token.rs"
 [[example]]
 name = "disable_dex"
 path = "examples/perp_deploy/disable_dex.rs"
+[[example]]
+name = "set_deployer_fees"
+path = "examples/perp_deploy/set_deployer_fees.rs"
 [[example]]
 name = "register_spot"
 path = "examples/spot_deploy/register_spot.rs"

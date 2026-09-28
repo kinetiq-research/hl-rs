@@ -149,6 +149,8 @@ pub enum SubDeployerVariant {
     SetFundingMultipliers,
     /// Permission to set 8-hour funding interest rates.
     SetFundingInterestRates,
+    /// Permission to set 8-hour funding clamps.
+    SetFundingClamps,
     /// Permission to halt/resume trading for assets.
     HaltTrading,
     /// Permission to set margin table IDs for assets.
@@ -170,7 +172,7 @@ pub enum SubDeployerVariant {
     /// Permission to disable the DEX.
     DisableDex,
     /// Permission to set the deployer fee scale with per asset granularity.
-    SetDeployerFees
+    SetDeployerFees,
 }
 
 impl SetSubDeployers {

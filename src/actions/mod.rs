@@ -162,6 +162,7 @@ impl_action_kind![
     SetFeeScale,
     SetFundingMultipliers,
     SetFundingInterestRates,
+    SetFundingClamps,
     SetMarginTableIds,
     InsertMarginTable,
     MigrateDexQuoteToken,

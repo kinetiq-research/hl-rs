@@ -19,6 +19,9 @@ pub use set_funding_multipliers::SetFundingMultipliers;
 mod set_funding_interest_rates;
 pub use set_funding_interest_rates::SetFundingInterestRates;
 
+mod set_funding_clamps;
+pub use set_funding_clamps::SetFundingClamps;
+
 mod set_margin_table_ids;
 pub use set_margin_table_ids::SetMarginTableIds;
 

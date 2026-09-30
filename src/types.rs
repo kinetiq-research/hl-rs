@@ -50,8 +50,11 @@ impl SigningChain {
     }
     pub(crate) fn get_signature_chain_id(&self) -> u64 {
         match self {
+            // Arbitrum Sepolia testnet chain ID used for testnet EIP-712 domains.
             SigningChain::Testnet => 421614,
-            SigningChain::Mainnet => 421614,
+            // Arbitrum One mainnet chain ID. This must differ from testnet so
+            // EIP-712 signatures cannot replay across environments.
+            SigningChain::Mainnet => 42161,
             #[cfg(feature = "custom-signing-chain")]
             SigningChain::Custom {
                 signature_chain_id, ..

@@ -5,7 +5,7 @@ pub enum Error {
     #[error(transparent)]
     Api(#[from] ApiError),
 
-    #[error("Signer not set. Call `ExchangeClientV2::with_signer(...)` before sending actions.")]
+    #[error("Signer not set. Call `ExchangeClient::with_signer(...)` before sending actions.")]
     SignerNotSet,
 
     #[error(

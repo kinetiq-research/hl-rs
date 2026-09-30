@@ -29,14 +29,14 @@ use crate::{
 ///
 /// use alloy::primitives::Address;
 /// use alloy::signers::local::PrivateKeySigner;
-/// use hl_rs::{BaseUrl, ExchangeClientV2, UsdSend};
+/// use hl_rs::{BaseUrl, ExchangeClient, UsdSend};
 /// use rust_decimal_macros::dec;
 ///
 /// # async fn run() -> Result<(), hl_rs::Error> {
 /// let wallet =
 ///     PrivateKeySigner::from_str("0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
 ///         .expect("valid private key hex");
-/// let client = ExchangeClientV2::new(BaseUrl::Testnet).with_signer(wallet);
+/// let client = ExchangeClient::new(BaseUrl::Testnet).with_signer(wallet);
 ///
 /// let action = UsdSend::new(Address::ZERO, dec!(1.0));
 ///
@@ -51,13 +51,13 @@ use crate::{
 ///
 /// use alloy::primitives::Address;
 /// use alloy::signers::local::PrivateKeySigner;
-/// use hl_rs::{BaseUrl, ExchangeClientV2, SetSubDeployers, SubDeployer, SubDeployerVariant};
+/// use hl_rs::{BaseUrl, ExchangeClient, SetSubDeployers, SubDeployer, SubDeployerVariant};
 ///
 /// # async fn run() -> Result<(), hl_rs::Error> {
 /// let wallet =
 ///     PrivateKeySigner::from_str("0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
 ///         .expect("valid private key hex");
-/// let client = ExchangeClientV2::new(BaseUrl::Testnet).with_signer(wallet);
+/// let client = ExchangeClient::new(BaseUrl::Testnet).with_signer(wallet);
 ///
 /// let sub_deployer = SubDeployer::enable(Address::ZERO, SubDeployerVariant::SetOracle);
 /// let action = SetSubDeployers::new("km", vec![sub_deployer]);
@@ -65,7 +65,9 @@ use crate::{
 /// # Ok(())
 /// # }
 /// ```
-#[derive(Debug, Clone)]
+/// Note: the signer (private key) is intentionally excluded from `Debug`
+/// output. See the manual `Debug` implementation below.
+#[derive(Clone)]
 pub struct ExchangeClient {
     base_url: BaseUrl,
     http_client: HttpClient,
@@ -75,19 +77,44 @@ pub struct ExchangeClient {
     nonce_counter: Arc<AtomicU64>,
 }
 
+// Manual Debug implementation that redacts key material. Deriving Debug would
+// print the private signer on every log or panic message.
+impl std::fmt::Debug for ExchangeClient {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ExchangeClient")
+            .field("base_url", &self.base_url)
+            .field("vault_address", &self.vault_address)
+            .field("expires_after", &self.expires_after)
+            .field("has_signer", &self.signer_private_key.is_some())
+            .finish()
+    }
+}
+
 impl ExchangeClient {
+    /// Current Unix time in milliseconds. Returns 0 on clock errors instead
+    /// of panicking, so signing paths cannot crash on clock skew.
     pub fn current_timestamp_ms() -> u64 {
         SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_millis() as u64
+            .map(|d| d.as_millis() as u64)
+            .unwrap_or(0)
+    }
+
+    /// Build an HTTP client with a bounded timeout so exchange requests
+    /// cannot hang indefinitely on a slow network.
+    fn build_http_client(base_url: &BaseUrl) -> HttpClient {
+        let client = Client::builder()
+            .timeout(std::time::Duration::from_secs(10))
+            .build()
+            .unwrap_or_default();
+        HttpClient {
+            client,
+            base_url: base_url.get_url(),
+        }
     }
 
     pub fn new(base_url: BaseUrl) -> Self {
-        let http_client = HttpClient {
-            client: Client::default(),
-            base_url: base_url.get_url(),
-        };
+        let http_client = Self::build_http_client(&base_url);
 
         Self {
             base_url,
@@ -113,9 +140,12 @@ impl ExchangeClient {
         self
     }
 
+    /// Prepare an action for signing. A strictly monotonic nonce is assigned
+    /// when the caller did not set one, so rapid-fire actions and the
+    /// prepare/sign/send flow never reuse a millisecond timestamp.
     pub fn prepare_action<A: Action>(&self, action: A) -> Result<PreparedAction<A>, Error> {
         PreparedAction::new(
-            action,
+            self.ensure_action_nonce(action),
             self.base_url.get_signing_chain(),
             self.vault_address,
             self.expires_after,
@@ -234,7 +264,9 @@ impl ExchangeClient {
             ));
         }
 
-        let nonce = action.nonce().unwrap_or_else(Self::current_timestamp_ms);
+        // Use the monotonic nonce so concurrent multisig signing in the same
+        // millisecond cannot reuse a timestamp.
+        let nonce = action.nonce().unwrap_or_else(|| self.next_nonce());
         let action = action.with_nonce(nonce);
         let signing_chain = self.base_url.get_signing_chain().clone();
         let inner_payload = (
@@ -268,7 +300,9 @@ impl ExchangeClient {
         multi_sig_user: Address,
         outer_signer: Address,
     ) -> Result<Signature, Error> {
-        let nonce = action.nonce().unwrap_or_else(Self::current_timestamp_ms);
+        // Use the monotonic nonce so concurrent multisig signing in the same
+        // millisecond cannot reuse a timestamp.
+        let nonce = action.nonce().unwrap_or_else(|| self.next_nonce());
         let action = action.with_nonce(nonce);
         let signing_chain = self.base_url.get_signing_chain().clone();
         let signing_hash =
@@ -290,7 +324,9 @@ impl ExchangeClient {
         outer_signer: Address,
         inner_signatures: Vec<Signature>,
     ) -> Result<SignedMultiSigAction, Error> {
-        let nonce = action.nonce().unwrap_or_else(Self::current_timestamp_ms);
+        // Use the monotonic nonce so concurrent multisig wrapping in the same
+        // millisecond cannot reuse a timestamp.
+        let nonce = action.nonce().unwrap_or_else(|| self.next_nonce());
         let action = action.with_nonce(nonce);
         let signing_chain = self.base_url.get_signing_chain().clone();
         let wrapped_action = build_multisig_action(

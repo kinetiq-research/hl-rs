@@ -79,8 +79,9 @@ impl ToAbiValue for str {
 impl ToAbiValue for Decimal {
     fn to_abi_value(&self, abi_type: &DynSolType) -> AbiResult {
         match abi_type {
-            // Decimal is always encoded as its string representation
-            DynSolType::String => Ok(DynSolValue::FixedBytes(keccak256(self.to_string()), 32)),
+            // Normalize the decimal string so equivalent values with different
+            // scales (for example 1.0 vs 1) hash identically for EIP-712.
+            DynSolType::String => Ok(DynSolValue::FixedBytes(keccak256(self.normalize().to_string()), 32)),
             _ => Err(Error::AbiEncode {
                 rust_type: "Decimal",
                 abi_type: format!("{:?}", abi_type),

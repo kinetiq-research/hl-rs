@@ -22,9 +22,16 @@ impl InfoClientBuilder {
     }
 
     pub fn build(self) -> Result<InfoClient> {
-        let http_client = self.http_client.unwrap_or(HttpClient {
-            client: Client::default(),
-            base_url: self.base_url.get_url(),
+        let http_client = self.http_client.unwrap_or_else(|| {
+            // Bounded timeout so info requests cannot hang indefinitely.
+            let client = Client::builder()
+                .timeout(std::time::Duration::from_secs(10))
+                .build()
+                .unwrap_or_default();
+            HttpClient {
+                client,
+                base_url: self.base_url.get_url(),
+            }
         });
 
         Ok(InfoClient { http_client })

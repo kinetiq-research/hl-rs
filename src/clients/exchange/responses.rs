@@ -85,13 +85,25 @@ pub struct ExchangeResponse {
 
 impl ExchangeResponse {
     /// Parsed order statuses when `response_type` is `"order"` and `data` has `statuses`.
+    /// Returns None for non-order responses. Corrupt order payloads are also
+    /// reported as None by this legacy helper; use `try_order_data` when the
+    /// distinction matters.
     pub fn order_data(&self) -> Option<ExchangeDataStatuses> {
+        self.try_order_data().unwrap_or(None)
+    }
+
+    /// Strict variant that distinguishes "not an order response" (Ok(None))
+    /// from "order response with corrupt payload" (Err).
+    pub fn try_order_data(&self) -> Result<Option<ExchangeDataStatuses>, Error> {
         if self.response_type != "order" {
-            return None;
+            return Ok(None);
         }
-        self.data
-            .as_ref()
-            .and_then(|v| serde_json::from_value(v.clone()).ok())
+        let Some(value) = self.data.as_ref() else {
+            return Ok(None);
+        };
+        serde_json::from_value(value.clone())
+            .map(Some)
+            .map_err(|e| Error::JsonParse(e.to_string()))
     }
 
     /// Messages array when `response_type` is `"setGlobal"` and `data` is `["msg1", "msg2", ...]`.

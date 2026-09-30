@@ -137,10 +137,21 @@ impl SignedActionKind {
     }
 }
 
-/// Get current timestamp in milliseconds
+/// Get current timestamp in milliseconds.
+/// Returns 0 when the system clock is before the Unix epoch instead of
+/// panicking, so clock skew can never crash signing paths.
 pub fn current_timestamp_ms() -> u64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
-        .as_millis() as u64
+        .map(|d| d.as_millis() as u64)
+        .unwrap_or(0)
+}
+
+/// Fallible timestamp helper for callers that need an explicit error when
+/// the system clock is unavailable or set before the Unix epoch.
+pub fn try_current_timestamp_ms() -> Result<u64, crate::Error> {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis() as u64)
+        .map_err(|e| crate::Error::GenericRequest(e.to_string()))
 }

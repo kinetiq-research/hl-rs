@@ -84,10 +84,10 @@ let action = SetSubDeployers::new("mydex")
 // Halt trading for a coin
 let action = ToggleTrading::halt("mydex", "BTC");
 
-// Set open interest caps
+// Set open interest caps (amounts are u64)
 let action = SetOpenInterestCaps::new("mydex", vec![
-    ("BTC", 10_000_000),
-    ("ETH", 5_000_000),
+    ("BTC", 10_000_000u64),
+    ("ETH", 5_000_000u64),
 ]);
 ```
 
@@ -118,10 +118,10 @@ let action = SpotTransfer::builder()
     .build()
     .unwrap();
 
-// Approve an agent
+// Approve an agent (agent_name is Option<String>, so pass an owned String)
 let action = ApproveAgent::builder()
     .agent_address(agent_address)
-    .agent_name("my-bot")
+    .agent_name("my-bot".to_string())
     .build()
     .unwrap();
 ```

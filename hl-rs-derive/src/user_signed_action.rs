@@ -66,17 +66,19 @@ fn build_field_map(
 }
 
 /// Convert an EIP-712 type string (e.g., "string", "uint64", "address") to a DynSolType token.
-fn eip712_type_to_dyn_sol_type(ty: &str) -> TokenStream2 {
+/// Returns an error for unsupported types instead of silently defaulting to
+/// String, so typos in `#[action(types = "...")]` fail at compile time.
+fn eip712_type_to_dyn_sol_type(ty: &str) -> Result<TokenStream2, syn::Error> {
     let ty_lower = ty.to_lowercase();
 
     if ty_lower == "string" {
-        quote! { alloy::dyn_abi::DynSolType::String }
+        Ok(quote! { alloy::dyn_abi::DynSolType::String })
     } else if ty_lower == "address" {
-        quote! { alloy::dyn_abi::DynSolType::Address }
+        Ok(quote! { alloy::dyn_abi::DynSolType::Address })
     } else if ty_lower == "bool" {
-        quote! { alloy::dyn_abi::DynSolType::Bool }
+        Ok(quote! { alloy::dyn_abi::DynSolType::Bool })
     } else if ty_lower == "bytes" {
-        quote! { alloy::dyn_abi::DynSolType::Bytes }
+        Ok(quote! { alloy::dyn_abi::DynSolType::Bytes })
     } else if ty_lower.starts_with("uint") {
         let size: usize = ty_lower
             .strip_prefix("uint")
@@ -88,7 +90,14 @@ fn eip712_type_to_dyn_sol_type(ty: &str) -> TokenStream2 {
                 }
             })
             .unwrap_or(256);
-        quote! { alloy::dyn_abi::DynSolType::Uint(#size) }
+        // EIP-712 integer widths must be a multiple of 8 between 8 and 256.
+        if !(8..=256).contains(&size) || size % 8 != 0 {
+            return Err(syn::Error::new(
+                proc_macro2::Span::call_site(),
+                format!("unsupported EIP-712 uint width: {ty}"),
+            ));
+        }
+        Ok(quote! { alloy::dyn_abi::DynSolType::Uint(#size) })
     } else if ty_lower.starts_with("int") {
         let size: usize = ty_lower
             .strip_prefix("int")
@@ -100,16 +109,32 @@ fn eip712_type_to_dyn_sol_type(ty: &str) -> TokenStream2 {
                 }
             })
             .unwrap_or(256);
-        quote! { alloy::dyn_abi::DynSolType::Int(#size) }
+        if !(8..=256).contains(&size) || size % 8 != 0 {
+            return Err(syn::Error::new(
+                proc_macro2::Span::call_site(),
+                format!("unsupported EIP-712 int width: {ty}"),
+            ));
+        }
+        Ok(quote! { alloy::dyn_abi::DynSolType::Int(#size) })
     } else if ty_lower.starts_with("bytes") {
         let size: usize = ty_lower
             .strip_prefix("bytes")
             .and_then(|s| s.parse().ok())
             .unwrap_or(32);
-        quote! { alloy::dyn_abi::DynSolType::FixedBytes(#size) }
+        if !(1..=32).contains(&size) {
+            return Err(syn::Error::new(
+                proc_macro2::Span::call_site(),
+                format!("unsupported EIP-712 fixed bytes size: {ty}"),
+            ));
+        }
+        Ok(quote! { alloy::dyn_abi::DynSolType::FixedBytes(#size) })
     } else {
-        // Default to string for unknown types
-        quote! { alloy::dyn_abi::DynSolType::String }
+        // Fail loudly on unknown types so invalid EIP-712 definitions cannot
+        // compile and produce wrong struct hashes at runtime.
+        Err(syn::Error::new(
+            proc_macro2::Span::call_site(),
+            format!("unsupported EIP-712 type: {ty}"),
+        ))
     }
 }
 
@@ -139,7 +164,7 @@ fn build_struct_hash_tokens(
     });
 
     for (ty, name) in params {
-        let dyn_sol_type = eip712_type_to_dyn_sol_type(&ty);
+        let dyn_sol_type = eip712_type_to_dyn_sol_type(&ty)?;
 
         // Special case: hyperliquidChain comes from the signing chain, not a field
         if name == "hyperliquidChain" {

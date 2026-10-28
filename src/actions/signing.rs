@@ -85,7 +85,7 @@ mod tests {
     use rust_decimal_macros::dec;
 
     use super::SigningMeta;
-    use crate::actions::{Action, UsdSend};
+    use crate::actions::{Action, TokenDelegate, UsdSend, UserDexAbstraction};
     use crate::SigningChain;
 
     #[test]
@@ -153,6 +153,63 @@ mod tests {
         let signed = prepared.sign(&wallet).unwrap();
 
         let expected_sig = "0x5e9d2fcbc9f4cecf997dd7ad72dabf096c2c772aacdedfe4fe558948bc504989026be4dfd8bab24982eca3cac8fb5a1cc2f5bbcf95af94f59da079653a86c7141c";
+        assert_eq!(signed.signature.to_string(), expected_sig);
+    }
+
+    /// Expected signature from the Python SDK's `TOKEN_DELEGATE_TYPES` (`address validator`).
+    #[test]
+    fn test_token_delegate_signing_hardcoded() {
+        let wallet: PrivateKeySigner =
+            "e908f86dbb4d55ac876378565aafeabc187f6690f046459397b17d9b9a19688e"
+                .parse()
+                .unwrap();
+        let validator = "0x5ac99df645f3414876c816caa18b2d234024b487"
+            .parse()
+            .unwrap();
+        let signing_chain = SigningChain::Mainnet;
+        let prepared = crate::actions::PreparedAction::new(
+            TokenDelegate {
+                validator,
+                wei: 100_000_000,
+                is_undelegate: false,
+                nonce: Some(1700000000000),
+            },
+            &signing_chain,
+            None,
+            None,
+        )
+        .unwrap();
+        let signed = prepared.sign(&wallet).unwrap();
+
+        let expected_sig = "0xa3db81b278eb654ffdbf0bef1ce5b3a9fbde61d9a138b800abd4660a0c10807511abb64496a3fded01b77b8b5da3b7b7b63bd548d9e18248263098db4efd95ae1c";
+        assert_eq!(signed.signature.to_string(), expected_sig);
+    }
+
+    /// Expected signature from the Python SDK's `USER_DEX_ABSTRACTION_SIGN_TYPES` (`address user`).
+    #[test]
+    fn test_user_dex_abstraction_signing_hardcoded() {
+        let wallet: PrivateKeySigner =
+            "e908f86dbb4d55ac876378565aafeabc187f6690f046459397b17d9b9a19688e"
+                .parse()
+                .unwrap();
+        let user = "0x0d1d9635d0640821d15e323ac8adadfa9c111414"
+            .parse()
+            .unwrap();
+        let signing_chain = SigningChain::Mainnet;
+        let prepared = crate::actions::PreparedAction::new(
+            UserDexAbstraction {
+                user,
+                enabled: true,
+                nonce: Some(1700000000000),
+            },
+            &signing_chain,
+            None,
+            None,
+        )
+        .unwrap();
+        let signed = prepared.sign(&wallet).unwrap();
+
+        let expected_sig = "0x38ef7f7ab12e335e8d2fe613108cee51a204f5e0626b7275b54af09d029d48535e8b66411a3664a0d3236e3de4f8b32d9a90a8a07582cb0397b2b9fb384303811b";
         assert_eq!(signed.signature.to_string(), expected_sig);
     }
 }

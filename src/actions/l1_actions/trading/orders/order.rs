@@ -231,7 +231,7 @@ pub struct BuilderInfo {
 
 /// Order grouping options.
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Default)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "camelCase")]
 pub enum Grouping {
     #[default]
     Na,
@@ -367,5 +367,24 @@ mod trigger_wire_order {
         assert_eq!(keys(&v), vec!["limit"]);
         assert_eq!(keys(&v["limit"]), vec!["tif"]);
         assert_eq!(v["limit"]["tif"], serde_json::json!("Alo"));
+    }
+}
+
+#[cfg(test)]
+mod grouping_wire {
+    use super::Grouping;
+
+    /// Python's `Grouping` is `"na" | "normalTpsl" | "positionTpsl"`.
+    #[test]
+    fn grouping_serializes_as_camel_case() {
+        assert_eq!(serde_json::to_value(Grouping::Na).unwrap(), "na");
+        assert_eq!(
+            serde_json::to_value(Grouping::NormalTpsl).unwrap(),
+            "normalTpsl"
+        );
+        assert_eq!(
+            serde_json::to_value(Grouping::PositionTpsl).unwrap(),
+            "positionTpsl"
+        );
     }
 }

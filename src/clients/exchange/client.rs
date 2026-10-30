@@ -29,14 +29,14 @@ use crate::{
 ///
 /// use alloy::primitives::Address;
 /// use alloy::signers::local::PrivateKeySigner;
-/// use hl_rs::{BaseUrl, ExchangeClientV2, UsdSend};
+/// use hl_rs::{BaseUrl, ExchangeClient, UsdSend};
 /// use rust_decimal_macros::dec;
 ///
 /// # async fn run() -> Result<(), hl_rs::Error> {
 /// let wallet =
 ///     PrivateKeySigner::from_str("0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
 ///         .expect("valid private key hex");
-/// let client = ExchangeClientV2::new(BaseUrl::Testnet).with_signer(wallet);
+/// let client = ExchangeClient::new(BaseUrl::Testnet).with_signer(wallet);
 ///
 /// let action = UsdSend::new(Address::ZERO, dec!(1.0));
 ///
@@ -51,16 +51,16 @@ use crate::{
 ///
 /// use alloy::primitives::Address;
 /// use alloy::signers::local::PrivateKeySigner;
-/// use hl_rs::{BaseUrl, ExchangeClientV2, SetSubDeployers, SubDeployer, SubDeployerVariant};
+/// use hl_rs::{BaseUrl, ExchangeClient, SetSubDeployers, SubDeployer, SubDeployerVariant};
 ///
 /// # async fn run() -> Result<(), hl_rs::Error> {
 /// let wallet =
 ///     PrivateKeySigner::from_str("0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
 ///         .expect("valid private key hex");
-/// let client = ExchangeClientV2::new(BaseUrl::Testnet).with_signer(wallet);
+/// let client = ExchangeClient::new(BaseUrl::Testnet).with_signer(wallet);
 ///
 /// let sub_deployer = SubDeployer::enable(Address::ZERO, SubDeployerVariant::SetOracle);
-/// let action = SetSubDeployers::new("km", vec![sub_deployer]);
+/// let action = SetSubDeployers::new("km").with_sub_deployer(sub_deployer);
 /// let _response = client.send_action(action).await?;
 /// # Ok(())
 /// # }

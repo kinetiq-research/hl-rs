@@ -223,9 +223,10 @@ pub struct OrderWire {
 /// Builder info for order attribution.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BuilderInfo {
-    /// Builder address (lowercase)
+    /// Builder address (lowercased when serialized)
+    #[serde(serialize_with = "crate::actions::serialization::ser_lowercase_str")]
     pub b: String,
-    /// Builder fee in basis points
+    /// Builder fee in tenths of a basis point (`10` charges 1 bp of notional)
     pub f: u32,
 }
 

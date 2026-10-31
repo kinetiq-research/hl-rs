@@ -1,6 +1,8 @@
 use hl_rs_derive::L1Action;
 use serde::{Deserialize, Serialize};
 
+use crate::actions::serialization::ser_lowercase_str;
+
 /// Request linking a Core spot token to an ERC20 on HyperEVM (nested under `spotDeploy`).
 ///
 /// See [HyperCore ↔ HyperEVM transfers](https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/hyperevm/hypercore-less-than-greater-than-hyperevm-transfers).
@@ -9,7 +11,8 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 pub struct RequestEvmContract {
     pub token: u32,
-    /// ERC20 contract address on the EVM (lowercase hex with `0x` prefix).
+    /// ERC20 contract address on the EVM (hex with `0x` prefix, lowercased when serialized).
+    #[serde(serialize_with = "ser_lowercase_str")]
     pub address: String,
     /// Difference in wei decimals between Core and EVM (typically in `[-2, 18]`).
     pub evm_extra_wei_decimals: i32,

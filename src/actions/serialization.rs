@@ -313,6 +313,33 @@ where
     serializer.serialize_str(&address.to_string().to_lowercase())
 }
 
+/// [`ser_lowercase`] for address fields typed as `String`.
+///
+/// Hyperliquid parses these fields as bytes and hashes the lowercase hex, so a checksummed
+/// string (what `Address::to_string()` returns) recovers a different signer. The Python SDK
+/// lowercases the same fields before signing.
+pub(crate) fn ser_lowercase_str<S>(address: &str, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    serializer.serialize_str(&address.to_lowercase())
+}
+
+/// [`ser_lowercase_str`] for the user half of `userGenesis` `(user, wei)` pairs.
+pub(crate) fn ser_lowercase_users<S>(
+    user_and_wei: &[(String, String)],
+    serializer: S,
+) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    serializer.collect_seq(
+        user_and_wei
+            .iter()
+            .map(|(user, wei)| (user.to_lowercase(), wei)),
+    )
+}
+
 /// Msgpack key order follows insertion order. `serde_json::Value` serialization through
 /// `rmp_serde` sorts object keys alphabetically, so wire payloads must use this wrapper.
 #[derive(Debug, Clone)]
@@ -1183,5 +1210,94 @@ mod tests {
                 "time".to_string(),
             ]
         );
+    }
+}
+
+#[cfg(test)]
+mod address_string_fields {
+    use alloy::primitives::B256;
+    use rust_decimal_macros::dec;
+
+    use super::build_action_value;
+    use crate::actions::signing::SigningMeta;
+    use crate::actions::{
+        Action, BatchOrder, BuilderInfo, FreezeUser, LimitOrderType, OrderType, OrderWire,
+        RequestEvmContract, Tif, UserGenesis,
+    };
+    use crate::SigningChain;
+
+    const CHECKSUMMED: &str = "0x0ef4B52b87ddcB520009cCb57cfe83B8c36b3955";
+    const LOWERCASE: &str = "0x0ef4b52b87ddcb520009ccb57cfe83b8c36b3955";
+
+    fn hash<T: Action>(action: &T) -> B256 {
+        let chain = SigningChain::Testnet;
+        let meta = SigningMeta {
+            nonce: 1_700_000_000_000,
+            vault_address: None,
+            expires_after: None,
+            signing_chain: &chain,
+        };
+        action.signing_hash(&meta).unwrap()
+    }
+
+    fn order_with_builder(b: &str) -> BatchOrder {
+        let order = OrderWire {
+            asset: 0,
+            is_buy: true,
+            limit_px: dec!(1000),
+            size: dec!(0.001),
+            reduce_only: false,
+            order_type: OrderType::Limit(LimitOrderType { tif: Tif::Gtc }),
+            client_order_id: None,
+        };
+        BatchOrder::new(vec![order]).with_builder(BuilderInfo {
+            b: b.to_string(),
+            f: 10,
+        })
+    }
+
+    /// These address fields are `String`, so they reach the signing hash exactly as the caller
+    /// spelled them. Hyperliquid parses them as bytes and hashes the lowercase hex.
+    ///
+    /// Measured on testnet with an unfunded key: the checksummed spelling of each address below
+    /// made the server recover a different signer ("User or API Wallet 0x<other> does not
+    /// exist"), while the lowercase spelling recovered the key that signed. A checksummed string
+    /// is exactly what `Address::to_string()` returns.
+    #[test]
+    fn a_checksummed_builder_address_hashes_and_sends_as_lowercase() {
+        let action = order_with_builder(CHECKSUMMED);
+        assert_eq!(hash(&action), hash(&order_with_builder(LOWERCASE)));
+        let wire = build_action_value(&action, None).unwrap();
+        assert_eq!(wire["builder"]["b"], LOWERCASE);
+    }
+
+    #[test]
+    fn a_checksummed_freeze_user_address_hashes_and_sends_as_lowercase() {
+        let action = FreezeUser::new(1, CHECKSUMMED, true);
+        assert_eq!(hash(&action), hash(&FreezeUser::new(1, LOWERCASE, true)));
+        let wire = build_action_value(&action, None).unwrap();
+        assert_eq!(wire["freezeUser"]["user"], LOWERCASE);
+    }
+
+    #[test]
+    fn a_checksummed_user_genesis_address_hashes_and_sends_as_lowercase() {
+        let genesis =
+            |user: &str| UserGenesis::new(1, vec![(user.to_string(), "1".into())], vec![]);
+        let action = genesis(CHECKSUMMED);
+        assert_eq!(hash(&action), hash(&genesis(LOWERCASE)));
+        let wire = build_action_value(&action, None).unwrap();
+        assert_eq!(wire["userGenesis"]["userAndWei"][0][0], LOWERCASE);
+        assert_eq!(wire["userGenesis"]["userAndWei"][0][1], "1");
+    }
+
+    #[test]
+    fn a_checksummed_evm_contract_address_hashes_and_sends_as_lowercase() {
+        let action = RequestEvmContract::new(1, CHECKSUMMED, 0);
+        assert_eq!(
+            hash(&action),
+            hash(&RequestEvmContract::new(1, LOWERCASE, 0))
+        );
+        let wire = build_action_value(&action, None).unwrap();
+        assert_eq!(wire["requestEvmContract"]["address"], LOWERCASE);
     }
 }

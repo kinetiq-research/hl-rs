@@ -1,6 +1,8 @@
 use hl_rs_derive::L1Action;
 use serde::{Deserialize, Serialize};
 
+use crate::actions::serialization::ser_lowercase_users;
+
 /// User genesis allocation for token distribution.
 #[derive(Serialize, Deserialize, Debug, Clone, L1Action)]
 #[action(action_type = "spotDeploy", payload_key = "userGenesis")]
@@ -8,7 +10,8 @@ use serde::{Deserialize, Serialize};
 pub struct UserGenesis {
     /// Token index
     pub token: u32,
-    /// User addresses and their wei allocations
+    /// User addresses and their wei allocations (addresses lowercased when serialized)
+    #[serde(serialize_with = "ser_lowercase_users")]
     pub user_and_wei: Vec<(String, String)>,
     /// Existing token IDs and their wei allocations
     pub existing_token_and_wei: Vec<(u32, String)>,

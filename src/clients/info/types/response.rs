@@ -278,16 +278,37 @@ pub struct Referrer {
     pub code: String,
 }
 
+/// The user's progress as a referrer. `data` depends on `stage`, and
+/// `needToCreateCode` carries none.
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ReferrerState {
-    pub stage: String,
-    pub data: ReferrerData,
+#[serde(tag = "stage", content = "data", rename_all = "camelCase")]
+pub enum ReferrerState {
+    Ready(ReferrerData),
+    NeedToCreateCode,
+    NeedToTrade(ReferrerRequirement),
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReferrerData {
+    pub code: String,
+    pub n_referrals: u64,
+    pub referral_states: Vec<ReferralState>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ReferralState {
+    pub cum_vlm: String,
+    pub cum_rewarded_fees_since_referred: String,
+    pub cum_fees_rewarded_to_referrer: String,
+    pub time_joined: u64,
+    pub user: Address,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ReferrerRequirement {
     pub required: String,
 }
 
@@ -390,4 +411,45 @@ pub struct UserRateLimit {
     pub n_requests_cap: u64,
     /// `max(0, reserved - cumulative_used)`
     pub n_requests_surplus: u64,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn referral(referrer_state: &str) -> ReferralResponse {
+        let json = format!(
+            r#"{{"referredBy":null,"cumVlm":"0.0","unclaimedRewards":"0.0","claimedRewards":"0.0","builderRewards":"0.0","referrerState":{referrer_state},"rewardHistory":[],"tokenToState":[]}}"#
+        );
+        serde_json::from_str(&json).expect("referral response should deserialize")
+    }
+
+    #[test]
+    fn referrer_state_deserializes_every_stage() {
+        let ready = referral(
+            r#"{"stage":"ready","data":{"code":"ABC","nReferrals":1,"referralStates":[{"cumVlm":"100.0","cumRewardedFeesSinceReferred":"1.5","cumFeesRewardedToReferrer":"0.5","timeJoined":1700000000000,"user":"0x0000000000000000000000000000000000000002","tokenToState":[[0,{"cumVlm":"100.0","cumRewardedFeesSinceReferred":"1.5","cumFeesRewardedToReferrer":"0.5"}]]}]}}"#,
+        );
+        match ready.referrer_state {
+            ReferrerState::Ready(data) => {
+                assert_eq!(data.code, "ABC");
+                assert_eq!(data.n_referrals, 1);
+                assert_eq!(data.referral_states.len(), 1);
+                assert_eq!(data.referral_states[0].time_joined, 1700000000000);
+            }
+            other => panic!("expected Ready, got {other:?}"),
+        }
+
+        // This stage has no `data` at all.
+        let create = referral(r#"{"stage":"needToCreateCode"}"#);
+        assert!(matches!(
+            create.referrer_state,
+            ReferrerState::NeedToCreateCode
+        ));
+
+        let trade = referral(r#"{"stage":"needToTrade","data":{"required":"$10,000"}}"#);
+        match trade.referrer_state {
+            ReferrerState::NeedToTrade(req) => assert_eq!(req.required, "$10,000"),
+            other => panic!("expected NeedToTrade, got {other:?}"),
+        }
+    }
 }

@@ -6,7 +6,11 @@ use serde::{Deserialize, Serialize};
 
 /// Subscription request for a specific feed.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "camelCase")]
+#[serde(
+    tag = "type",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase"
+)]
 pub enum Subscription {
     #[serde(rename = "allMids")]
     AllMids {

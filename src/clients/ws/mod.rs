@@ -131,6 +131,78 @@ impl WsClient {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
+
+    fn subscriptions_with_options() -> [(Subscription, serde_json::Value); 3] {
+        [
+            (
+                Subscription::L2Book {
+                    coin: "ETH".to_string(),
+                    n_sig_figs: Some(5),
+                    mantissa: Some(2),
+                },
+                json!({"type": "l2Book", "coin": "ETH", "nSigFigs": 5, "mantissa": 2}),
+            ),
+            (
+                Subscription::UserFills {
+                    user: "0xabc".to_string(),
+                    aggregate_by_time: Some(false),
+                },
+                json!({"type": "userFills", "user": "0xabc", "aggregateByTime": false}),
+            ),
+            (
+                Subscription::SpotState {
+                    user: "0xabc".to_string(),
+                    is_portfolio_margin: Some(true),
+                },
+                json!({"type": "spotState", "user": "0xabc", "isPortfolioMargin": true}),
+            ),
+        ]
+    }
+
+    #[test]
+    fn subscription_requests_use_camel_case_options() {
+        for (subscription, expected) in subscriptions_with_options() {
+            for (method, request) in [
+                ("subscribe", WsRequest::subscribe(subscription.clone())),
+                ("unsubscribe", WsRequest::unsubscribe(subscription)),
+            ] {
+                assert_eq!(
+                    serde_json::to_value(request).unwrap(),
+                    json!({"method": method, "subscription": expected})
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn subscription_options_deserialize_from_camel_case() {
+        for (_, wire) in subscriptions_with_options() {
+            let subscription: Subscription = serde_json::from_value(wire).unwrap();
+            match subscription {
+                Subscription::L2Book {
+                    n_sig_figs,
+                    mantissa,
+                    ..
+                } => {
+                    assert_eq!(n_sig_figs, Some(5));
+                    assert_eq!(mantissa, Some(2));
+                }
+                Subscription::UserFills {
+                    aggregate_by_time, ..
+                } => {
+                    assert_eq!(aggregate_by_time, Some(false));
+                }
+                Subscription::SpotState {
+                    is_portfolio_margin,
+                    ..
+                } => {
+                    assert_eq!(is_portfolio_margin, Some(true));
+                }
+                _ => panic!("unexpected subscription"),
+            }
+        }
+    }
 
     #[test]
     fn subscription_all_mids_json() {
@@ -146,7 +218,29 @@ mod tests {
             n_sig_figs: None,
             mantissa: None,
         };
-        let json = serde_json::to_string(&s).unwrap();
-        assert!(!json.contains("nSigFigs"));
+        assert_eq!(
+            serde_json::to_value(s).unwrap(),
+            json!({"type": "l2Book", "coin": "ETH"})
+        );
+    }
+
+    #[test]
+    fn subscription_boolean_options_omitted_when_absent() {
+        let fills = Subscription::UserFills {
+            user: "0xabc".to_string(),
+            aggregate_by_time: None,
+        };
+        let spot = Subscription::SpotState {
+            user: "0xabc".to_string(),
+            is_portfolio_margin: None,
+        };
+        assert_eq!(
+            serde_json::to_value(fills).unwrap(),
+            json!({"type": "userFills", "user": "0xabc"})
+        );
+        assert_eq!(
+            serde_json::to_value(spot).unwrap(),
+            json!({"type": "spotState", "user": "0xabc"})
+        );
     }
 }

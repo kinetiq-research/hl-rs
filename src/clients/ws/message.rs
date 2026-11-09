@@ -470,4 +470,29 @@ mod tests {
             _ => panic!("expected subscription response"),
         }
     }
+
+    #[test]
+    fn subscription_response_preserves_camel_case_options() {
+        let v = serde_json::json!({
+            "channel": "subscriptionResponse",
+            "data": {
+                "method": "subscribe",
+                "subscription": {
+                    "type": "userFills",
+                    "user": "0xabc",
+                    "aggregateByTime": false
+                }
+            }
+        });
+        let m: WsMessage = serde_json::from_value(v).unwrap();
+        assert!(matches!(
+            m,
+            WsMessage::SubscriptionResponse {
+                data: Subscription::UserFills {
+                    aggregate_by_time: Some(false),
+                    ..
+                }
+            }
+        ));
+    }
 }

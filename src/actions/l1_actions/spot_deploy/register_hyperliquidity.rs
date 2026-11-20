@@ -51,9 +51,10 @@ mod tests {
     use rust_decimal_macros::dec;
 
     /// Prices and sizes go out normalised, against CPython `msgpack.packb` of
-    /// `{"spot":1,"startPx":"2","orderSz":"1.25","nOrders":3}`. Both `"2.0"` and `"2"` reached the
-    /// deployer check on testnet (2026-11-20), so HyperCore hashes either as sent; this picks the
-    /// one rendering orders use. Note the SDK's own method sends `str(float)`, i.e. `"2.0"`.
+    /// `{"spot":1,"startPx":"2","orderSz":"1.25","nOrders":3}`. Both `"2.0"`/`"1.0"` and
+    /// `"2"`/`"1"` recovered the signer (testnet 2026-11-20: signed by a key approved nowhere, the
+    /// answer named that key), so either verifies; this picks the one rendering orders use. Note
+    /// the SDK's own method sends `str(float)`, i.e. `"2.0"`.
     #[test]
     fn decimals_are_sent_normalised() {
         let a = RegisterHyperliquidity::new(1, dec!(2.0), dec!(1.2500), 3);

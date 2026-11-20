@@ -15,7 +15,8 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 pub struct ScheduleCancel {
     /// UTC milliseconds at which to cancel all open orders, or `None` to unset any scheduled
-    /// cancel. `None` is the absent key.
+    /// cancel. `None` is the absent key: it recovers the signer and `"time":null` does not (testnet
+    /// 2026-11-20: signed by a key approved nowhere, the answer named that key).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub time: Option<u64>,
     #[serde(skip_serializing)]

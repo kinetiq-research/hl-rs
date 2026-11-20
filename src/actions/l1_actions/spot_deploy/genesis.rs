@@ -15,9 +15,10 @@ pub struct Genesis {
     /// Whether to disable hyperliquidity.
     ///
     /// **Sent only when `true`.** The Python SDK adds `"noHyperliquidity": true` to the dict only
-    /// in that case, and the docs mark the key optional. `false` is the absent key, never a
-    /// `false` value: the action is msgpacked before it is hashed, so sending the key changes the
-    /// signed bytes, and whether HyperCore canonicalises it back is unknown.
+    /// in that case, and the docs mark the key optional. `false` is the absent key, never a `false`
+    /// value. Measured (testnet 2026-11-20: signed by a key approved nowhere, the answer named that
+    /// key): `true` and the absent key recover the signer; `"noHyperliquidity":false` recovers a
+    /// random address.
     #[serde(default, skip_serializing_if = "is_false")]
     pub no_hyperliquidity: bool,
     #[serde(skip_serializing)]
@@ -45,8 +46,8 @@ mod tests {
     }
 
     /// `Exchange.spot_deploy_genesis(2, "1", False)` in SDK 0.21.0, through CPython
-    /// `msgpack.packb`: no `noHyperliquidity` key at all. Also the body HyperCore answered with
-    /// `Incorrect deployer` (a recovered signer) on testnet, 2026-11-20.
+    /// `msgpack.packb`: no `noHyperliquidity` key at all. Also a body that recovered its signer
+    /// (testnet 2026-11-20: signed by a key approved nowhere, the answer named that key).
     #[test]
     fn false_omits_the_key() {
         let a = Genesis::new(2, "1", false);

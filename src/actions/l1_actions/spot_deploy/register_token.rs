@@ -25,7 +25,9 @@ pub struct RegisterToken {
     /// Full display name for the token.
     ///
     /// Optional in the docs, and skipped when `None`. An `Option` rather than a `String` so that
-    /// "no full name" is the absent key and never an empty string signed by accident.
+    /// "no full name" is the absent key and never an empty string signed by accident. The absent
+    /// key recovers the signer and `null` does not (testnet 2026-11-20: signed by a key approved
+    /// nowhere, the answer named that key).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub full_name: Option<String>,
     #[serde(skip_serializing)]
@@ -76,8 +78,8 @@ mod tests {
     }
 
     /// `Exchange.spot_deploy_register_token("PZQX", 2, 8, 1, "p0 probe")` in SDK 0.21.0, through
-    /// CPython `msgpack.packb`. Also the body HyperCore answered on its gas check, for agent and
-    /// master alike, on testnet 2026-11-20.
+    /// CPython `msgpack.packb`. Also a body that recovered its signer (testnet 2026-11-20: signed
+    /// by a key approved nowhere, the answer named that key).
     #[test]
     fn with_a_full_name_it_is_the_sdk_dict() {
         let a = RegisterToken::new("PZQX", 2, 8, 1, "p0 probe");

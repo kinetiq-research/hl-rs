@@ -15,9 +15,10 @@ pub struct UserGenesis {
     /// `[user, blacklist]` pairs: `true` blacklists the user from the genesis, `false` removes them
     /// from the blacklist. The docs type is `Option<Vec<[String, bool]>>`.
     ///
-    /// Skipped when `None`, so a genesis without it signs exactly the SDK's dict, which has no
-    /// such key. Addresses are sent as given; pass them lowercase, as the SDK does for
-    /// `userAndWei`.
+    /// Skipped when `None`, so a genesis without it signs exactly the SDK's dict, which has no such
+    /// key. Addresses are sent as given; pass them lowercase, as the SDK does for `userAndWei`. The
+    /// absent key and `[[addr,true]]` recover the signer; `null` does not (testnet 2026-11-20:
+    /// signed by a key approved nowhere, the answer named that key).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub blacklist_users: Option<Vec<(String, bool)>>,
     #[serde(skip_serializing)]
@@ -74,8 +75,8 @@ mod tests {
         );
     }
 
-    /// The docs' `blacklistUsers`, last, as `[user, bool]` arrays: the shape HyperCore answered
-    /// with `Incorrect deployer` (a recovered signer) on testnet, 2026-11-20.
+    /// The docs' `blacklistUsers`, last, as `[user, bool]` arrays: the shape that recovered its
+    /// signer (testnet 2026-11-20: signed by a key approved nowhere, the answer named that key).
     #[test]
     fn the_blacklist_is_last_as_user_bool_pairs() {
         let a = base().with_blacklist_users(vec![(B.into(), true), (A.into(), false)]);

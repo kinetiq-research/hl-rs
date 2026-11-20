@@ -65,8 +65,10 @@ pub struct BorrowLend {
     pub token: u64,
     /// Amount in human-readable units, not wei.
     ///
-    /// **`None` serializes as `null`, which HyperCore reads as the full amount.** See the type-level
-    /// docs; use [`BorrowLend::withdraw_all`] rather than writing `None` here.
+    /// **`None` serializes as `null`, which HyperCore reads as the full amount.** See the
+    /// type-level docs; use [`BorrowLend::withdraw_all`] rather than writing `None` here. `null`
+    /// recovers the signer and an omitted key does not (testnet 2026-11-20: signed by a key
+    /// approved nowhere, the answer named that key).
     ///
     /// Sent normalised (`1.50000000` -> `"1.5"`), as orders are and as the SDK's `float_to_wire`
     /// renders amounts, whatever scale the `Decimal` was built at.
@@ -170,11 +172,13 @@ mod tests {
     }
 
     /// The null amount is the full balance, so its encoding is worth pinning separately: a change
-    /// that made `None` serialize as an absent key, or as `0`, would mean something different.
-    /// A `Decimal` built at a fixed scale goes out normalised. Before this, an amount built as
+    /// that made `None` serialize as an absent key, or as `0`, would mean something different. A
+    /// `Decimal` built at a fixed scale goes out normalised. Before this, an amount built as
     /// 8-decimal fixed point (`1.50000000`) was sent with its scale, which is a different string
-    /// and so a different msgpack and hash from the SDK-style `"1.5"`. The msgpack is checked
-    /// against CPython `msgpack.packb` of `{"type":"borrowLend",...,"amount":"1.5"}`.
+    /// and so a different msgpack and hash from the SDK-style `"1.5"`. Both verify: each recovered
+    /// the signer (testnet 2026-11-20: signed by a key approved nowhere, the answer named that
+    /// key). So this is one rendering per amount, not a signing fix. The msgpack is checked against
+    /// CPython `msgpack.packb` of `{"type":"borrowLend",...,"amount":"1.5"}`.
     #[test]
     fn a_scaled_amount_is_sent_normalised() {
         let a = BorrowLend::supply(0, Decimal::from_i128_with_scale(150_000_000, 8));

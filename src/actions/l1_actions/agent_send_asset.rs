@@ -121,9 +121,9 @@ mod tests {
         assert_eq!(<AgentSendAsset as Action>::ACTION_TYPE, "agentSendAsset");
     }
 
-    /// The field order HyperCore accepted from an agent on testnet (2026-11-20, Phase 0: the
-    /// answer named the master's balance, not a mis-recovered signer), with the docs' key names:
-    /// `destination, sourceDex, destinationDex, token, amount, fromSubAccount, nonce`.
+    /// The field order that recovered its signer (testnet 2026-11-20: signed by a key approved
+    /// nowhere, the answer named that key), with the docs' key names: `destination, sourceDex,
+    /// destinationDex, token, amount, fromSubAccount, nonce`.
     #[test]
     fn the_wire_form_matches_the_accepted_body() {
         assert_eq!(

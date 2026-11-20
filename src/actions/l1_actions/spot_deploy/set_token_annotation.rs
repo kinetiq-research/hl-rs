@@ -10,8 +10,11 @@ use serde::{Deserialize, Serialize};
 pub struct TokenAnnotation {
     pub category: String,
     pub description: String,
-    /// **`None` is sent as `null`, not omitted.** That is the shape HyperCore deserialised and
-    /// verified (a recovered signer) on testnet, 2026-11-20. The omitted form was not measured.
+    /// **`None` is sent as `null`, never omitted.** Measured on testnet 2026-11-20 with a key
+    /// approved nowhere, whose answer (`User or API Wallet <addr> does not exist`) names the
+    /// recovered signer: `"displayName":null` and `"displayName":"PZQ"` each recovered that key,
+    /// and the same body with the key omitted recovered a random address. HyperCore re-serialises
+    /// a `None` display name as `null`, so omitting it would sign a body it never hashes.
     pub display_name: Option<String>,
     pub keywords: Vec<String>,
 }
@@ -46,8 +49,9 @@ mod tests {
         alloy::hex::encode(rmp_serde::to_vec_named(&L1ActionWrapper { action: a }).unwrap())
     }
 
-    /// The body HyperCore answered with `Incorrect deployer` (a recovered signer) on testnet,
-    /// 2026-11-20, against CPython `msgpack.packb`: a null display name and no keywords.
+    /// The body that recovered its signer on testnet 2026-11-20 (signed by a key approved
+    /// nowhere, the answer named that key), against CPython `msgpack.packb`: a null display name
+    /// and no keywords.
     #[test]
     fn the_minimal_annotation_matches_the_measured_body() {
         let a = SetTokenAnnotation::new(

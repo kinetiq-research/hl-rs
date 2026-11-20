@@ -23,8 +23,8 @@ mod tests {
     use super::*;
     use crate::actions::L1ActionWrapper;
 
-    /// The docs shape, which HyperCore deserialised and answered with `Incorrect deployer` (a
-    /// recovered signer) on testnet, 2026-11-20; against CPython `msgpack.packb`.
+    /// The docs shape, which recovered its signer (testnet 2026-11-20: signed by a key approved
+    /// nowhere, the answer named that key); against CPython `msgpack.packb`.
     #[test]
     fn msgpack_matches_python_reference() {
         let a = DisableQuoteToken::new(2);

@@ -42,6 +42,11 @@ pub struct ReserveRequestWeight {
     /// `{"type":"reserveRequestWeight","weight":1}` verified to the master and was charged, while
     /// the same body with `"destination":null` mis-recovered to a random address, for an agent's
     /// signature and the master's alike. HyperCore does not hash a null `destination` as sent.
+    ///
+    /// `Some` is sent as the lowercase address, after `weight`. Measured on testnet 2026-11-20 with
+    /// a key approved nowhere: `{"type":"reserveRequestWeight","weight":1,"destination":"0xaaf0…"}`
+    /// answered `Must deposit … User: <that key>`, so the signature recovered and HyperCore has the
+    /// field. What a reservation for another user does was not measured.
     #[serde(
         default,
         skip_serializing_if = "Option::is_none",
@@ -69,6 +74,9 @@ impl ReserveRequestWeight {
     }
 
     /// Reserve the weight for `destination` rather than the signer.
+    ///
+    /// The wire form is measured to recover the signer (see [`Self::destination`]); the effect,
+    /// whose balance pays and whose limit rises, is not.
     pub fn for_destination(mut self, destination: Address) -> Self {
         self.destination = Some(destination);
         self

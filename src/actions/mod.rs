@@ -186,4 +186,7 @@ impl_action_kind![
     FreezeUser,
     RevokeFreezePrivilege,
     EnableQuoteToken,
+    DisableQuoteToken,
+    SetDeployerLabel,
+    SetTokenAnnotation,
 ];

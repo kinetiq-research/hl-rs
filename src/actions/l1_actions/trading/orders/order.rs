@@ -6,27 +6,7 @@ use serde::{
 };
 use std::fmt;
 
-/// Serialize Decimal as normalized string for HL wire format (matches Python float_to_wire).
-fn serialize_decimal_wire<S>(d: &Decimal, serializer: S) -> Result<S::Ok, S::Error>
-where
-    S: Serializer,
-{
-    let s = d.normalize().to_string();
-    serializer.serialize_str(&s)
-}
-
-/// Deserialize Decimal from string.
-fn deserialize_decimal_wire<'de, D>(deserializer: D) -> Result<Decimal, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    use serde::de::Error;
-    let s = String::deserialize(deserializer)?;
-    s.trim()
-        .parse::<Decimal>()
-        .map_err(D::Error::custom)
-        .map(|d| d.normalize())
-}
+use crate::actions::serialization::{deserialize_decimal_wire, serialize_decimal_wire};
 
 /// Order type for limit orders with time-in-force.
 #[derive(Serialize, Deserialize, Debug, Clone)]

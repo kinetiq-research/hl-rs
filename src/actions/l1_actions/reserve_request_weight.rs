@@ -1,5 +1,6 @@
+use alloy::primitives::Address;
 use hl_rs_derive::L1Action;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
 
 /// Reserve additional request weight (rate-limit capacity).
 ///
@@ -34,16 +35,51 @@ use serde::{Deserialize, Serialize};
 pub struct ReserveRequestWeight {
     /// Number of additional actions to reserve.
     pub weight: u64,
+    /// The L1 user whose weight is reserved, when paying for someone other than the signer. The
+    /// docs show the field; most callers leave it `None`.
+    ///
+    /// **`None` is the absent key, never `null`.** Measured on testnet 2026-11-20: the body
+    /// `{"type":"reserveRequestWeight","weight":1}` verified to the master and was charged, while
+    /// the same body with `"destination":null` mis-recovered to a random address, for an agent's
+    /// signature and the master's alike. HyperCore does not hash a null `destination` as sent.
+    ///
+    /// `Some` is sent as the lowercase address, after `weight`. Measured on testnet 2026-11-20 with
+    /// a key approved nowhere: `{"type":"reserveRequestWeight","weight":1,"destination":"0xaaf0…"}`
+    /// answered `Must deposit … User: <that key>`, so the signature recovered and HyperCore has the
+    /// field. What a reservation for another user does was not measured.
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        serialize_with = "ser_lowercase_opt"
+    )]
+    pub destination: Option<Address>,
     #[serde(skip_serializing)]
     pub nonce: Option<u64>,
+}
+
+fn ser_lowercase_opt<S: Serializer>(a: &Option<Address>, s: S) -> Result<S::Ok, S::Error> {
+    match a {
+        Some(a) => s.serialize_str(&format!("{a:#x}")),
+        None => s.serialize_none(),
+    }
 }
 
 impl ReserveRequestWeight {
     pub fn new(weight: u64) -> Self {
         Self {
             weight,
+            destination: None,
             nonce: None,
         }
+    }
+
+    /// Reserve the weight for `destination` rather than the signer.
+    ///
+    /// The wire form is measured to recover the signer (see [`Self::destination`]); the effect,
+    /// whose balance pays and whose limit rises, is not.
+    pub fn for_destination(mut self, destination: Address) -> Self {
+        self.destination = Some(destination);
+        self
     }
 }
 
@@ -66,6 +102,38 @@ mod tests {
         assert_eq!(
             v.get("action").unwrap(),
             &json!({ "type": "reserveRequestWeight", "weight": 1234 })
+        );
+    }
+
+    fn msgpack_hex(a: &ReserveRequestWeight) -> String {
+        alloy::hex::encode(
+            rmp_serde::to_vec_named(&crate::actions::L1ActionWrapper { action: a }).unwrap(),
+        )
+    }
+
+    /// The body HyperCore verified and charged on testnet (2026-11-20), against CPython
+    /// `msgpack.packb`: no `destination` key, and in particular no `null`.
+    #[test]
+    fn no_destination_is_the_absent_key() {
+        let a = ReserveRequestWeight::new(1);
+        assert_eq!(serde_json::to_string(&a).unwrap(), r#"{"weight":1}"#);
+        assert_eq!(
+            msgpack_hex(&a),
+            "82a474797065b47265736572766552657175657374576569676874a677656967687401"
+        );
+    }
+
+    /// With a destination: after `weight`, as a lowercase hex string.
+    #[test]
+    fn a_destination_is_a_lowercase_address_after_the_weight() {
+        let a = ReserveRequestWeight::new(1).for_destination(Address::repeat_byte(0x22));
+        assert_eq!(
+            serde_json::to_string(&a).unwrap(),
+            r#"{"weight":1,"destination":"0x2222222222222222222222222222222222222222"}"#
+        );
+        assert_eq!(
+            msgpack_hex(&a),
+            "83a474797065b47265736572766552657175657374576569676874a677656967687401ab64657374696e6174696f6ed92a307832323232323232323232323232323232323232323232323232323232323232323232323232323232"
         );
     }
 

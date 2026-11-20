@@ -35,3 +35,12 @@ pub use enable_quote_token::EnableQuoteToken;
 
 mod freeze_user;
 pub use freeze_user::FreezeUser;
+
+mod disable_quote_token;
+pub use disable_quote_token::DisableQuoteToken;
+
+mod set_deployer_label;
+pub use set_deployer_label::SetDeployerLabel;
+
+mod set_token_annotation;
+pub use set_token_annotation::{SetTokenAnnotation, TokenAnnotation};

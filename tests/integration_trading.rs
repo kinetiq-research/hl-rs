@@ -282,10 +282,10 @@ async fn test_schedule_cancel_at_time() {
 }
 
 #[tokio::test]
-async fn test_schedule_cancel_now() {
-    let action = ScheduleCancel::now(); // Cancel all orders immediately
-    log_action("ScheduleCancel (now)", &action);
+async fn test_schedule_cancel_unset() {
+    let action = ScheduleCancel::unset(); // Unset any scheduled cancel
+    log_action("ScheduleCancel (unset)", &action);
 
     let result = send_action(action).await;
-    log_response("ScheduleCancel (now)", &result);
+    log_response("ScheduleCancel (unset)", &result);
 }

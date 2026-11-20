@@ -2,6 +2,8 @@ use hl_rs_derive::L1Action;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
+use crate::actions::serialization::serialize_opt_decimal_wire;
+
 /// Which side of a borrow/lend reserve an action moves.
 ///
 /// `Supply` and `Withdraw` are the two HyperCore's CoreWriter precompile also exposes (as
@@ -65,6 +67,10 @@ pub struct BorrowLend {
     ///
     /// **`None` serializes as `null`, which HyperCore reads as the full amount.** See the type-level
     /// docs; use [`BorrowLend::withdraw_all`] rather than writing `None` here.
+    ///
+    /// Sent normalised (`1.50000000` -> `"1.5"`), as orders are and as the SDK's `float_to_wire`
+    /// renders amounts, whatever scale the `Decimal` was built at.
+    #[serde(serialize_with = "serialize_opt_decimal_wire")]
     pub amount: Option<Decimal>,
     #[serde(skip_serializing)]
     pub nonce: Option<u64>,
@@ -165,6 +171,33 @@ mod tests {
 
     /// The null amount is the full balance, so its encoding is worth pinning separately: a change
     /// that made `None` serialize as an absent key, or as `0`, would mean something different.
+    /// A `Decimal` built at a fixed scale goes out normalised. Before this, an amount built as
+    /// 8-decimal fixed point (`1.50000000`) was sent with its scale, which is a different string
+    /// and so a different msgpack and hash from the SDK-style `"1.5"`. The msgpack is checked
+    /// against CPython `msgpack.packb` of `{"type":"borrowLend",...,"amount":"1.5"}`.
+    #[test]
+    fn a_scaled_amount_is_sent_normalised() {
+        let a = BorrowLend::supply(0, Decimal::from_i128_with_scale(150_000_000, 8));
+        assert_eq!(
+            serde_json::to_string(&a).unwrap(),
+            r#"{"operation":"supply","token":0,"amount":"1.5"}"#
+        );
+        assert_eq!(
+            alloy::hex::encode(
+                rmp_serde::to_vec_named(&crate::actions::L1ActionWrapper { action: &a }).unwrap()
+            ),
+            "84a474797065aa626f72726f774c656e64a96f7065726174696f6ea6737570706c79a5746f6b656e00a6616d6f756e74a3312e35"
+        );
+        for (scaled, want) in [
+            (Decimal::from_i128_with_scale(100_000_000, 8), "1"),
+            (Decimal::from_i128_with_scale(1, 8), "0.00000001"),
+            (Decimal::from_i128_with_scale(1_000_000_000_000, 8), "10000"),
+        ] {
+            let v = serde_json::to_value(BorrowLend::withdraw(0, scaled)).unwrap();
+            assert_eq!(v["amount"], want);
+        }
+    }
+
     #[test]
     fn withdraw_all_serializes_a_null_amount() {
         let json = serde_json::to_string(&BorrowLend::withdraw_all(0)).unwrap();

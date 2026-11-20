@@ -3,16 +3,8 @@ use hl_rs_derive::L1Action;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
-use crate::actions::serialization::ser_lowercase;
+use crate::actions::serialization::{ser_lowercase, serialize_decimal_wire};
 use crate::actions::DexId;
-
-/// HyperLiquid wants `amount` as a **string**, and the default `Decimal` serialization emits a
-/// number -- which the exchange rejects with a 422 and
-/// `"Failed to deserialize the JSON body into the target type"`, i.e. nothing about the field that
-/// is wrong. Measured 2026-11-16.
-fn ser_amount_as_string<S: serde::Serializer>(d: &Decimal, s: S) -> Result<S::Ok, S::Error> {
-    s.serialize_str(&d.normalize().to_string())
-}
 
 /// Send assets between DEXes **on behalf of the principal, signed by an agent**.
 ///
@@ -52,8 +44,9 @@ pub struct AgentSendAsset {
     /// `USDC:0xeb62eee3685fc4c43992febcd9e75443` on testnet, from `/info` `spotMeta`. A bare
     /// `"USDC"` is a 422. Only the collateral token may cross a perp DEX boundary.
     pub token: String,
-    /// Amount to move. Serialized as a string, as the exchange requires.
-    #[serde(serialize_with = "ser_amount_as_string")]
+    /// Amount to move, as a normalised string. A JSON number is refused with a bare 422,
+    /// `"Failed to deserialize the JSON body into the target type"` (measured 2026-11-16).
+    #[serde(serialize_with = "serialize_decimal_wire")]
     pub amount: Decimal,
     /// Source sub-account, or the empty string for the main account.
     ///

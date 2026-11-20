@@ -143,6 +143,7 @@ impl_action_kind![
     SubAccountSpotTransfer,
     VaultTransfer,
     BorrowLend,
+    AgentSendAsset,
     AgentEnableDexAbstraction,
     FinalizeEvmContract,
     // Trading actions

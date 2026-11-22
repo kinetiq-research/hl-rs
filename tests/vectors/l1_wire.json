@@ -1,5 +1,5 @@
 {
-  "provenance": "cw-enclave reference/vectors.json, section wire, written by reference/gen_wire_vectors.py. Cases with source sdk-method are built by hyperliquid-python-sdk's own Exchange methods; cases with source hand-built have no SDK method and carry the body shape HyperCore recovered the signer of on testnet. Hashes and digests are the SDK's action_hash / construct_phantom_agent / l1_payload.",
+  "provenance": "Cases of the order-family kinds (order, batch-order, cancel, cancel-fast, cancel-by-cloid, cancel-by-cloid-fast, modify-by-cloid, modify-by-oid, batch-modify, borrow-lend, borrow-lend-all) are written by tests/vectors/gen_order_family.py; the rest come from cw-enclave reference/vectors.json, section wire, written by reference/gen_wire_vectors.py. Cases with source sdk-method are built by hyperliquid-python-sdk's own Exchange methods; cases with source hand-built have no SDK method and carry the body shape HyperCore recovered the signer of on testnet, or the SDK body with the cancel fast flag added. Hashes and digests are the SDK's action_hash / construct_phantom_agent / l1_payload.",
   "sdk": "hyperliquid-python-sdk 0.21.0 (be7523d)",
   "note": "vault_address None, expires_after None; digest_* is the EIP-712 Agent digest the agent key signs, source a (mainnet) or b (testnet)",
   "cases": [
@@ -1019,6 +1019,919 @@
       "kind": "request-evm-contract",
       "msgpack": "0x82a474797065aa73706f744465706c6f79b27265717565737445766d436f6e747261637483a5746f6b656e07a761646472657373d92a307861623538303161376433393833353162386265313163343339653035633562333235396165633962b365766d4578747261576569446563696d616c73fe",
       "name": "request EVM contract, 2 fewer decimals (-2)",
+      "nonce": 1700000000000,
+      "source": "hand-built"
+    },
+    {
+      "action": {
+        "grouping": "na",
+        "orders": [
+          {
+            "a": 4,
+            "b": true,
+            "p": "3000",
+            "r": false,
+            "s": "1.5",
+            "t": {
+              "limit": {
+                "tif": "Alo"
+              }
+            }
+          }
+        ],
+        "type": "order"
+      },
+      "connection_id": "0x2896b06b82136df8f16db22a6abb43a8c0ad4ca2d5893184552778d29f74d21b",
+      "digest_mainnet": "0x274d74d6b44057dfddb1d8c808516f6cef329ccd770bc0c6d6018e149ffb08ba",
+      "digest_testnet": "0x26b145ee5a139b60735ed00fdc9b1e8b7bee8e84c25ea37a784ffd7c3afdd5ec",
+      "fields": {
+        "asset": 4,
+        "cloid": null,
+        "is_buy": true,
+        "limit_px": 300000000000,
+        "reduce_only": false,
+        "sz": 150000000,
+        "tif": "Alo"
+      },
+      "kind": "order",
+      "msgpack": "0x83a474797065a56f72646572a66f72646572739186a16104a162c3a170a433303030a173a3312e35a172c2a17481a56c696d697481a3746966a3416c6fa867726f7570696e67a26e61",
+      "name": "order, Alo buy at 3000, no cloid",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "grouping": "na",
+        "orders": [
+          {
+            "a": 159,
+            "b": false,
+            "c": "0x0123456789abcdef0123456789abcdef",
+            "p": "0.1",
+            "r": false,
+            "s": "1.5",
+            "t": {
+              "limit": {
+                "tif": "Alo"
+              }
+            }
+          }
+        ],
+        "type": "order"
+      },
+      "connection_id": "0xeccd8531cfc3df44a02150ec46a6b0524d922d37b4d5cc99483c6b771c50824b",
+      "digest_mainnet": "0x0ec811f6d9e50e626e51f1c2452837299d25cf0810e2561c35670db5071582e0",
+      "digest_testnet": "0xc01936be89ed78ddcf510a5d701ef2d575688cecdffe6c2ee044a7a788bd72d8",
+      "fields": {
+        "asset": 159,
+        "cloid": "0x0123456789abcdef0123456789abcdef",
+        "is_buy": false,
+        "limit_px": 10000000,
+        "reduce_only": false,
+        "sz": 150000000,
+        "tif": "Alo"
+      },
+      "kind": "order",
+      "msgpack": "0x83a474797065a56f72646572a66f72646572739187a161cc9fa162c2a170a3302e31a173a3312e35a172c2a17481a56c696d697481a3746966a3416c6fa163d92230783031323334353637383961626364656630313233343536373839616263646566a867726f7570696e67a26e61",
+      "name": "order, Alo sell at 0.1, cloid",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "grouping": "na",
+        "orders": [
+          {
+            "a": 10107,
+            "b": true,
+            "p": "0.1",
+            "r": false,
+            "s": "1.5",
+            "t": {
+              "limit": {
+                "tif": "Gtc"
+              }
+            }
+          }
+        ],
+        "type": "order"
+      },
+      "connection_id": "0x476b5075d76ed86e3477d823ea273ba6003c69022d7f90ed59bb4409d1b2c921",
+      "digest_mainnet": "0xd1ce0c288ccc00331919c08324bd375a9a1d270e710f49069da74dfa72056453",
+      "digest_testnet": "0xfc19e0d13029abb43993b612fc2b2000249e22027290e59b07731a4e1e1a78e8",
+      "fields": {
+        "asset": 10107,
+        "cloid": null,
+        "is_buy": true,
+        "limit_px": 10000000,
+        "reduce_only": false,
+        "sz": 150000000,
+        "tif": "Gtc"
+      },
+      "kind": "order",
+      "msgpack": "0x83a474797065a56f72646572a66f72646572739186a161cd277ba162c3a170a3302e31a173a3312e35a172c2a17481a56c696d697481a3746966a3477463a867726f7570696e67a26e61",
+      "name": "order, Gtc buy at 0.1 on a spot asset, no cloid",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "grouping": "na",
+        "orders": [
+          {
+            "a": 4,
+            "b": false,
+            "c": "0x00000000000000000000000000000001",
+            "p": "3000",
+            "r": false,
+            "s": "1.5",
+            "t": {
+              "limit": {
+                "tif": "Gtc"
+              }
+            }
+          }
+        ],
+        "type": "order"
+      },
+      "connection_id": "0xf55a9c01664a9a45cc1b57ce632daad1af1bcf2c29fb5483b557a55940faac18",
+      "digest_mainnet": "0xf5c94606ba74fe39ae840f5771687ca34324f2f19c6cf6a368535bc5f855c0c5",
+      "digest_testnet": "0xde8a8bcbc7377fda9b7510cc031d7b81cf04b3792199040b4b1043ab692ab8a4",
+      "fields": {
+        "asset": 4,
+        "cloid": "0x00000000000000000000000000000001",
+        "is_buy": false,
+        "limit_px": 300000000000,
+        "reduce_only": false,
+        "sz": 150000000,
+        "tif": "Gtc"
+      },
+      "kind": "order",
+      "msgpack": "0x83a474797065a56f72646572a66f72646572739187a16104a162c2a170a433303030a173a3312e35a172c2a17481a56c696d697481a3746966a3477463a163d92230783030303030303030303030303030303030303030303030303030303030303031a867726f7570696e67a26e61",
+      "name": "order, Gtc sell at 3000, smallest cloid",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "grouping": "na",
+        "orders": [
+          {
+            "a": 0,
+            "b": true,
+            "p": "3000",
+            "r": true,
+            "s": "1.5",
+            "t": {
+              "limit": {
+                "tif": "Ioc"
+              }
+            }
+          }
+        ],
+        "type": "order"
+      },
+      "connection_id": "0x377f3b9c71afbfcd691feb46b46a34bf1c3b564d43e160acffe9cfaef6d0f820",
+      "digest_mainnet": "0x13725b4d258793e5d84d4effe4ce8cd6c9611963d67de43be02311e392a1ad48",
+      "digest_testnet": "0xd5566bd2ec71cbc6fa06c0c7eace456d4104f959250d229abef0c41fc2ef204b",
+      "fields": {
+        "asset": 0,
+        "cloid": null,
+        "is_buy": true,
+        "limit_px": 300000000000,
+        "reduce_only": true,
+        "sz": 150000000,
+        "tif": "Ioc"
+      },
+      "kind": "order",
+      "msgpack": "0x83a474797065a56f72646572a66f72646572739186a16100a162c3a170a433303030a173a3312e35a172c3a17481a56c696d697481a3746966a3496f63a867726f7570696e67a26e61",
+      "name": "order, Ioc reduce-only buy at 3000, no cloid",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "grouping": "na",
+        "orders": [
+          {
+            "a": 159,
+            "b": false,
+            "c": "0xffffffffffffffffffffffffffffffff",
+            "p": "0.1",
+            "r": true,
+            "s": "1.5",
+            "t": {
+              "limit": {
+                "tif": "Ioc"
+              }
+            }
+          }
+        ],
+        "type": "order"
+      },
+      "connection_id": "0x254b11c0c9e350f276b0125a16ef926405b71f326a5fc70434270cc222160e91",
+      "digest_mainnet": "0xf12757d7bc44995c1c4ca19dfb728dd65cba0969e84c7f34530958aa8fc7d38d",
+      "digest_testnet": "0x2df6c08017c836bc37a0a2373ead428d8bef463b4da458e5bcf31f305e223a75",
+      "fields": {
+        "asset": 159,
+        "cloid": "0xffffffffffffffffffffffffffffffff",
+        "is_buy": false,
+        "limit_px": 10000000,
+        "reduce_only": true,
+        "sz": 150000000,
+        "tif": "Ioc"
+      },
+      "kind": "order",
+      "msgpack": "0x83a474797065a56f72646572a66f72646572739187a161cc9fa162c2a170a3302e31a173a3312e35a172c3a17481a56c696d697481a3746966a3496f63a163d92230786666666666666666666666666666666666666666666666666666666666666666a867726f7570696e67a26e61",
+      "name": "order, Ioc reduce-only sell at 0.1, widest cloid",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "grouping": "na",
+        "orders": [
+          {
+            "a": 4,
+            "b": true,
+            "c": "0x00000000000000000000000000000001",
+            "p": "3000",
+            "r": false,
+            "s": "1.5",
+            "t": {
+              "limit": {
+                "tif": "Alo"
+              }
+            }
+          },
+          {
+            "a": 159,
+            "b": false,
+            "c": "0x0123456789abcdef0123456789abcdef",
+            "p": "0.1",
+            "r": false,
+            "s": "1.5",
+            "t": {
+              "limit": {
+                "tif": "Gtc"
+              }
+            }
+          },
+          {
+            "a": 0,
+            "b": true,
+            "c": "0xffffffffffffffffffffffffffffffff",
+            "p": "3000",
+            "r": true,
+            "s": "1.5",
+            "t": {
+              "limit": {
+                "tif": "Ioc"
+              }
+            }
+          }
+        ],
+        "type": "order"
+      },
+      "connection_id": "0xe1823599fc50042e49cca1f681ebeb8795a94b113102f7d48ad0a29f6c268301",
+      "digest_mainnet": "0x992c76cfdce1d4fcfc17574e77c37b31a4d6f7b6dd25694fa5b24099abe6ff99",
+      "digest_testnet": "0x9963d9c62ab07715186f5a445b585dbeb3470837c4cfa46d55ae83dd248afecd",
+      "fields": {
+        "orders": [
+          {
+            "asset": 4,
+            "cloid": "0x00000000000000000000000000000001",
+            "is_buy": true,
+            "limit_px": 300000000000,
+            "reduce_only": false,
+            "sz": 150000000,
+            "tif": "Alo"
+          },
+          {
+            "asset": 159,
+            "cloid": "0x0123456789abcdef0123456789abcdef",
+            "is_buy": false,
+            "limit_px": 10000000,
+            "reduce_only": false,
+            "sz": 150000000,
+            "tif": "Gtc"
+          },
+          {
+            "asset": 0,
+            "cloid": "0xffffffffffffffffffffffffffffffff",
+            "is_buy": true,
+            "limit_px": 300000000000,
+            "reduce_only": true,
+            "sz": 150000000,
+            "tif": "Ioc"
+          }
+        ]
+      },
+      "kind": "batch-order",
+      "msgpack": "0x83a474797065a56f72646572a66f72646572739387a16104a162c3a170a433303030a173a3312e35a172c2a17481a56c696d697481a3746966a3416c6fa163d9223078303030303030303030303030303030303030303030303030303030303030303187a161cc9fa162c2a170a3302e31a173a3312e35a172c2a17481a56c696d697481a3746966a3477463a163d9223078303132333435363738396162636465663031323334353637383961626364656687a16100a162c3a170a433303030a173a3312e35a172c3a17481a56c696d697481a3746966a3496f63a163d92230786666666666666666666666666666666666666666666666666666666666666666a867726f7570696e67a26e61",
+      "name": "bulk orders, one per tif, every one with a cloid",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "grouping": "na",
+        "orders": [
+          {
+            "a": 4,
+            "b": false,
+            "c": "0x0123456789abcdef0123456789abcdef",
+            "p": "3000",
+            "r": false,
+            "s": "1.5",
+            "t": {
+              "limit": {
+                "tif": "Alo"
+              }
+            }
+          },
+          {
+            "a": 10107,
+            "b": true,
+            "p": "0.1",
+            "r": false,
+            "s": "1.5",
+            "t": {
+              "limit": {
+                "tif": "Gtc"
+              }
+            }
+          }
+        ],
+        "type": "order"
+      },
+      "connection_id": "0xc2760d231536810f69d8fec2b95a35cb7b3e4fedc8131cbb1f6ce419a73a723b",
+      "digest_mainnet": "0x157ad526a96f5b92794c73f3b86ceba9276028c65449da224e167c9023378e1d",
+      "digest_testnet": "0xbf74bc51bf719d9e7c8dde9a902c5e2b73019f24ad665777af2bf635c5323e6e",
+      "fields": {
+        "orders": [
+          {
+            "asset": 4,
+            "cloid": "0x0123456789abcdef0123456789abcdef",
+            "is_buy": false,
+            "limit_px": 300000000000,
+            "reduce_only": false,
+            "sz": 150000000,
+            "tif": "Alo"
+          },
+          {
+            "asset": 10107,
+            "cloid": null,
+            "is_buy": true,
+            "limit_px": 10000000,
+            "reduce_only": false,
+            "sz": 150000000,
+            "tif": "Gtc"
+          }
+        ]
+      },
+      "kind": "batch-order",
+      "msgpack": "0x83a474797065a56f72646572a66f72646572739287a16104a162c2a170a433303030a173a3312e35a172c2a17481a56c696d697481a3746966a3416c6fa163d9223078303132333435363738396162636465663031323334353637383961626364656686a161cd277ba162c3a170a3302e31a173a3312e35a172c2a17481a56c696d697481a3746966a3477463a867726f7570696e67a26e61",
+      "name": "bulk orders, two, one without a cloid",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "cancels": [
+          {
+            "a": 4,
+            "o": 63638909939
+          }
+        ],
+        "type": "cancel"
+      },
+      "connection_id": "0xe1ef29c5d39de5b3b21402ba74b8fdd26b5bee0cf1c61b3faea688c91618290d",
+      "digest_mainnet": "0xa262ca57304ec4f4e63406987d4f093fc31422dab6f04fcf7cdebe186b7cf3d4",
+      "digest_testnet": "0x6ec33a41bda927ea47694ef9ee111ea1d8570b34a77edad3c0a07f0c25f2eee8",
+      "fields": {
+        "cancels": [
+          {
+            "asset": 4,
+            "oid": 63638909939
+          }
+        ]
+      },
+      "kind": "cancel",
+      "msgpack": "0x82a474797065a663616e63656ca763616e63656c739182a16104a16fcf0000000ed12cb3f3",
+      "name": "cancel by oid",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "cancels": [
+          {
+            "a": 4,
+            "o": 63638909939
+          },
+          {
+            "a": 159,
+            "o": 18446744073709551615
+          }
+        ],
+        "type": "cancel"
+      },
+      "connection_id": "0xec646da361e64358d6f4fe6aa6dbff6bf649c6dc7fd53d95232643a1618651ba",
+      "digest_mainnet": "0xa10cf7a5b2cdcc6ca36ad2f09eb01103cd4ae5af25e1602669c75aad588d8b11",
+      "digest_testnet": "0x47064e0ee4839e2c1d46f078fd928f8850ce61cde0a64341306fcd86d3063f11",
+      "fields": {
+        "cancels": [
+          {
+            "asset": 4,
+            "oid": 63638909939
+          },
+          {
+            "asset": 159,
+            "oid": 18446744073709551615
+          }
+        ]
+      },
+      "kind": "cancel",
+      "msgpack": "0x82a474797065a663616e63656ca763616e63656c739282a16104a16fcf0000000ed12cb3f382a161cc9fa16fcfffffffffffffffff",
+      "name": "bulk cancel by oid, two, the widest oid",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "cancels": [
+          {
+            "asset": 159,
+            "cloid": "0x0123456789abcdef0123456789abcdef"
+          }
+        ],
+        "type": "cancelByCloid"
+      },
+      "connection_id": "0x7844ecc4ef42b163bc550e6a7ccbd4367551a6f50e82ea369738c6323be34a26",
+      "digest_mainnet": "0xad94897adab6ae2545ba8953a09ad5f62353a4c11a230607f0497bfc1f68e5ce",
+      "digest_testnet": "0xfc4e34b15bb25f0b04889a0775379952b9e4c47b28a4b39e4e810ca35cc0bae1",
+      "fields": {
+        "cancels": [
+          {
+            "asset": 159,
+            "cloid": "0x0123456789abcdef0123456789abcdef"
+          }
+        ]
+      },
+      "kind": "cancel-by-cloid",
+      "msgpack": "0x82a474797065ad63616e63656c4279436c6f6964a763616e63656c739182a56173736574cc9fa5636c6f6964d92230783031323334353637383961626364656630313233343536373839616263646566",
+      "name": "cancel by cloid",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "cancels": [
+          {
+            "asset": 4,
+            "cloid": "0x00000000000000000000000000000001"
+          },
+          {
+            "asset": 10107,
+            "cloid": "0xffffffffffffffffffffffffffffffff"
+          }
+        ],
+        "type": "cancelByCloid"
+      },
+      "connection_id": "0x9b0de53f7982385ed1e5433dea0cde2fafbdff20cb41ebb0c3d9ef29ec34a3ee",
+      "digest_mainnet": "0x7cbcd1aa9629272fccd28c39a08f81ef950b989ffc1867c9765847e858c70aba",
+      "digest_testnet": "0x75fb1a7925a53642c0a6150d06e0f5142776d5ad9f3218dcb473252a98afc435",
+      "fields": {
+        "cancels": [
+          {
+            "asset": 4,
+            "cloid": "0x00000000000000000000000000000001"
+          },
+          {
+            "asset": 10107,
+            "cloid": "0xffffffffffffffffffffffffffffffff"
+          }
+        ]
+      },
+      "kind": "cancel-by-cloid",
+      "msgpack": "0x82a474797065ad63616e63656c4279436c6f6964a763616e63656c739282a5617373657404a5636c6f6964d9223078303030303030303030303030303030303030303030303030303030303030303182a56173736574cd277ba5636c6f6964d92230786666666666666666666666666666666666666666666666666666666666666666",
+      "name": "bulk cancel by cloid, two",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "modifies": [
+          {
+            "oid": "0x00000000000000000000000000000001",
+            "order": {
+              "a": 4,
+              "b": true,
+              "c": "0x0123456789abcdef0123456789abcdef",
+              "p": "3000",
+              "r": false,
+              "s": "1.5",
+              "t": {
+                "limit": {
+                  "tif": "Alo"
+                }
+              }
+            }
+          }
+        ],
+        "type": "batchModify"
+      },
+      "connection_id": "0x5fdf1aaa16bcbbe427a2c062c16e822a1a07fef81c082916ad34944867987dc8",
+      "digest_mainnet": "0x95793fd08734b634b1087abbcf852b851464bb214b0f0f0b6efceff385ed0d7e",
+      "digest_testnet": "0xf4f990bcdaf020166976c352b98c8d1f08259349d801fc32404da014159b5017",
+      "fields": {
+        "order": {
+          "asset": 4,
+          "cloid": "0x0123456789abcdef0123456789abcdef",
+          "is_buy": true,
+          "limit_px": 300000000000,
+          "reduce_only": false,
+          "sz": 150000000,
+          "tif": "Alo"
+        },
+        "target": "0x00000000000000000000000000000001"
+      },
+      "kind": "modify-by-cloid",
+      "msgpack": "0x82a474797065ab62617463684d6f64696679a86d6f6469666965739182a36f6964d92230783030303030303030303030303030303030303030303030303030303030303031a56f7264657287a16104a162c3a170a433303030a173a3312e35a172c2a17481a56c696d697481a3746966a3416c6fa163d92230783031323334353637383961626364656630313233343536373839616263646566",
+      "name": "modify by cloid, Alo, new cloid",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "modifies": [
+          {
+            "oid": "0xffffffffffffffffffffffffffffffff",
+            "order": {
+              "a": 159,
+              "b": false,
+              "p": "0.1",
+              "r": false,
+              "s": "1.5",
+              "t": {
+                "limit": {
+                  "tif": "Gtc"
+                }
+              }
+            }
+          }
+        ],
+        "type": "batchModify"
+      },
+      "connection_id": "0xbfb64253d325fa55a58d43f04719ff13f2af1d5da13544dc923f855d3fd9d8e1",
+      "digest_mainnet": "0xfcabbe2506f7f09fc419f3a77358a8e95b6d973c0bcecb672c70c15eb02efcfc",
+      "digest_testnet": "0x7a3ca945d7ec75710a8731c7a91e39e078d21d2552187e7542446ddb574c1160",
+      "fields": {
+        "order": {
+          "asset": 159,
+          "cloid": null,
+          "is_buy": false,
+          "limit_px": 10000000,
+          "reduce_only": false,
+          "sz": 150000000,
+          "tif": "Gtc"
+        },
+        "target": "0xffffffffffffffffffffffffffffffff"
+      },
+      "kind": "modify-by-cloid",
+      "msgpack": "0x82a474797065ab62617463684d6f64696679a86d6f6469666965739182a36f6964d92230786666666666666666666666666666666666666666666666666666666666666666a56f7264657286a161cc9fa162c2a170a3302e31a173a3312e35a172c2a17481a56c696d697481a3746966a3477463",
+      "name": "modify by cloid, Gtc, no new cloid",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "modifies": [
+          {
+            "oid": 63638909939,
+            "order": {
+              "a": 0,
+              "b": false,
+              "c": "0xffffffffffffffffffffffffffffffff",
+              "p": "3000",
+              "r": true,
+              "s": "1.5",
+              "t": {
+                "limit": {
+                  "tif": "Ioc"
+                }
+              }
+            }
+          }
+        ],
+        "type": "batchModify"
+      },
+      "connection_id": "0xd67370a4c8f2142024e26c5086474a392f5c9c6f2895991daa215b6f6e6ca7f3",
+      "digest_mainnet": "0x25de2b6d859394bc145a43e4b55e34f564f189c3ceacf2d75598f9b55cf1e8f4",
+      "digest_testnet": "0x7d1adfb08292b5b109c63a7c7990ecc009c47d27d4c4c70d7ef9aebf4dbbe766",
+      "fields": {
+        "order": {
+          "asset": 0,
+          "cloid": "0xffffffffffffffffffffffffffffffff",
+          "is_buy": false,
+          "limit_px": 300000000000,
+          "reduce_only": true,
+          "sz": 150000000,
+          "tif": "Ioc"
+        },
+        "target": 63638909939
+      },
+      "kind": "modify-by-oid",
+      "msgpack": "0x82a474797065ab62617463684d6f64696679a86d6f6469666965739182a36f6964cf0000000ed12cb3f3a56f7264657287a16100a162c2a170a433303030a173a3312e35a172c3a17481a56c696d697481a3746966a3496f63a163d92230786666666666666666666666666666666666666666666666666666666666666666",
+      "name": "modify by oid, Ioc reduce-only",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "modifies": [
+          {
+            "oid": "0x00000000000000000000000000000001",
+            "order": {
+              "a": 4,
+              "b": true,
+              "c": "0x0123456789abcdef0123456789abcdef",
+              "p": "3000",
+              "r": false,
+              "s": "1.5",
+              "t": {
+                "limit": {
+                  "tif": "Alo"
+                }
+              }
+            }
+          },
+          {
+            "oid": "0xffffffffffffffffffffffffffffffff",
+            "order": {
+              "a": 159,
+              "b": false,
+              "c": "0x00000000000000000000000000000001",
+              "p": "0.1",
+              "r": true,
+              "s": "1.5",
+              "t": {
+                "limit": {
+                  "tif": "Gtc"
+                }
+              }
+            }
+          }
+        ],
+        "type": "batchModify"
+      },
+      "connection_id": "0x486907a8ceb031f90ce887ce22c805e1b8e76a0e0212e6659b7e5f3fc19df3c1",
+      "digest_mainnet": "0x32609b956b1213b8a68355a2a9d837c16837a4d961da81ca4865ff356313b983",
+      "digest_testnet": "0xf676318432d8c704f09f5de1246b71a2e9c5d35c0026564ea265476f852b9e6f",
+      "fields": {
+        "modifies": [
+          {
+            "order": {
+              "asset": 4,
+              "cloid": "0x0123456789abcdef0123456789abcdef",
+              "is_buy": true,
+              "limit_px": 300000000000,
+              "reduce_only": false,
+              "sz": 150000000,
+              "tif": "Alo"
+            },
+            "target": "0x00000000000000000000000000000001"
+          },
+          {
+            "order": {
+              "asset": 159,
+              "cloid": "0x00000000000000000000000000000001",
+              "is_buy": false,
+              "limit_px": 10000000,
+              "reduce_only": true,
+              "sz": 150000000,
+              "tif": "Gtc"
+            },
+            "target": "0xffffffffffffffffffffffffffffffff"
+          }
+        ]
+      },
+      "kind": "batch-modify",
+      "msgpack": "0x82a474797065ab62617463684d6f64696679a86d6f6469666965739282a36f6964d92230783030303030303030303030303030303030303030303030303030303030303031a56f7264657287a16104a162c3a170a433303030a173a3312e35a172c2a17481a56c696d697481a3746966a3416c6fa163d9223078303132333435363738396162636465663031323334353637383961626364656682a36f6964d92230786666666666666666666666666666666666666666666666666666666666666666a56f7264657287a161cc9fa162c2a170a3302e31a173a3312e35a172c3a17481a56c696d697481a3746966a3477463a163d92230783030303030303030303030303030303030303030303030303030303030303031",
+      "name": "bulk modify, two, by cloid",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "cancels": [
+          {
+            "a": 4,
+            "o": 63638909939
+          }
+        ],
+        "f": true,
+        "type": "cancel"
+      },
+      "connection_id": "0x309b5b49370673f07d89453c644a40886019c67684f2b64a2dc99a716e4fe382",
+      "digest_mainnet": "0xa636e2e54f1cf8cd0fa880ab48238c51d72dacff5d631245d0c23f435cdc5326",
+      "digest_testnet": "0xa21c6a8c5379b5a6c533cffd62015883397313644067d54a60b7e2ff5598c597",
+      "fields": {
+        "cancels": [
+          {
+            "asset": 4,
+            "oid": 63638909939
+          }
+        ]
+      },
+      "kind": "cancel-fast",
+      "msgpack": "0x83a474797065a663616e63656ca763616e63656c739182a16104a16fcf0000000ed12cb3f3a166c3",
+      "name": "cancel by oid, fast",
+      "nonce": 1700000000000,
+      "source": "hand-built"
+    },
+    {
+      "action": {
+        "cancels": [
+          {
+            "a": 4,
+            "o": 63638909939
+          },
+          {
+            "a": 159,
+            "o": 18446744073709551615
+          }
+        ],
+        "f": true,
+        "type": "cancel"
+      },
+      "connection_id": "0x85d7cd64e54435cf2be3c9f724dda698bf5e1ea309104aaa83ab793fdca5d77e",
+      "digest_mainnet": "0x21dd1ac626fe2ee81de71d2d0f73ee8e50b6b00a988d46b3c89522efad9fb01f",
+      "digest_testnet": "0xb71db98d6a9656ec085369769aaa1a88a02238d4147aa05f3e861beed2920dde",
+      "fields": {
+        "cancels": [
+          {
+            "asset": 4,
+            "oid": 63638909939
+          },
+          {
+            "asset": 159,
+            "oid": 18446744073709551615
+          }
+        ]
+      },
+      "kind": "cancel-fast",
+      "msgpack": "0x83a474797065a663616e63656ca763616e63656c739282a16104a16fcf0000000ed12cb3f382a161cc9fa16fcfffffffffffffffffa166c3",
+      "name": "bulk cancel by oid, two, fast",
+      "nonce": 1700000000000,
+      "source": "hand-built"
+    },
+    {
+      "action": {
+        "cancels": [
+          {
+            "asset": 159,
+            "cloid": "0x0123456789abcdef0123456789abcdef"
+          }
+        ],
+        "f": true,
+        "type": "cancelByCloid"
+      },
+      "connection_id": "0x2dba3f792dbc1a8e16913245f341b6717c3cb970110f8bbfd38864cd25ebf630",
+      "digest_mainnet": "0xfaaaf1fa8ac49aaf02ce8862106c77789bf6f46d1582288e4f3a39bc732209f5",
+      "digest_testnet": "0x763804229aa97c8271d7c29ff3e09e9becf7e882e5d7eb3d2191eb0f0531efb8",
+      "fields": {
+        "cancels": [
+          {
+            "asset": 159,
+            "cloid": "0x0123456789abcdef0123456789abcdef"
+          }
+        ]
+      },
+      "kind": "cancel-by-cloid-fast",
+      "msgpack": "0x83a474797065ad63616e63656c4279436c6f6964a763616e63656c739182a56173736574cc9fa5636c6f6964d92230783031323334353637383961626364656630313233343536373839616263646566a166c3",
+      "name": "cancel by cloid, fast",
+      "nonce": 1700000000000,
+      "source": "hand-built"
+    },
+    {
+      "action": {
+        "cancels": [
+          {
+            "asset": 4,
+            "cloid": "0x00000000000000000000000000000001"
+          },
+          {
+            "asset": 10107,
+            "cloid": "0xffffffffffffffffffffffffffffffff"
+          }
+        ],
+        "f": true,
+        "type": "cancelByCloid"
+      },
+      "connection_id": "0x0d916f86678b310a47016c25c4dbb6af9c8b0bbec13a1104cb878e824b97f627",
+      "digest_mainnet": "0x2b318b488a6d9e06285e69a12a2c34c03a488124d5ea52b69bbaaf2d588efa20",
+      "digest_testnet": "0x170d3bbd33c3bad58b93bf5b718826a28dc394ae972609fc9837bdec84363196",
+      "fields": {
+        "cancels": [
+          {
+            "asset": 4,
+            "cloid": "0x00000000000000000000000000000001"
+          },
+          {
+            "asset": 10107,
+            "cloid": "0xffffffffffffffffffffffffffffffff"
+          }
+        ]
+      },
+      "kind": "cancel-by-cloid-fast",
+      "msgpack": "0x83a474797065ad63616e63656c4279436c6f6964a763616e63656c739282a5617373657404a5636c6f6964d9223078303030303030303030303030303030303030303030303030303030303030303182a56173736574cd277ba5636c6f6964d92230786666666666666666666666666666666666666666666666666666666666666666a166c3",
+      "name": "bulk cancel by cloid, two, fast",
+      "nonce": 1700000000000,
+      "source": "hand-built"
+    },
+    {
+      "action": {
+        "amount": "1.5",
+        "operation": "supply",
+        "token": 0,
+        "type": "borrowLend"
+      },
+      "connection_id": "0xb4b5d2edda1ab7ebcaa1fafcc0e56f22175509f5bf6e3fcb75f1e1bab82dc575",
+      "digest_mainnet": "0x3d4020d51b16a0be87607b2a0ee1e645410961d9935d9435def2d378596e478f",
+      "digest_testnet": "0x1335d461c14d281a116136f0824c8dbf2e3f15ab44e5498e0325e32ac7ddf4b6",
+      "fields": {
+        "operation": "supply",
+        "token": 0,
+        "wei": 150000000
+      },
+      "kind": "borrow-lend",
+      "msgpack": "0x84a474797065aa626f72726f774c656e64a96f7065726174696f6ea6737570706c79a5746f6b656e00a6616d6f756e74a3312e35",
+      "name": "borrow lend, supply 1.5",
+      "nonce": 1700000000000,
+      "source": "hand-built"
+    },
+    {
+      "action": {
+        "amount": "0.25",
+        "operation": "withdraw",
+        "token": 0,
+        "type": "borrowLend"
+      },
+      "connection_id": "0x03fd219ed98ad7a2dbb769b609fcaab5672bac492e339195785782a3811baf84",
+      "digest_mainnet": "0x92aada7087260f3d9040b2af21d811e333b63f4f3b953b0a52c0569fc15aa205",
+      "digest_testnet": "0x5f4196c00fe44f91a9bca6005a041bb93626dcbdf87dead972450f40e84bf402",
+      "fields": {
+        "operation": "withdraw",
+        "token": 0,
+        "wei": 25000000
+      },
+      "kind": "borrow-lend",
+      "msgpack": "0x84a474797065aa626f72726f774c656e64a96f7065726174696f6ea87769746864726177a5746f6b656e00a6616d6f756e74a4302e3235",
+      "name": "borrow lend, withdraw 0.25",
+      "nonce": 1700000000000,
+      "source": "hand-built"
+    },
+    {
+      "action": {
+        "amount": null,
+        "operation": "supply",
+        "token": 0,
+        "type": "borrowLend"
+      },
+      "connection_id": "0xf1b3ffe45e07e0815dc29ae0d8d9248135e104b1f9ed16a2fa73f2bd47f9bccc",
+      "digest_mainnet": "0xe830c6b736b94201ff9479a17a833561606cda0a0fbfa0d0a2506fe6c93f6230",
+      "digest_testnet": "0x6b3dcd81989d42e5abfc1fb9d3577924c8c32d03d7d183d4faef5984eb171d73",
+      "fields": {
+        "operation": "supply",
+        "token": 0,
+        "wei": 0
+      },
+      "kind": "borrow-lend-all",
+      "msgpack": "0x84a474797065aa626f72726f774c656e64a96f7065726174696f6ea6737570706c79a5746f6b656e00a6616d6f756e74c0",
+      "name": "borrow lend, supply the whole balance (null)",
+      "nonce": 1700000000000,
+      "source": "hand-built"
+    },
+    {
+      "action": {
+        "amount": null,
+        "operation": "withdraw",
+        "token": 0,
+        "type": "borrowLend"
+      },
+      "connection_id": "0xf3b758f8cefd481b7159a945ce11dd9265d02bb514b83e3c5cab5e91354a150d",
+      "digest_mainnet": "0xef740a0a71ed164a95eda1232c78311bcdd169f7795d821c0b0f4ef5c0e189c1",
+      "digest_testnet": "0x00ba044825e2d3c205615b805e7d4b1f5cbb8778232e15a798a0c1ef72aec641",
+      "fields": {
+        "operation": "withdraw",
+        "token": 0,
+        "wei": 0
+      },
+      "kind": "borrow-lend-all",
+      "msgpack": "0x84a474797065aa626f72726f774c656e64a96f7065726174696f6ea87769746864726177a5746f6b656e00a6616d6f756e74c0",
+      "name": "borrow lend, withdraw the whole balance (null)",
       "nonce": 1700000000000,
       "source": "hand-built"
     }

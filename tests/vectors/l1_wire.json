@@ -1,0 +1,1026 @@
+{
+  "provenance": "cw-enclave reference/vectors.json, section wire, written by reference/gen_wire_vectors.py. Cases with source sdk-method are built by hyperliquid-python-sdk's own Exchange methods; cases with source hand-built have no SDK method and carry the body shape HyperCore recovered the signer of on testnet. Hashes and digests are the SDK's action_hash / construct_phantom_agent / l1_payload.",
+  "sdk": "hyperliquid-python-sdk 0.21.0 (be7523d)",
+  "note": "vault_address None, expires_after None; digest_* is the EIP-712 Agent digest the agent key signs, source a (mainnet) or b (testnet)",
+  "cases": [
+    {
+      "action": {
+        "asset": 4,
+        "isCross": true,
+        "leverage": 20,
+        "type": "updateLeverage"
+      },
+      "connection_id": "0x48083ae52a9d07a39d896451d6af4345aaf3a1bca5be0b1f743fd7d05baf76f1",
+      "digest_mainnet": "0xf08a7351c6ec215172b092c016ac1e2b4694c6375d45b88448fd3582503e9064",
+      "digest_testnet": "0xcaa755a5956fb39e3543c2499573c2d4e36f00a00e6e88184c9f5368ec61aed4",
+      "fields": {
+        "asset": 4,
+        "is_cross": true,
+        "leverage": 20
+      },
+      "kind": "update-leverage",
+      "msgpack": "0x84a474797065ae7570646174654c65766572616765a5617373657404a7697343726f7373c3a86c6576657261676514",
+      "name": "update leverage, cross",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "asset": 159,
+        "isCross": false,
+        "leverage": 3,
+        "type": "updateLeverage"
+      },
+      "connection_id": "0x2b2b6ab1ed4d4edd7bbfcc34e4174ce6e7559bd587b3c0df61cb28068344d999",
+      "digest_mainnet": "0x7143328e801df77e9c7ae7af31e3cefd58e8492c755c8ed88c1ee3b6d72c42b0",
+      "digest_testnet": "0xc18203ea0896f3936e5173b8f9980b6b31f0c30bda136ee934b2f7a1a9f7da84",
+      "fields": {
+        "asset": 159,
+        "is_cross": false,
+        "leverage": 3
+      },
+      "kind": "update-leverage",
+      "msgpack": "0x84a474797065ae7570646174654c65766572616765a56173736574cc9fa7697343726f7373c2a86c6576657261676503",
+      "name": "update leverage, isolated",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "time": 1700000060000,
+        "type": "scheduleCancel"
+      },
+      "connection_id": "0x543d84c42876132614aca907b0dbd95399b942229d79e0f1c5eb81f1592e2ddf",
+      "digest_mainnet": "0x2328b8ab69b2ed78b109d7accb34b8784aa308f9331be1e26962bff7d031c264",
+      "digest_testnet": "0x7984736cc03fcec3c6907ef5b1ea48755e8bcaf14752503c9a65530210d071d7",
+      "fields": {
+        "time_ms": 1700000060000
+      },
+      "kind": "schedule-cancel",
+      "msgpack": "0x82a474797065ae7363686564756c6543616e63656ca474696d65cf0000018bcfe65260",
+      "name": "schedule cancel, armed",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "type": "scheduleCancel"
+      },
+      "connection_id": "0x3203332b8f438c09b3d96dc86b924df85640505711dacbbe2ba373d7f16ef09c",
+      "digest_mainnet": "0x5e42eda016cade5efaa5e3adfac1b95025f761934e78f583054b3430d098d987",
+      "digest_testnet": "0x4cd0b6d952848dbdd0e2f04ed4634f12d2d1e92747afb1008a1f159ef61444ea",
+      "fields": {
+        "time_ms": 0
+      },
+      "kind": "schedule-cancel-unset",
+      "msgpack": "0x81a474797065ae7363686564756c6543616e63656c",
+      "name": "schedule cancel, unset",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "code": "KINETIQ",
+        "type": "setReferrer"
+      },
+      "connection_id": "0x3b4ba8d351921414333b80c1eb43f609d380b9c7af9f24225413d6111bdef7ae",
+      "digest_mainnet": "0xa4119557d786b6cad093385e072840458d26d9d25afa18fc7341908243f72cec",
+      "digest_testnet": "0xf857364595ea2c0f336c8bcefe9d6d3fd7f621d3a444e2325468f73232698b9e",
+      "fields": {
+        "code": "KINETIQ"
+      },
+      "kind": "set-referrer",
+      "msgpack": "0x82a474797065ab7365745265666572726572a4636f6465a74b494e45544951",
+      "name": "set referrer",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "type": "evmUserModify",
+        "usingBigBlocks": true
+      },
+      "connection_id": "0xeac133f11f3bc0a1da0f1012a24a27c8aec1628f4d5eca3fb6c84dfd1094e5a0",
+      "digest_mainnet": "0x101355f6ebd168afc42ab58fb5f4fdba42b08d33262418908aa178f3f60a4073",
+      "digest_testnet": "0x392e2633d016636f28c55a3118c3bc72ab40898690dea49b085836e60c4a75e9",
+      "fields": {
+        "using_big_blocks": true
+      },
+      "kind": "toggle-big-blocks",
+      "msgpack": "0x82a474797065ad65766d557365724d6f64696679ae7573696e67426967426c6f636b73c3",
+      "name": "toggle big blocks, on",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "type": "evmUserModify",
+        "usingBigBlocks": false
+      },
+      "connection_id": "0x4ca5cdbac708be03360d7ed26fc4af0f9eeda06803fbd1b07625a89a020446c2",
+      "digest_mainnet": "0x1bb4527c92c792451ef3668ecdc78ac1402312cdacbea39756d038e57c85f19e",
+      "digest_testnet": "0x65d8614ee12f4bb67eb42f17cfcceb540ca336db2c252188268bcdb28269870d",
+      "fields": {
+        "using_big_blocks": false
+      },
+      "kind": "toggle-big-blocks",
+      "msgpack": "0x82a474797065ad65766d557365724d6f64696679ae7573696e67426967426c6f636b73c2",
+      "name": "toggle big blocks, off",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "asset": 4,
+        "isBuy": true,
+        "ntli": 1500000,
+        "type": "updateIsolatedMargin"
+      },
+      "connection_id": "0x2a4676f131830e01640f7c7831fb799fba1888407a9e0e8d6ac9d56e58f13e47",
+      "digest_mainnet": "0x6657507fe86529fc376a82ee8f7aec173a63b83d60e4a60ff81e8352f7f7efc7",
+      "digest_testnet": "0x0c8a8c0fe6086056c5d1f8b13e834114b0c93dad0cc2decb24de5172a79a48a1",
+      "fields": {
+        "asset": 4,
+        "is_add": true,
+        "is_buy": true,
+        "ntli": 1500000
+      },
+      "kind": "isolated-margin-add",
+      "msgpack": "0x84a474797065b475706461746549736f6c617465644d617267696ea5617373657404a56973427579c3a46e746c69ce0016e360",
+      "name": "update isolated margin, add",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "asset": 159,
+        "isBuy": true,
+        "ntli": -2250000,
+        "type": "updateIsolatedMargin"
+      },
+      "connection_id": "0xe592d401dc87b7469fbf5a083f8da07e9ffae6375e5761822ce15860d9786fd3",
+      "digest_mainnet": "0xdc5e24ed4125e19600e102ec0ed4b9d699d555c9aa998350f6a3f904a223c2a0",
+      "digest_testnet": "0x5c3379a5547eb3ce0b0a544c1a346f06558285331d5d8d054ccff28d03b0cea1",
+      "fields": {
+        "asset": 159,
+        "is_add": false,
+        "is_buy": true,
+        "ntli": 2250000
+      },
+      "kind": "isolated-margin-remove",
+      "msgpack": "0x84a474797065b475706461746549736f6c617465644d617267696ea56173736574cc9fa56973427579c3a46e746c69d2ffddaaf0",
+      "name": "update isolated margin, remove",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "isDeposit": true,
+        "subAccountUser": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
+        "type": "subAccountTransfer",
+        "usd": 1500000
+      },
+      "connection_id": "0xf8c8750319b072cfa62b2233745bbd23de91b2eb4621e6035a8a6471cb76a2c5",
+      "digest_mainnet": "0x927c2ea17e7ef88e74f17dceae2ce904bc700efde95a32fbfc06c224426f4b06",
+      "digest_testnet": "0x9ef066068d6831f81f23aeac4ed7bd859b0d19332d32301d0b0229416edb2b00",
+      "fields": {
+        "is_deposit": true,
+        "sub_account": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
+        "usd": 1500000
+      },
+      "kind": "sub-account-deposit",
+      "msgpack": "0x84a474797065b27375624163636f756e745472616e73666572ae7375624163636f756e7455736572d92a307861623538303161376433393833353162386265313163343339653035633562333235396165633962a969734465706f736974c3a3757364ce0016e360",
+      "name": "sub-account transfer, deposit",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "isDeposit": false,
+        "subAccountUser": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
+        "type": "subAccountTransfer",
+        "usd": 2000000
+      },
+      "connection_id": "0x530f2eca4d67a5ed3ca71a8aa268ca474a5cd4fcf79939cd8125552f4389d841",
+      "digest_mainnet": "0x7f5e047f412fc2d6e4b7ce8023a2d2861adcd6ba5d77f4a74a616cd7ec458ebd",
+      "digest_testnet": "0xc3b3717fa8b36734e4e7549a4885ea753752da946796b911bee9deecd6f1ca58",
+      "fields": {
+        "is_deposit": false,
+        "sub_account": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
+        "usd": 2000000
+      },
+      "kind": "sub-account-withdraw",
+      "msgpack": "0x84a474797065b27375624163636f756e745472616e73666572ae7375624163636f756e7455736572d92a307861623538303161376433393833353162386265313163343339653035633562333235396165633962a969734465706f736974c2a3757364ce001e8480",
+      "name": "sub-account transfer, withdraw",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "amount": "1.5",
+        "isDeposit": true,
+        "subAccountUser": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
+        "token": "USDC:0xeb62eee3685fc4c43992febcd9e75443",
+        "type": "subAccountSpotTransfer"
+      },
+      "connection_id": "0xe5b5e007f93f429e274247ed9e9e9b62c135d985244907c1647f6d1b10813351",
+      "digest_mainnet": "0x559da7eac372460496847d95550926e8e72fad02f8ad6fbbe392d226932f136f",
+      "digest_testnet": "0xa261f2edc11d7c99d9c759e65cf9d42008bf4d7996c74d0a3706b40cbc35f88c",
+      "fields": {
+        "is_deposit": true,
+        "sub_account": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
+        "token": 0,
+        "wei": 150000000
+      },
+      "kind": "sub-account-spot-deposit",
+      "msgpack": "0x85a474797065b67375624163636f756e7453706f745472616e73666572ae7375624163636f756e7455736572d92a307861623538303161376433393833353162386265313163343339653035633562333235396165633962a969734465706f736974c3a5746f6b656ed927555344433a30786562363265656533363835666334633433393932666562636439653735343433a6616d6f756e74a3312e35",
+      "name": "sub-account spot transfer, deposit",
+      "network": "testnet",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "amount": "0.25",
+        "isDeposit": false,
+        "subAccountUser": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
+        "token": "USDC:0xeb62eee3685fc4c43992febcd9e75443",
+        "type": "subAccountSpotTransfer"
+      },
+      "connection_id": "0x2fdb103cfe31cd382b2256e8799c6017cea01621291837a55c37d4b387da873f",
+      "digest_mainnet": "0x5aad062c895f635213f804beab8502ffac2bd12a0fba39f54efe233cbd078fb6",
+      "digest_testnet": "0x34377d0de1046a35368ed13e3beec4bf8fdfd4d65f6c6837d93d4de8149be947",
+      "fields": {
+        "is_deposit": false,
+        "sub_account": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
+        "token": 0,
+        "wei": 25000000
+      },
+      "kind": "sub-account-spot-withdraw",
+      "msgpack": "0x85a474797065b67375624163636f756e7453706f745472616e73666572ae7375624163636f756e7455736572d92a307861623538303161376433393833353162386265313163343339653035633562333235396165633962a969734465706f736974c2a5746f6b656ed927555344433a30786562363265656533363835666334633433393932666562636439653735343433a6616d6f756e74a4302e3235",
+      "name": "sub-account spot transfer, withdraw",
+      "network": "testnet",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "name": "vault-1",
+        "type": "createSubAccount"
+      },
+      "connection_id": "0x65995e1bbf518f6c4eab5a54248ef03ca32c0a5573f13ef0ceb246b69e02ed1e",
+      "digest_mainnet": "0xcaf0f0a92a93e886dd70ff51517b64c976516d312e10ff54a822cdd3fd3c3a41",
+      "digest_testnet": "0xfd56e43186c29c72ed0ef6744d626f5933096c870cd97d90301db357635be573",
+      "fields": {
+        "name": "vault-1"
+      },
+      "kind": "create-sub-account",
+      "msgpack": "0x82a474797065b06372656174655375624163636f756e74a46e616d65a77661756c742d31",
+      "name": "create sub-account",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "name": "!SUBACCOUNT0123456789abcdefghij~",
+        "type": "createSubAccount"
+      },
+      "connection_id": "0x11e64ae6cb31f78675f953dd617c8fcba6efb785a1cf8a19f3d40ad541264bbd",
+      "digest_mainnet": "0x65418e96f97da6a9684329ef1666e2d5067567bc485ef5bc107e2e7998e685fe",
+      "digest_testnet": "0x729f031af5eda9ef8d8083e296da830614cd50eefa3a6c817db388306b14a06f",
+      "fields": {
+        "name": "!SUBACCOUNT0123456789abcdefghij~"
+      },
+      "kind": "create-sub-account",
+      "msgpack": "0x82a474797065b06372656174655375624163636f756e74a46e616d65d920215355424143434f554e54303132333435363738396162636465666768696a7e",
+      "name": "create sub-account, 32 bytes, both ends of the character set",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "registerToken2": {
+          "fullName": "Elysium test token",
+          "maxGas": 1000000000000,
+          "spec": {
+            "name": "PZQX",
+            "szDecimals": 2,
+            "weiDecimals": 8
+          }
+        },
+        "type": "spotDeploy"
+      },
+      "connection_id": "0x11414e58f0c147a058eb98315afd61d1465b853f7ac30f417829aea512aa9723",
+      "digest_mainnet": "0xf639695d9ae5ff5283e818e44df3698659a87041c046572dfd3150490bb4cbca",
+      "digest_testnet": "0x6e2af2fdd1c2fd13c870180d5519cf1cfd1d972e6b6426059a909b9b34db3725",
+      "fields": {
+        "full_name": "Elysium test token",
+        "max_gas": 1000000000000,
+        "name": "PZQX",
+        "sz_decimals": 2,
+        "wei_decimals": 8
+      },
+      "kind": "register-token",
+      "msgpack": "0x82a474797065aa73706f744465706c6f79ae7265676973746572546f6b656e3283a47370656383a46e616d65a4505a5158aa737a446563696d616c7302ab776569446563696d616c7308a66d6178476173cf000000e8d4a51000a866756c6c4e616d65b2456c797369756d207465737420746f6b656e",
+      "name": "register token, with a full name",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "registerToken2": {
+          "fullName": "Elysium Deploy Test Token, sixty-four bytes of printable text!!!",
+          "maxGas": 1,
+          "spec": {
+            "name": "!TOKEN0123456789abcdefghijklmno~",
+            "szDecimals": 0,
+            "weiDecimals": 0
+          }
+        },
+        "type": "spotDeploy"
+      },
+      "connection_id": "0x512c31996531e552f3a4c4541ca791ffe96f2df2abe8fb79105eb0822721a326",
+      "digest_mainnet": "0x9c29c943e61168a7bf373ef69d3a179e756f1248e76fd6082ecfd78123950015",
+      "digest_testnet": "0x605738587d9cbd60310117ca4cfee6d07df543bc546fed0e8e5a47bd8d60ab8c",
+      "fields": {
+        "full_name": "Elysium Deploy Test Token, sixty-four bytes of printable text!!!",
+        "max_gas": 1,
+        "name": "!TOKEN0123456789abcdefghijklmno~",
+        "sz_decimals": 0,
+        "wei_decimals": 0
+      },
+      "kind": "register-token",
+      "msgpack": "0x82a474797065aa73706f744465706c6f79ae7265676973746572546f6b656e3283a47370656383a46e616d65d92021544f4b454e303132333435363738396162636465666768696a6b6c6d6e6f7eaa737a446563696d616c7300ab776569446563696d616c7300a66d617847617301a866756c6c4e616d65d940456c797369756d204465706c6f79205465737420546f6b656e2c2073697874792d666f7572206279746573206f66207072696e7461626c652074657874212121",
+      "name": "register token, 32-byte name, 64-byte full name",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "type": "spotDeploy",
+        "userGenesis": {
+          "existingTokenAndWei": [],
+          "token": 7,
+          "userAndWei": [
+            [
+              "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
+              "1000"
+            ],
+            [
+              "0x5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a",
+              "100000000000000"
+            ]
+          ]
+        }
+      },
+      "connection_id": "0x0440443569e17c5c4d1d3cef044c77531868ce53d896f32ec42c820ff153aad9",
+      "digest_mainnet": "0x9966f9cfd123171a596fa240260f7c0c12f15eda55c9f7dc76b11d30824fb5a4",
+      "digest_testnet": "0x1bf0446ebcfc6e0e599ddf3f8053b401e004d5f7d65ff2da4c5d1f63d8e14582",
+      "fields": {
+        "amounts_wei": [
+          1000,
+          100000000000000
+        ],
+        "token": 7,
+        "users": [
+          "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
+          "0x5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a"
+        ]
+      },
+      "kind": "user-genesis",
+      "msgpack": "0x82a474797065aa73706f744465706c6f79ab7573657247656e6573697383a5746f6b656e07aa75736572416e645765699292d92a307861623538303161376433393833353162386265313163343339653035633562333235396165633962a43130303092d92a307835613561356135613561356135613561356135613561356135613561356135613561356135613561af313030303030303030303030303030b36578697374696e67546f6b656e416e6457656990",
+      "name": "user genesis, two users",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "type": "spotDeploy",
+        "userGenesis": {
+          "existingTokenAndWei": [
+            [
+              1,
+              "100000000000000"
+            ],
+            [
+              4294967295,
+              "18446744073709551615"
+            ]
+          ],
+          "token": 4294967295,
+          "userAndWei": []
+        }
+      },
+      "connection_id": "0x7593715d45ddde186a1053fe7df6f6db901f2c9b727a2c94f0975f426e2f9380",
+      "digest_mainnet": "0xf8e1c6ff39393f32db5722151d0874df706cef90f4b9026d7b3ad8d297cf0c04",
+      "digest_testnet": "0x6cd6d6f9c0a48ec699c92ee2f771c031b7d7ff039106abbd85d02c5875b22870",
+      "fields": {
+        "amounts_wei": [
+          100000000000000,
+          18446744073709551615
+        ],
+        "existing_tokens": [
+          1,
+          4294967295
+        ],
+        "token": 4294967295
+      },
+      "kind": "user-genesis-existing-token",
+      "msgpack": "0x82a474797065aa73706f744465706c6f79ab7573657247656e6573697383a5746f6b656eceffffffffaa75736572416e6457656990b36578697374696e67546f6b656e416e64576569929201af31303030303030303030303030303092ceffffffffb43138343436373434303733373039353531363135",
+      "name": "user genesis to existing token holders, at the maxima",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "genesis": {
+          "maxSupply": "300000000000000",
+          "noHyperliquidity": true,
+          "token": 7
+        },
+        "type": "spotDeploy"
+      },
+      "connection_id": "0x8e1c1c63c5ec842527cff23283a93495ff766d6645f074b3a9b16439464b069a",
+      "digest_mainnet": "0x73d77652eaf372af3b68df3012f059b93809c34f437c040054ef2304d33ec3a8",
+      "digest_testnet": "0x0c692f616a9f420c2f0929277ddc87a58615e4caec7da2504cca39f6200f5628",
+      "fields": {
+        "max_supply": 300000000000000,
+        "no_hyperliquidity": true,
+        "token": 7
+      },
+      "kind": "genesis",
+      "msgpack": "0x82a474797065aa73706f744465706c6f79a767656e6573697383a5746f6b656e07a96d6178537570706c79af333030303030303030303030303030b06e6f48797065726c6971756964697479c3",
+      "name": "genesis, no hyperliquidity",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "genesis": {
+          "maxSupply": "18446744073709551615",
+          "token": 7
+        },
+        "type": "spotDeploy"
+      },
+      "connection_id": "0xc8cca5cde3f021a62462f1e327608065e80e6338216d3c10898b700cde6a841d",
+      "digest_mainnet": "0x33c7613f71374a49833f4dfceee3ab8a755fd27b2c0e678b8493c77ba831892e",
+      "digest_testnet": "0xc70acfdfb9fb5be060a2e842206725a36dd17fc4d83f95a7539905e965d37b82",
+      "fields": {
+        "max_supply": 18446744073709551615,
+        "no_hyperliquidity": false,
+        "token": 7
+      },
+      "kind": "genesis",
+      "msgpack": "0x82a474797065aa73706f744465706c6f79a767656e6573697382a5746f6b656e07a96d6178537570706c79b43138343436373434303733373039353531363135",
+      "name": "genesis, with hyperliquidity (the key omitted)",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "registerSpot": {
+          "tokens": [
+            7,
+            0
+          ]
+        },
+        "type": "spotDeploy"
+      },
+      "connection_id": "0x1b8553a2d304a0d13178937b8f4c54add611a6c27002af3da0e467d063cf9a5d",
+      "digest_mainnet": "0xfcf9184253ebc0fb82457f86de703c6655921b66126a7fe2e9dfec5d7a4df26d",
+      "digest_testnet": "0xbf7ea4b96a406eaf08165abed55f6af9de071a4ab9ec1051cd3e03e686f320e7",
+      "fields": {
+        "base": 7,
+        "quote": 0
+      },
+      "kind": "register-spot",
+      "msgpack": "0x82a474797065aa73706f744465706c6f79ac726567697374657253706f7481a6746f6b656e73920700",
+      "name": "register spot",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "registerHyperliquidity": {
+          "nOrders": 100,
+          "orderSz": "0.75",
+          "spot": 9,
+          "startPx": "2.5"
+        },
+        "type": "spotDeploy"
+      },
+      "connection_id": "0x6be9e522fee72487715af540180dd305f1ace7b7f3a372e0868dbafa1769054d",
+      "digest_mainnet": "0x564a0e8ae35d47cf6ed73bd66f13742e0e35f4aabb484326e20cc4ba24576a00",
+      "digest_testnet": "0x83cd69e77d73a3c8ef3ca84cd49cc75af455a310bec9b47c2de9e8387f56cbc0",
+      "fields": {
+        "n_orders": 100,
+        "n_seeded_levels": 0,
+        "order_sz": 75000000,
+        "spot": 9,
+        "start_px": 250000000
+      },
+      "kind": "register-hyperliquidity",
+      "msgpack": "0x82a474797065aa73706f744465706c6f79b6726567697374657248797065726c697175696469747984a473706f7409a773746172745078a3322e35a76f72646572537aa4302e3735a76e4f726465727364",
+      "name": "register hyperliquidity, no seeded levels",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "registerHyperliquidity": {
+          "nOrders": 50,
+          "nSeededLevels": 3,
+          "orderSz": "4.5",
+          "spot": 9,
+          "startPx": "1.25"
+        },
+        "type": "spotDeploy"
+      },
+      "connection_id": "0xe2322d4cff6982a6957f3fb328d1eb2a9e85b4aabe6a4b2608a0d66f4304c0bd",
+      "digest_mainnet": "0x220353343223488de3f1577f32811d2e14fc6393462d81bee72385498b89cedb",
+      "digest_testnet": "0xbb166a287878e65f4c9ba90f866f73dae2445ead86aa55fff28bd0a8f0b04a7e",
+      "fields": {
+        "n_orders": 50,
+        "n_seeded_levels": 3,
+        "order_sz": 450000000,
+        "spot": 9,
+        "start_px": 125000000
+      },
+      "kind": "register-hyperliquidity",
+      "msgpack": "0x82a474797065aa73706f744465706c6f79b6726567697374657248797065726c697175696469747985a473706f7409a773746172745078a4312e3235a76f72646572537aa3342e35a76e4f726465727332ad6e5365656465644c6576656c7303",
+      "name": "register hyperliquidity, 3 seeded levels",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "setDeployerTradingFeeShare": {
+          "share": "99%",
+          "token": 7
+        },
+        "type": "spotDeploy"
+      },
+      "connection_id": "0xad62b3dc4f1eb3f80367da2a2c918d262cc4d550ab244740b5cef372a0a34cb7",
+      "digest_mainnet": "0x69d22e7529112f1c3824d74f5e847466e0e389a4084511e1b50198731d223edf",
+      "digest_testnet": "0xf6258e680c22e22cf215e2a60b552c10e162cde4f96f3abb617658ec50680c44",
+      "fields": {
+        "share_milli_pct": 99000,
+        "token": 7
+      },
+      "kind": "set-deployer-trading-fee-share",
+      "msgpack": "0x82a474797065aa73706f744465706c6f79ba7365744465706c6f79657254726164696e67466565536861726582a5746f6b656e07a57368617265a3393925",
+      "name": "set deployer trading fee share, 99%",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "setDeployerTradingFeeShare": {
+          "share": "12.345%",
+          "token": 4294967295
+        },
+        "type": "spotDeploy"
+      },
+      "connection_id": "0xd8ea1e43fe692dc77eb427d53aae75d9cc0f5d64f49e4eee177a944a2c4ed5dc",
+      "digest_mainnet": "0xd8533636766293d251d63562f9b6d7d35f5ead1caa59162d88d3c2a9a3b470e2",
+      "digest_testnet": "0xdb13d8551b66ffdda18c0f219bb8004cfd3b6556849accdb1633c9da91c490a3",
+      "fields": {
+        "share_milli_pct": 12345,
+        "token": 4294967295
+      },
+      "kind": "set-deployer-trading-fee-share",
+      "msgpack": "0x82a474797065aa73706f744465706c6f79ba7365744465706c6f79657254726164696e67466565536861726582a5746f6b656eceffffffffa57368617265a731322e33343525",
+      "name": "set deployer trading fee share, 12.345%",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "setDeployerTradingFeeShare": {
+          "share": "0%",
+          "token": 7
+        },
+        "type": "spotDeploy"
+      },
+      "connection_id": "0xa54a355bf28542e2e984f06a0eeeb483a7fd5fd50ae6b84d90b3a1064f0da351",
+      "digest_mainnet": "0x80902bc7125682393387bc2206da27a40e3b2b601ec5b944bc577624f7d3ef56",
+      "digest_testnet": "0x0e85e2b8c281a87d4f5bab4157985c6992c21a2f9543b3d647dc6228b1be1251",
+      "fields": {
+        "share_milli_pct": 0,
+        "token": 7
+      },
+      "kind": "set-deployer-trading-fee-share",
+      "msgpack": "0x82a474797065aa73706f744465706c6f79ba7365744465706c6f79657254726164696e67466565536861726582a5746f6b656e07a57368617265a23025",
+      "name": "set deployer trading fee share, 0%",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "enableFreezePrivilege": {
+          "token": 7
+        },
+        "type": "spotDeploy"
+      },
+      "connection_id": "0xb631ccf93df5b3c843ad72f06c18eab16cd0bb0be22eb9d5009c2243babc6e08",
+      "digest_mainnet": "0xee409b4d076ad0517835749ec5dcc9d7aa14b95150ef0980d58d8eaec2aabfc4",
+      "digest_testnet": "0x1d411dcaf1239162ba63d8bc41d43e7f0f1e77a1551003a53926704732fba09a",
+      "fields": {
+        "token": 7
+      },
+      "kind": "enable-freeze-privilege",
+      "msgpack": "0x82a474797065aa73706f744465706c6f79b5656e61626c65467265657a6550726976696c65676581a5746f6b656e07",
+      "name": "enable freeze privilege",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "freezeUser": {
+          "freeze": true,
+          "token": 7,
+          "user": "0xab5801a7d398351b8be11c439e05c5b3259aec9b"
+        },
+        "type": "spotDeploy"
+      },
+      "connection_id": "0xb3c61993dc42c0374c670527967aebc5500613a7e5de268c68be95884dbcef9d",
+      "digest_mainnet": "0xf176bfe865a0a56b95f6e36c5fc3f021f9e03b322eb8160892d9ce7af6154da3",
+      "digest_testnet": "0x0a5e882f4b7efb68239dd9e68daebfd7f7f5c6b7a11a67f851a664f04b2be349",
+      "fields": {
+        "freeze": true,
+        "token": 7,
+        "user": "0xab5801a7d398351b8be11c439e05c5b3259aec9b"
+      },
+      "kind": "freeze-user",
+      "msgpack": "0x82a474797065aa73706f744465706c6f79aa667265657a655573657283a5746f6b656e07a475736572d92a307861623538303161376433393833353162386265313163343339653035633562333235396165633962a6667265657a65c3",
+      "name": "freeze user",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "freezeUser": {
+          "freeze": false,
+          "token": 7,
+          "user": "0xab5801a7d398351b8be11c439e05c5b3259aec9b"
+        },
+        "type": "spotDeploy"
+      },
+      "connection_id": "0x86767ac390ad712eff6dd006618b31603a9ede072b32e8dd1fc22ac90cc26c4c",
+      "digest_mainnet": "0x62df2b6c0efa43073e24ed13ea1c905055ba679406a302010b9a0af75abf813c",
+      "digest_testnet": "0xc452f707888129ce5a23887995251bc2415a41efeff03319227b7a524ef54237",
+      "fields": {
+        "freeze": false,
+        "token": 7,
+        "user": "0xab5801a7d398351b8be11c439e05c5b3259aec9b"
+      },
+      "kind": "unfreeze-user",
+      "msgpack": "0x82a474797065aa73706f744465706c6f79aa667265657a655573657283a5746f6b656e07a475736572d92a307861623538303161376433393833353162386265313163343339653035633562333235396165633962a6667265657a65c2",
+      "name": "unfreeze user",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "revokeFreezePrivilege": {
+          "token": 7
+        },
+        "type": "spotDeploy"
+      },
+      "connection_id": "0x4cd77d062af2b2ea732d745a4fb106833033c496c5d288b9bf6a9ea5e04ee5d3",
+      "digest_mainnet": "0x06d21c1927dd0d1c50d009fd559cfc671b30cad622fd60125f653f31c3ada2dc",
+      "digest_testnet": "0x65b7b9881aac1dbc8a8c523a556eb463fb504030c2964eb431f21f2eaae768ba",
+      "fields": {
+        "token": 7
+      },
+      "kind": "revoke-freeze-privilege",
+      "msgpack": "0x82a474797065aa73706f744465706c6f79b57265766f6b65467265657a6550726976696c65676581a5746f6b656e07",
+      "name": "revoke freeze privilege",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "enableQuoteToken": {
+          "token": 7
+        },
+        "type": "spotDeploy"
+      },
+      "connection_id": "0x1a37aa948d3c7d60e800c46c862102cbd2f1ceb3a80c5c54fba570ed2874902d",
+      "digest_mainnet": "0x44ad027b2e6e62f4839a045977647359877b9d448492839f424cee5e8dd4a7c7",
+      "digest_testnet": "0x9e72fe1e7c36a5ac55ace0ecaadd2825dcb4487d6b6c4d110a7af342abdef341",
+      "fields": {
+        "token": 7
+      },
+      "kind": "enable-quote-token",
+      "msgpack": "0x82a474797065aa73706f744465706c6f79b0656e61626c6551756f7465546f6b656e81a5746f6b656e07",
+      "name": "enable quote token",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "disableQuoteToken": {
+          "token": 7
+        },
+        "type": "spotDeploy"
+      },
+      "connection_id": "0x5d7459f4ed3805cbe4fa09112c392092f1d9fa511486000054b8298e06ffecbb",
+      "digest_mainnet": "0xa2dde10ae36fb508e3c356e4dcb4c782c777d827afe8d428dd64a122349774eb",
+      "digest_testnet": "0xffffb6317af3727d8c9f48e1b1b80601e435325703570afc66c452c08618417e",
+      "fields": {
+        "token": 7
+      },
+      "kind": "disable-quote-token",
+      "msgpack": "0x82a474797065aa73706f744465706c6f79b164697361626c6551756f7465546f6b656e81a5746f6b656e07",
+      "name": "disable quote token",
+      "nonce": 1700000000000,
+      "source": "sdk-method"
+    },
+    {
+      "action": {
+        "type": "claimRewards"
+      },
+      "connection_id": "0x51aaf1b5200df7fd6fe4d7b9695b49a19d5fedb54caccfd6005949da3fbdd50a",
+      "digest_mainnet": "0xa47814c26a1380037fca6cae838eecfec7a7e336e81d7271d12a7f3dc1d092dd",
+      "digest_testnet": "0x7d51d354f802a6f8ef8ff6c7a06fcd0221447e407d8571b56fca152f2320eb21",
+      "fields": {},
+      "kind": "claim-rewards",
+      "msgpack": "0x81a474797065ac636c61696d52657761726473",
+      "name": "claim rewards",
+      "nonce": 1700000000000,
+      "source": "hand-built"
+    },
+    {
+      "action": {
+        "amount": "1.5",
+        "destination": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
+        "destinationDex": "spot",
+        "fromSubAccount": "",
+        "nonce": 1700000000000,
+        "sourceDex": "",
+        "token": "USDC:0xeb62eee3685fc4c43992febcd9e75443",
+        "type": "agentSendAsset"
+      },
+      "connection_id": "0x2955c5614d122a13056a43a43dc7f4bb83a7ef93036ae353c0b9fef584941119",
+      "digest_mainnet": "0xb2d41a0d65fad9d195b20058b435f6d606d4e1e64548714db8c23342601360e6",
+      "digest_testnet": "0x7ccae8d9eab78a40864e07f7303a5723a13a07a103fc126d218643f51ae9999b",
+      "fields": {
+        "destination": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
+        "destination_dex": 4294967295,
+        "source_dex": 0,
+        "sub_account": "0x0000000000000000000000000000000000000000",
+        "token": 0,
+        "wei": 150000000
+      },
+      "kind": "agent-send-asset",
+      "msgpack": "0x88a474797065ae6167656e7453656e644173736574ab64657374696e6174696f6ed92a307861623538303161376433393833353162386265313163343339653035633562333235396165633962a9736f75726365446578a0ae64657374696e6174696f6e446578a473706f74a5746f6b656ed927555344433a30786562363265656533363835666334633433393932666562636439653735343433a6616d6f756e74a3312e35ae66726f6d5375624163636f756e74a0a56e6f6e6365cf0000018bcfe56800",
+      "name": "agent send asset, perp to spot",
+      "network": "testnet",
+      "nonce": 1700000000000,
+      "source": "hand-built"
+    },
+    {
+      "action": {
+        "amount": "0.25",
+        "destination": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
+        "destinationDex": "",
+        "fromSubAccount": "",
+        "nonce": 1700000000000,
+        "sourceDex": "spot",
+        "token": "USDC:0xeb62eee3685fc4c43992febcd9e75443",
+        "type": "agentSendAsset"
+      },
+      "connection_id": "0x7170ed0df10c46caa73295f9cb2e3afc7bc622d68fa73a68c1f7ad853820231b",
+      "digest_mainnet": "0xe5d33ba1880e33f4ddabcfda5f003201e18fcb038dbb9a0bbcd5d7afda55b4aa",
+      "digest_testnet": "0xe0a88b1b5b6204ed4611cff13e93036489e6a1858a93eedb7e3345aafc5d108a",
+      "fields": {
+        "destination": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
+        "destination_dex": 0,
+        "source_dex": 4294967295,
+        "sub_account": "0x0000000000000000000000000000000000000000",
+        "token": 0,
+        "wei": 25000000
+      },
+      "kind": "agent-send-asset",
+      "msgpack": "0x88a474797065ae6167656e7453656e644173736574ab64657374696e6174696f6ed92a307861623538303161376433393833353162386265313163343339653035633562333235396165633962a9736f75726365446578a473706f74ae64657374696e6174696f6e446578a0a5746f6b656ed927555344433a30786562363265656533363835666334633433393932666562636439653735343433a6616d6f756e74a4302e3235ae66726f6d5375624163636f756e74a0a56e6f6e6365cf0000018bcfe56800",
+      "name": "agent send asset, spot to perp",
+      "network": "testnet",
+      "nonce": 1700000000000,
+      "source": "hand-built"
+    },
+    {
+      "action": {
+        "registerToken2": {
+          "maxGas": 1000000000000,
+          "spec": {
+            "name": "PZQX",
+            "szDecimals": 2,
+            "weiDecimals": 8
+          }
+        },
+        "type": "spotDeploy"
+      },
+      "connection_id": "0x0a96ed5c7724ac9dbba719d1a431f70f920ee59228abd22663941ba3c8cd70ca",
+      "digest_mainnet": "0xc3aafe358978dc71a064019de58090ad82b9161a5c0abe4393172c552877e4ea",
+      "digest_testnet": "0x0ff663adda27230130a5fdd32878e4d50edca6284390449d3e3b8bb558f0fc45",
+      "fields": {
+        "max_gas": 1000000000000,
+        "name": "PZQX",
+        "sz_decimals": 2,
+        "wei_decimals": 8
+      },
+      "kind": "register-token",
+      "msgpack": "0x82a474797065aa73706f744465706c6f79ae7265676973746572546f6b656e3282a47370656383a46e616d65a4505a5158aa737a446563696d616c7302ab776569446563696d616c7308a66d6178476173cf000000e8d4a51000",
+      "name": "register token, full name omitted",
+      "nonce": 1700000000000,
+      "source": "hand-built"
+    },
+    {
+      "action": {
+        "type": "spotDeploy",
+        "userGenesis": {
+          "blacklistUsers": [
+            [
+              "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
+              true
+            ],
+            [
+              "0x5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a",
+              false
+            ]
+          ],
+          "existingTokenAndWei": [],
+          "token": 7,
+          "userAndWei": []
+        }
+      },
+      "connection_id": "0x9681491f7a07f82d4c04d0acf954a3f61ee29329d572f25f0c31cd3937fc8d30",
+      "digest_mainnet": "0x9b8f8db4fbdacf093430defc0a44f51ccc40314ccce6e3ffcbe85090ed01dd12",
+      "digest_testnet": "0xcf67edee4400694a73ff7da3489628780cbf98546484974f708e5f1eb418907d",
+      "fields": {
+        "blacklist": [
+          true,
+          false
+        ],
+        "token": 7,
+        "users": [
+          "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
+          "0x5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a"
+        ]
+      },
+      "kind": "user-genesis-blacklist",
+      "msgpack": "0x82a474797065aa73706f744465706c6f79ab7573657247656e6573697384a5746f6b656e07aa75736572416e6457656990b36578697374696e67546f6b656e416e6457656990ae626c61636b6c69737455736572739292d92a307861623538303161376433393833353162386265313163343339653035633562333235396165633962c392d92a307835613561356135613561356135613561356135613561356135613561356135613561356135613561c2",
+      "name": "user genesis blacklist, blacklist and readmit",
+      "nonce": 1700000000000,
+      "source": "hand-built"
+    },
+    {
+      "action": {
+        "setDeployerLabel": {
+          "label": "qzx"
+        },
+        "type": "spotDeploy"
+      },
+      "connection_id": "0x1a554ceee55af99138b590baebcf6e20bb477a81e6f068a8345be8faa3ae42d2",
+      "digest_mainnet": "0x37c82b72fdfb2ce9416ca9b95865c5565a99801a5859f1f3a65ac4356a4c2ad0",
+      "digest_testnet": "0xd87b3c202942efa0bcb55148c4b64912db54bf0bc9d3791ab650603a2bf791da",
+      "fields": {
+        "label": "qzx"
+      },
+      "kind": "set-deployer-label",
+      "msgpack": "0x82a474797065aa73706f744465706c6f79b07365744465706c6f7965724c6162656c81a56c6162656ca3717a78",
+      "name": "set deployer label, 3 letters",
+      "nonce": 1700000000000,
+      "source": "hand-built"
+    },
+    {
+      "action": {
+        "setDeployerLabel": {
+          "label": "wxyz"
+        },
+        "type": "spotDeploy"
+      },
+      "connection_id": "0xa1c0b109b7484556d121751cb035bfc759d516885584b4ab9c0e4b5cc5f29688",
+      "digest_mainnet": "0x6f82ca17d9b8d567f95a230b1abf75048d9e8af38cc412da80a76c65fcc31353",
+      "digest_testnet": "0x0ad70e3d3ab45a9d9e5a941d6c5f93e9cb180496928f00f5c9fcbefc741334e7",
+      "fields": {
+        "label": "wxyz"
+      },
+      "kind": "set-deployer-label",
+      "msgpack": "0x82a474797065aa73706f744465706c6f79b07365744465706c6f7965724c6162656c81a56c6162656ca47778797a",
+      "name": "set deployer label, 4 letters",
+      "nonce": 1700000000000,
+      "source": "hand-built"
+    },
+    {
+      "action": {
+        "setTokenAnnotation": {
+          "annotation": {
+            "category": "test",
+            "description": "probe",
+            "displayName": null,
+            "keywords": []
+          },
+          "token": 7
+        },
+        "type": "spotDeploy"
+      },
+      "connection_id": "0xc010ff4425f2476a5956871da30eff30756e7806d5b09b2c9f30b844013a00e7",
+      "digest_mainnet": "0x1f58a8a2a1857e6daaaf129846cafbaad3a1a47b7f9889655f007babf9b681b6",
+      "digest_testnet": "0x737210ba6f8b6e8930dcb72434cdf5ea780b7828c88204df735e7d16d841afaf",
+      "fields": {
+        "category": "test",
+        "description": "probe",
+        "keywords": [],
+        "token": 7
+      },
+      "kind": "set-token-annotation",
+      "msgpack": "0x82a474797065aa73706f744465706c6f79b2736574546f6b656e416e6e6f746174696f6e82a5746f6b656e07aa616e6e6f746174696f6e84a863617465676f7279a474657374ab6465736372697074696f6ea570726f6265ab646973706c61794e616d65c0a86b6579776f72647390",
+      "name": "set token annotation, no display name, no keywords",
+      "nonce": 1700000000000,
+      "source": "hand-built"
+    },
+    {
+      "action": {
+        "setTokenAnnotation": {
+          "annotation": {
+            "category": "test",
+            "description": "probe",
+            "displayName": "PZQ",
+            "keywords": [
+              "alpha",
+              "beta"
+            ]
+          },
+          "token": 7
+        },
+        "type": "spotDeploy"
+      },
+      "connection_id": "0xf05bc3db4a652d517dd877ab93966055bfe015caaaec8b0043d3f9852472abb3",
+      "digest_mainnet": "0x3bf76f5ea92bb565d247ac31d5181e098ab9d75d7bcaa28f7f58ac558e8f5abb",
+      "digest_testnet": "0x662ffb345f69f3826130b4759ce2f7e92a62c9ff3dd47e8ee9b6b3d6b5089e43",
+      "fields": {
+        "category": "test",
+        "description": "probe",
+        "display_name": "PZQ",
+        "keywords": [
+          "alpha",
+          "beta"
+        ],
+        "token": 7
+      },
+      "kind": "set-token-annotation",
+      "msgpack": "0x82a474797065aa73706f744465706c6f79b2736574546f6b656e416e6e6f746174696f6e82a5746f6b656e07aa616e6e6f746174696f6e84a863617465676f7279a474657374ab6465736372697074696f6ea570726f6265ab646973706c61794e616d65a3505a51a86b6579776f72647392a5616c706861a462657461",
+      "name": "set token annotation, display name and two keywords",
+      "nonce": 1700000000000,
+      "source": "hand-built"
+    },
+    {
+      "action": {
+        "requestEvmContract": {
+          "address": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
+          "evmExtraWeiDecimals": 13,
+          "token": 7
+        },
+        "type": "spotDeploy"
+      },
+      "connection_id": "0xb07c4c9eff91662bcfd4150175743a077729d2e90d7e3db59be6599f09ce2aed",
+      "digest_mainnet": "0xc3eb6e93894c0eaaf492f9299f9cef7f1184c7d3541b6255709615407a7f79c1",
+      "digest_testnet": "0x80907fe5ff3d0060392993e32a740283ae6c36b00f18f0e3442b03fb291906cb",
+      "fields": {
+        "evm_contract": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
+        "evm_extra_wei_decimals": 13,
+        "token": 7
+      },
+      "kind": "request-evm-contract",
+      "msgpack": "0x82a474797065aa73706f744465706c6f79b27265717565737445766d436f6e747261637483a5746f6b656e07a761646472657373d92a307861623538303161376433393833353162386265313163343339653035633562333235396165633962b365766d4578747261576569446563696d616c730d",
+      "name": "request EVM contract, 13 extra decimals",
+      "nonce": 1700000000000,
+      "source": "hand-built"
+    },
+    {
+      "action": {
+        "requestEvmContract": {
+          "address": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
+          "evmExtraWeiDecimals": -2,
+          "token": 7
+        },
+        "type": "spotDeploy"
+      },
+      "connection_id": "0xfe8b7b99d9824c6a0d9846cbf4015f6cf60282e2b9b8ee88218d72ba6b8b4ea7",
+      "digest_mainnet": "0x2445bdfd3d5d02abb5411a491cd8b688d119f421d9e573c1a1f75237874312bd",
+      "digest_testnet": "0x4acd1bdc8288175e06d78285830999db53a7546e6915ec22e1f5032d12d3c22c",
+      "fields": {
+        "evm_contract": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
+        "evm_extra_wei_decimals": -2,
+        "token": 7
+      },
+      "kind": "request-evm-contract",
+      "msgpack": "0x82a474797065aa73706f744465706c6f79b27265717565737445766d436f6e747261637483a5746f6b656e07a761646472657373d92a307861623538303161376433393833353162386265313163343339653035633562333235396165633962b365766d4578747261576569446563696d616c73fe",
+      "name": "request EVM contract, 2 fewer decimals (-2)",
+      "nonce": 1700000000000,
+      "source": "hand-built"
+    }
+  ]
+}

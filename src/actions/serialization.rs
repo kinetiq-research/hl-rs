@@ -384,6 +384,42 @@ where
     serializer.serialize_str(&address.to_string().to_lowercase())
 }
 
+/// An optional address as its lowercase hex string. Pair it with
+/// `skip_serializing_if = "Option::is_none"` where the absent key is the wire form.
+pub(crate) fn ser_lowercase_opt<S>(
+    address: &Option<Address>,
+    serializer: S,
+) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    match address {
+        Some(a) => serializer.serialize_str(&format!("{a:#x}")),
+        None => serializer.serialize_none(),
+    }
+}
+
+/// Optional `[user, flag]` pairs with each user address string lowercased, as
+/// HyperCore re-serialises an address before hashing.
+pub(crate) fn ser_lowercase_user_flags<S>(
+    pairs: &Option<Vec<(String, bool)>>,
+    serializer: S,
+) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    match pairs {
+        Some(pairs) => {
+            let lowered: Vec<(String, bool)> = pairs
+                .iter()
+                .map(|(user, flag)| (user.to_lowercase(), *flag))
+                .collect();
+            serializer.serialize_some(&lowered)
+        }
+        None => serializer.serialize_none(),
+    }
+}
+
 /// Msgpack key order follows insertion order. `serde_json::Value` serialization through
 /// `rmp_serde` sorts object keys alphabetically, so wire payloads must use this wrapper.
 #[derive(Debug, Clone)]

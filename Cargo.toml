@@ -25,9 +25,6 @@ ws = ["client", "dep:tokio-tungstenite", "dep:futures-util"]
 [dependencies]
 alloy = { version = "1.1.1", default-features = false, features = ["std", "sol-types", "dyn-abi", "signers", "signer-local", "eip712"] }
 alloy-signer = { version = "1.1.1", features = ["eip712"] }
-chrono = "0.4.42"
-dotenv = "0.15.0"
-env_logger = "0.11.8"
 error-stack = "0.6.0"
 k256 = "0.13.4"
 lazy_static = "1.5.0"
@@ -39,7 +36,6 @@ serde_json = { version = "1.0.145", features = ["preserve_order"] }
 thiserror = "2.0.17"
 tokio = { version = "1.48.0", features = ["macros", "net", "rt-multi-thread"], optional = true }
 tracing = { version = "0.1.43", optional = true }
-uuid = { version = "1.18.1", features = ["v4"] }
 derive_builder = "0.20.2"
 rust_decimal = { version = "1.36.0", features = ["serde"] }
 rust_decimal_macros = "1.36.0"
@@ -48,6 +44,13 @@ hl-rs-derive = { path = "hl-rs-derive" }
 # WebSocket (optional)
 tokio-tungstenite = { version = "0.24", features = ["rustls-tls-webpki-roots"], optional = true }
 futures-util = { version = "0.3", optional = true }
+
+# Used by examples only, so the library build does not link them.
+[dev-dependencies]
+chrono = "0.4.42"
+dotenv = "0.15.0"
+env_logger = "0.11.8"
+uuid = { version = "1.18.1", features = ["v4"] }
 
 # Perp deploy examples live in examples/perp_deploy/; paths are explicit
 # because Cargo only auto-discovers examples/*.rs at the top level.

@@ -43,6 +43,11 @@ fn concrete<A: Action + Clone>(
     vault: Option<Address>,
     expires: Option<u64>,
 ) -> (B256, String) {
+    assert!(
+        !A::is_user_signed(),
+        "{} is user-signed and has no place in L1ActionKind",
+        A::ACTION_TYPE
+    );
     let prepared = PreparedAction::new(action.clone(), chain, vault, expires).unwrap();
     let hash = prepared.signing_hash();
     let body = serde_json::to_string(&prepared.with_signature(signature())).unwrap();

@@ -63,6 +63,14 @@ macro_rules! impl_action_kind {
         impl_action_kind!(@all [$($user,)* $($l1,)*] [$($l1,)*]);
     };
     (@all [$($action:ident,)*] [$($l1:ident,)*]) => {
+        // Every type in the `l1` list must be an `L1Action`. `L1ActionKind` hashes
+        // through `Action::signing_hash`, which would take the EIP-712 path for a
+        // user-signed type, so a misplaced type fails to compile here instead.
+        const _: fn() = || {
+            fn is_l1_action<T: L1Action>() {}
+            $(is_l1_action::<$l1>();)*
+        };
+
         #[derive(Debug, Clone)]
         pub enum ActionKind {
             $($action($action),)*

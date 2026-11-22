@@ -356,6 +356,21 @@ where
     serializer.serialize_str(&address.to_string().to_lowercase())
 }
 
+/// An optional address as its lowercase hex string. Pair it with
+/// `skip_serializing_if = "Option::is_none"` where the absent key is the wire form.
+pub(crate) fn ser_lowercase_opt<S>(
+    address: &Option<Address>,
+    serializer: S,
+) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    match address {
+        Some(a) => serializer.serialize_str(&format!("{a:#x}")),
+        None => serializer.serialize_none(),
+    }
+}
+
 /// Msgpack key order follows insertion order. `serde_json::Value` serialization through
 /// `rmp_serde` sorts object keys alphabetically, so wire payloads must use this wrapper.
 #[derive(Debug, Clone)]

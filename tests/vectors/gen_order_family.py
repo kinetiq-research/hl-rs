@@ -9,12 +9,25 @@ are the ones the SDK would have signed and posted. Nothing is signed or sent and
 involved. The hash and the EIP-712 `Agent` digest are the SDK's own `action_hash`,
 `construct_phantom_agent` and `l1_payload`, hashed with eth_account.
 
-Two forms have no SDK method and are written here, labelled `hand-built`:
+Two forms have no SDK method and are written here, labelled `hand-built`. Their cases show
+that hl-rs signs the dict written here; they are not themselves HyperCore measurements. What
+HyperCore did with each form is listed with it:
 
 - `cancel` and `cancelByCloid` with the fast flag: the SDK dict with `"f": true` after
-  `cancels`, the only form the flag takes (absent when unset).
-- `borrowLend`: `{type, operation, token, amount}`, the key order HyperCore accepted, with
-  `amount` a normalised decimal string or `null` (the whole balance).
+  `cancels`, the only form the flag takes (absent when unset). Measured for single cancels on
+  testnet: four `f: true` cancels of resting orders went through (2026-10-25, cw-enclave
+  `LATENCY.md` §3.3); `cancelByCloid` with `f: true` against a trigger order answered
+  `Order not eligible for fast cancel` (2026-10-26); explorer `userDetails` records
+  `{"type":"cancel","cancels":[{"a":…,"o":…}],"f":true}` with `error: null` (2026-11-20,
+  cw-enclave `crates/cw-executor/tests/fixtures/coreheight`). Multi-cancel bodies with the flag
+  are unmeasured.
+- `borrowLend`: `{type, operation, token, amount}`, with `amount` a normalised decimal string or
+  `null` (the whole balance). Measured on testnet: agent-signed supply and withdraw reached the
+  lending module (2026-10-28), and `"1.5"`, `"1.50000000"` and `null` each recovered the
+  signer (2026-11-20, cw-enclave `AGENT_AUTHORITY_MATRIX.md` Phase 0).
+
+Every case is built by parsing the dict, so none exercises building an action from CoreWriter
+scale; cw-enclave's wire vectors build from `fields` for that.
 
 The script replaces every case of the kinds it writes and leaves the other cases as they are, so
 running it twice gives the same file. `fields` holds each case's inputs at CoreWriter scale
@@ -39,7 +52,8 @@ ORDER_KINDS = {
     "modify-by-cloid", "modify-by-oid", "batch-modify", "borrow-lend", "borrow-lend-all",
 }
 # borrowLend supply 1.5 USDC at nonce 42 on testnet, as cw-enclave pins it
-# (core_action::a_borrow_lend_hashes_the_normalised_amount): a cross-check on the hand-built form.
+# (core_action::a_borrow_lend_hashes_the_normalised_amount). That digest comes from hl-rs, so
+# this checks the generator and the enclave build the same dict, not that HyperCore accepts it.
 BORROW_LEND_TESTNET_42 = "0xcecdb72d090283d610439b437ca16bba88ca83deb5fb867438ae3c0c72cb46cd"
 
 

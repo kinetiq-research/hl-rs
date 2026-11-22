@@ -1,0 +1,44 @@
+name: features
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  actions-only:
+    name: actions-only build (no client)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-musl
+      - name: Build
+        run: cargo build --no-default-features --all-targets
+      - name: Test
+        run: cargo test --no-default-features
+      - name: No HTTP, TLS or async runtime in the tree
+        run: |
+          banned='^(reqwest|hyper|rustls|aws-lc-rs|aws-lc-sys|ring|openssl|openssl-sys|native-tls|tokio)$'
+          found=$(cargo tree --no-default-features -e normal --prefix none \
+            | sed 's/ v.*//' | sort -u | grep -E "$banned" || true)
+          if [ -n "$found" ]; then
+            echo "actions-only build pulls in:"
+            echo "$found"
+            exit 1
+          fi
+      - name: Build for musl
+        run: cargo build --no-default-features --lib --target x86_64-unknown-linux-musl
+
+  client:
+    name: client build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Test
+        run: cargo test --features ws --lib --tests

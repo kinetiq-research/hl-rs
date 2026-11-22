@@ -24,8 +24,10 @@ jobs:
       - name: No HTTP, TLS or async runtime in the tree
         run: |
           banned='^(reqwest|hyper|rustls|aws-lc-rs|aws-lc-sys|ring|openssl|openssl-sys|native-tls|tokio)$'
-          found=$(cargo tree --no-default-features -e normal --prefix none \
-            | sed 's/ v.*//' | sort -u | grep -E "$banned" || true)
+          # A plain assignment takes cargo tree's exit status, so a failing
+          # cargo tree fails the step; only grep's no-match exit is tolerated.
+          tree=$(cargo tree --no-default-features -e normal --prefix none)
+          found=$(printf '%s\n' "$tree" | sed 's/ v.*//' | sort -u | grep -E "$banned" || true)
           if [ -n "$found" ]; then
             echo "actions-only build pulls in:"
             echo "$found"

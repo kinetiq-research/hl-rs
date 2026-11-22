@@ -1,6 +1,8 @@
 use alloy::primitives::Address;
 use hl_rs_derive::L1Action;
-use serde::{Deserialize, Serialize, Serializer};
+use serde::{Deserialize, Serialize};
+
+use crate::actions::serialization::ser_lowercase_opt;
 
 /// Reserve additional request weight (rate-limit capacity).
 ///
@@ -55,13 +57,6 @@ pub struct ReserveRequestWeight {
     pub destination: Option<Address>,
     #[serde(skip_serializing)]
     pub nonce: Option<u64>,
-}
-
-fn ser_lowercase_opt<S: Serializer>(a: &Option<Address>, s: S) -> Result<S::Ok, S::Error> {
-    match a {
-        Some(a) => s.serialize_str(&format!("{a:#x}")),
-        None => s.serialize_none(),
-    }
 }
 
 impl ReserveRequestWeight {

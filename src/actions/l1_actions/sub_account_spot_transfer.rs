@@ -16,7 +16,11 @@ pub struct SubAccountSpotTransfer {
     pub is_deposit: bool,
     /// Token identifier
     pub token: String,
-    /// Amount to transfer, sent normalised as orders are (`1.50` -> `"1.5"`).
+    /// Amount to transfer, sent normalised as orders are (`1.50` -> `"1.5"`, `1.0` -> `"1"`).
+    ///
+    /// The SDK's method sends `str(float)`, so a whole amount is `"1.0"` there and `"1"` here.
+    /// HyperCore hashes this string as sent: `"1"` and `"1.00000000"` each recovered the signer
+    /// (testnet 2026-11-20, cw-enclave `AGENT_AUTHORITY_MATRIX.md` Phase 0, wire facts).
     #[serde(serialize_with = "serialize_decimal_wire")]
     pub amount: Decimal,
     #[serde(skip_serializing)]
@@ -62,5 +66,14 @@ mod tests {
             alloy::hex::encode(rmp_serde::to_vec_named(&L1ActionWrapper { action: &a }).unwrap()),
             "85a474797065b67375624163636f756e7453706f745472616e73666572ae7375624163636f756e7455736572d92a307831313131313131313131313131313131313131313131313131313131313131313131313131313131a969734465706f736974c3a5746f6b656ea455534443a6616d6f756e74a3312e35"
         );
+    }
+
+    /// A whole amount goes out as `"1"`, the form HyperCore recovered, not the SDK's `"1.0"`.
+    #[test]
+    fn a_whole_amount_is_sent_without_a_fraction() {
+        let a = SubAccountSpotTransfer::deposit(Address::repeat_byte(0x11), "USDC", dec!(1.00));
+        assert!(serde_json::to_string(&a)
+            .unwrap()
+            .ends_with(r#""amount":"1"}"#));
     }
 }

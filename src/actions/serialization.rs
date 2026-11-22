@@ -371,6 +371,27 @@ where
     }
 }
 
+/// Optional `[user, flag]` pairs with each user address string lowercased, as
+/// HyperCore re-serialises an address before hashing.
+pub(crate) fn ser_lowercase_user_flags<S>(
+    pairs: &Option<Vec<(String, bool)>>,
+    serializer: S,
+) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    match pairs {
+        Some(pairs) => {
+            let lowered: Vec<(String, bool)> = pairs
+                .iter()
+                .map(|(user, flag)| (user.to_lowercase(), *flag))
+                .collect();
+            serializer.serialize_some(&lowered)
+        }
+        None => serializer.serialize_none(),
+    }
+}
+
 /// Msgpack key order follows insertion order. `serde_json::Value` serialization through
 /// `rmp_serde` sorts object keys alphabetically, so wire payloads must use this wrapper.
 #[derive(Debug, Clone)]

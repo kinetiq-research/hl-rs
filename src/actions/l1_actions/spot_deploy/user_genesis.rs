@@ -1,6 +1,8 @@
 use hl_rs_derive::L1Action;
 use serde::{Deserialize, Serialize};
 
+use crate::actions::serialization::ser_lowercase_user_flags;
+
 /// User genesis allocation for token distribution.
 #[derive(Serialize, Deserialize, Debug, Clone, L1Action)]
 #[action(action_type = "spotDeploy", payload_key = "userGenesis")]
@@ -16,10 +18,14 @@ pub struct UserGenesis {
     /// from the blacklist. The docs type is `Option<Vec<[String, bool]>>`.
     ///
     /// Skipped when `None`, so a genesis without it signs exactly the SDK's dict, which has no such
-    /// key. Addresses are sent as given; pass them lowercase, as the SDK does for `userAndWei`. The
-    /// absent key and `[[addr,true]]` recover the signer; `null` does not (testnet 2026-11-20:
-    /// signed by a key approved nowhere, the answer named that key).
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    /// key. Each address is sent lowercase, as the SDK sends `userAndWei`, so a checksummed address
+    /// signs the same body. The absent key and `[[addr,true]]` recover the signer; `null` does not
+    /// (testnet 2026-11-20: signed by a key approved nowhere, the answer named that key).
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        serialize_with = "ser_lowercase_user_flags"
+    )]
     pub blacklist_users: Option<Vec<(String, bool)>>,
     #[serde(skip_serializing)]
     pub nonce: Option<u64>,
@@ -88,5 +94,17 @@ mod tests {
             msgpack_hex(&a),
             "82a474797065aa73706f744465706c6f79ab7573657247656e6573697384a5746f6b656e02aa75736572416e645765699192d92a307831313131313131313131313131313131313131313131313131313131313131313131313131313131a3313030b36578697374696e67546f6b656e416e64576569919201a135ae626c61636b6c69737455736572739292d92a307832323232323232323232323232323232323232323232323232323232323232323232323232323232c392d92a307831313131313131313131313131313131313131313131313131313131313131313131313131313131c2"
         );
+    }
+
+    /// A checksummed blacklist address signs the lowercase body.
+    #[test]
+    fn a_checksummed_blacklist_address_is_sent_lowercase() {
+        let checksummed = "0xAaF00000000000000000000000000000000000aB";
+        let a = base().with_blacklist_users(vec![(checksummed.into(), true)]);
+        let lower = base().with_blacklist_users(vec![(checksummed.to_lowercase(), true)]);
+        assert_eq!(msgpack_hex(&a), msgpack_hex(&lower));
+        assert!(serde_json::to_string(&a)
+            .unwrap()
+            .contains(&checksummed.to_lowercase()));
     }
 }

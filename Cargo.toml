@@ -14,13 +14,16 @@ categories = ["api-bindings"]
 members = ["hl-rs-derive"]
 
 [features]
-default = []
+default = ["client"]
+# HTTP clients (`ExchangeClient`, `InfoClient`). Without it the crate builds,
+# signs and serialises actions with no HTTP, TLS or async runtime in the tree.
+client = ["dep:reqwest", "dep:tokio", "dep:tracing"]
 custom-signing-chain = []
-integration-tests = []
-ws = ["dep:tokio-tungstenite", "dep:futures-util"]
+integration-tests = ["client"]
+ws = ["client", "dep:tokio-tungstenite", "dep:futures-util"]
 
 [dependencies]
-alloy = "1.1.1"
+alloy = { version = "1.1.1", default-features = false, features = ["std", "sol-types", "dyn-abi", "signers", "signer-local", "eip712"] }
 alloy-signer = { version = "1.1.1", features = ["eip712"] }
 chrono = "0.4.42"
 dotenv = "0.15.0"
@@ -29,13 +32,13 @@ error-stack = "0.6.0"
 k256 = "0.13.4"
 lazy_static = "1.5.0"
 log = "0.4.28"
-reqwest = { version = "0.12.24", features = ["json"] }
+reqwest = { version = "0.12.24", features = ["json"], optional = true }
 rmp-serde = "1.3.0"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = { version = "1.0.145", features = ["preserve_order"] }
 thiserror = "2.0.17"
-tokio = { version = "1.48.0", features = ["macros", "net", "rt-multi-thread"] }
-tracing = "0.1.43"
+tokio = { version = "1.48.0", features = ["macros", "net", "rt-multi-thread"], optional = true }
+tracing = { version = "0.1.43", optional = true }
 uuid = { version = "1.18.1", features = ["v4"] }
 derive_builder = "0.20.2"
 rust_decimal = { version = "1.36.0", features = ["serde"] }
@@ -51,91 +54,120 @@ futures-util = { version = "0.3", optional = true }
 [[example]]
 name = "enable_growth_mode"
 path = "examples/perp_deploy/enable_growth_mode.rs"
+required-features = ["client"]
 [[example]]
 name = "register_asset_existing_dex"
 path = "examples/perp_deploy/register_asset_existing_dex.rs"
+required-features = ["client"]
 [[example]]
 name = "register_asset_new_dex"
 path = "examples/perp_deploy/register_asset_new_dex.rs"
+required-features = ["client"]
 [[example]]
 name = "set_funding_interest_rates"
 path = "examples/perp_deploy/set_funding_interest_rates.rs"
+required-features = ["client"]
 [[example]]
 name = "set_funding_clamps"
 path = "examples/perp_deploy/set_funding_clamps.rs"
+required-features = ["client"]
 [[example]]
 name = "set_oi_caps"
 path = "examples/perp_deploy/set_oi_caps.rs"
+required-features = ["client"]
 [[example]]
 name = "set_oracle"
 path = "examples/perp_deploy/set_oracle.rs"
+required-features = ["client"]
 [[example]]
 name = "set_sub_deployers"
 path = "examples/perp_deploy/set_sub_deployers.rs"
+required-features = ["client"]
 [[example]]
 name = "toggle_trading"
 path = "examples/perp_deploy/toggle_trading.rs"
+required-features = ["client"]
 [[example]]
 name = "set_margin_table_ids"
 path = "examples/perp_deploy/set_margin_table_ids.rs"
+required-features = ["client"]
 [[example]]
 name = "set_margin_modes"
 path = "examples/perp_deploy/set_margin_modes.rs"
+required-features = ["client"]
 [[example]]
 name = "set_perp_annotation"
 path = "examples/perp_deploy/set_perp_annotation.rs"
+required-features = ["client"]
 [[example]]
 name = "migrate_dex_quote_token"
 path = "examples/perp_deploy/migrate_dex_quote_token.rs"
+required-features = ["client"]
 [[example]]
 name = "disable_dex"
 path = "examples/perp_deploy/disable_dex.rs"
+required-features = ["client"]
 [[example]]
 name = "set_deployer_fees"
 path = "examples/perp_deploy/set_deployer_fees.rs"
+required-features = ["client"]
 [[example]]
 name = "register_spot"
 path = "examples/spot_deploy/register_spot.rs"
+required-features = ["client"]
 [[example]]
 name = "register_hyperliquidity"
 path = "examples/spot_deploy/register_hyperliquidity.rs"
+required-features = ["client"]
 
 [[example]]
 name = "spot_register_token"
 path = "examples/spot_deploy/register_token.rs"
+required-features = ["client"]
 [[example]]
 name = "spot_genesis"
 path = "examples/spot_deploy/genesis.rs"
+required-features = ["client"]
 [[example]]
 name = "spot_user_genesis"
 path = "examples/spot_deploy/user_genesis.rs"
+required-features = ["client"]
 [[example]]
 name = "spot_register_spot"
 path = "examples/spot_deploy/register_spot.rs"
+required-features = ["client"]
 [[example]]
 name = "spot_register_hyperliquidity"
 path = "examples/spot_deploy/register_hyperliquidity.rs"
+required-features = ["client"]
 [[example]]
 name = "spot_set_deployer_fees"
 path = "examples/spot_deploy/set_deployer_fees.rs"
+required-features = ["client"]
 [[example]]
 name = "spot_request_evm_contract"
 path = "examples/spot_deploy/request_evm_contract.rs"
+required-features = ["client"]
 [[example]]
 name = "spot_finalize_evm_contract"
 path = "examples/spot_deploy/finalize_evm_contract.rs"
+required-features = ["client"]
 [[example]]
 name = "spot_enable_freeze_privilege"
 path = "examples/spot_deploy/enable_freeze_privilege.rs"
+required-features = ["client"]
 [[example]]
 name = "spot_revoke_freeze_privilege"
 path = "examples/spot_deploy/revoke_freeze_privilege.rs"
+required-features = ["client"]
 [[example]]
 name = "spot_enable_quote_token"
 path = "examples/spot_deploy/enable_quote_token.rs"
+required-features = ["client"]
 [[example]]
 name = "spot_freeze_user"
 path = "examples/spot_deploy/freeze_user.rs"
+required-features = ["client"]
 [[example]]
 name = "ws_trades"
 path = "examples/ws_trades.rs"
@@ -152,3 +184,57 @@ name = "ws_l2_book_snapshot"
 path = "tests/integration/ws_l2_book_snapshot.rs"
 required-features = ["ws"]
 
+# Every example talks to the API, so each needs the `client` feature.
+[[example]]
+name = "bridge_usdc_spot_to_evm"
+required-features = ["client"]
+[[example]]
+name = "builder_codes"
+required-features = ["client"]
+[[example]]
+name = "convert_to_multisig_user"
+required-features = ["client"]
+[[example]]
+name = "enable_big_blocks"
+required-features = ["client"]
+[[example]]
+name = "multisig_order"
+required-features = ["client"]
+[[example]]
+name = "multisig_spot_transfer"
+required-features = ["client"]
+[[example]]
+name = "multisig_spot_transfer_external_signer"
+required-features = ["client"]
+[[example]]
+name = "place_order"
+required-features = ["client"]
+[[example]]
+name = "send_asset"
+required-features = ["client"]
+[[example]]
+name = "spot_transfer_kntq"
+required-features = ["client"]
+[[example]]
+name = "sub_account_spot_transfer"
+required-features = ["client"]
+[[example]]
+name = "user_set_abstraction"
+required-features = ["client"]
+
+# Integration tests send live testnet requests through `ExchangeClient`.
+[[test]]
+name = "integration_l1_actions"
+required-features = ["integration-tests"]
+[[test]]
+name = "integration_perp_deploy"
+required-features = ["integration-tests"]
+[[test]]
+name = "integration_spot_deploy"
+required-features = ["integration-tests"]
+[[test]]
+name = "integration_trading"
+required-features = ["integration-tests"]
+[[test]]
+name = "integration_user_signed_actions"
+required-features = ["integration-tests"]

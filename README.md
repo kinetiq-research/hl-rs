@@ -64,6 +64,38 @@ async fn main() -> Result<(), hl_rs::Error> {
 }
 ```
 
+### Actions-Only Build (No HTTP Client)
+
+The `client` feature (on by default) provides `ExchangeClient` and `InfoClient`.
+With default features off, the crate builds, signs and serialises actions with
+no HTTP, TLS or async runtime in the dependency tree, for example inside an
+enclave or a static musl binary:
+
+```toml
+hl-rs = { git = "https://github.com/kinetiq-research/hl-rs", default-features = false }
+```
+
+```rust
+use alloy::signers::local::PrivateKeySigner;
+use hl_rs::{actions::Action, PreparedAction, ScheduleCancel, SigningChain};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let wallet: PrivateKeySigner = "0x...".parse()?;
+    let action = ScheduleCancel::at(1_700_000_060_000).with_nonce(1_700_000_000_000);
+    let prepared = PreparedAction::new(action, &SigningChain::Mainnet, None, None)?;
+    let signed = prepared.sign(&wallet)?;
+    let body = serde_json::to_string(&signed)?; // POST this to /exchange
+    Ok(())
+}
+```
+
+| Feature | Adds |
+| --- | --- |
+| `client` (default) | `ExchangeClient`, `InfoClient` (reqwest, tokio, tracing) |
+| `ws` | `WsClient`; implies `client` |
+| `custom-signing-chain` | `SigningChain::Custom` |
+| `integration-tests` | Live testnet tests; implies `client` |
+
 ### L1 Actions (Perp Deploy, Trading, etc.)
 
 ```rust

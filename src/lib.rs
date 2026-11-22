@@ -2,12 +2,15 @@ pub mod types;
 
 mod abi_value;
 pub mod actions;
+#[cfg(feature = "client")]
 pub mod clients;
 mod consts;
 mod error;
+#[cfg(feature = "client")]
 mod http;
 mod prelude;
 
+#[cfg(feature = "client")]
 pub use clients::{
     exchange::responses::ExchangeResponse,
     info::{self, InfoClient},

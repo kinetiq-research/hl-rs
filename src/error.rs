@@ -34,6 +34,9 @@ pub enum Error {
     RmpParse(String),
     #[error("ECDSA signature failed: {0}")]
     SignatureFailure(String),
+    /// An L1 action was hashed without a nonce. Set one with `with_nonce` first.
+    #[error("nonce not set: call with_nonce before hashing an L1 action")]
+    NonceNotSet,
     #[error("ABI encoding error: {rust_type} cannot be encoded as EIP-712 type {abi_type}")]
     AbiEncode {
         rust_type: &'static str,

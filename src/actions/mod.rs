@@ -321,6 +321,7 @@ impl_action_kind! {
         BorrowLend,
         AgentSendAsset,
         AgentEnableDexAbstraction,
+        AgentSetAbstraction,
         FinalizeEvmContract,
         // Trading actions
         UpdateLeverage,

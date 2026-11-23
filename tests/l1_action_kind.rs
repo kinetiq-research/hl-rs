@@ -14,13 +14,13 @@ use std::collections::BTreeSet;
 use alloy::primitives::{Address, B256};
 use alloy_signer::Signature;
 use hl_rs::{
-    Action, ActionKind, AgentEnableDexAbstraction, AssetRequest, BatchCancel, DeployerFeeConfig,
-    DisableDex, Error, FinalizeEvmContract, InsertMarginTable, L1ActionKind, MarginMode,
-    MigrateDexQuoteToken, NoOp, PerpDexSchema, PerpSetDeployerFees, PreparedAction, RegisterAsset,
-    ReserveRequestWeight, SetFeeRecipient, SetFeeScale, SetFundingClamps, SetFundingInterestRates,
-    SetFundingMultipliers, SetGrowthModes, SetMarginModes, SetMarginTableIds, SetOpenInterestCaps,
-    SetOracle, SetPerpAnnotation, SetSubDeployers, SignedActionKind, SigningChain,
-    SubDeployerVariant, ToggleTrading, UsdSend, VaultTransfer,
+    Action, ActionKind, AgentEnableDexAbstraction, AgentSetAbstraction, AssetRequest, BatchCancel,
+    DeployerFeeConfig, DisableDex, Error, FinalizeEvmContract, InsertMarginTable, L1ActionKind,
+    MarginMode, MigrateDexQuoteToken, NoOp, PerpDexSchema, PerpSetDeployerFees, PreparedAction,
+    RegisterAsset, ReserveRequestWeight, SetFeeRecipient, SetFeeScale, SetFundingClamps,
+    SetFundingInterestRates, SetFundingMultipliers, SetGrowthModes, SetMarginModes,
+    SetMarginTableIds, SetOpenInterestCaps, SetOracle, SetPerpAnnotation, SetSubDeployers,
+    SignedActionKind, SigningChain, SubDeployerVariant, ToggleTrading, UsdSend, VaultTransfer,
 };
 use rust_decimal_macros::dec;
 use serde_json::{json, Value};
@@ -88,6 +88,7 @@ l1_variants![
     BorrowLend,
     AgentSendAsset,
     AgentEnableDexAbstraction,
+    AgentSetAbstraction,
     FinalizeEvmContract,
     UpdateLeverage,
     UpdateIsolatedMargin,
@@ -164,6 +165,7 @@ fn constructed_samples() -> Vec<L1ActionKind> {
         NoOp::invalidate_nonce(NONCE).into(),
         VaultTransfer::deposit(user, 1_000_000).into(),
         AgentEnableDexAbstraction::new().into(),
+        AgentSetAbstraction::portfolio_margin().into(),
         FinalizeEvmContract::by_create_nonce(7, 3).into(),
         RegisterAsset::new("dex", asset)
             .deploy_dex(PerpDexSchema::new("Test DEX", 0).with_oracle_updater(user))

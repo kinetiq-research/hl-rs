@@ -8,7 +8,7 @@ use crate::actions::serialization::ser_lowercase;
 /// Delegate or undelegate tokens to a validator.
 #[derive(Debug, Clone, Serialize, Deserialize, Builder, UserSignedAction)]
 #[action(
-    types = "TokenDelegate(string hyperliquidChain,string validator,uint64 wei,bool isUndelegate,uint64 nonce)"
+    types = "TokenDelegate(string hyperliquidChain,address validator,uint64 wei,bool isUndelegate,uint64 nonce)"
 )]
 #[serde(rename_all = "camelCase")]
 #[builder(setter(into))]

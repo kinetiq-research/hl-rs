@@ -8,7 +8,7 @@ use crate::actions::serialization::ser_lowercase;
 /// Enable or disable DEX abstraction for a user.
 #[derive(Debug, Clone, Serialize, Deserialize, Builder, UserSignedAction)]
 #[action(
-    types = "UserDexAbstraction(string hyperliquidChain,string user,bool enabled,uint64 nonce)"
+    types = "UserDexAbstraction(string hyperliquidChain,address user,bool enabled,uint64 nonce)"
 )]
 #[serde(rename_all = "camelCase")]
 #[builder(setter(into))]

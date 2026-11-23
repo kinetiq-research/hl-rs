@@ -17,8 +17,10 @@ use crate::actions::serialization::ser_lowercase_opt;
 /// use std::str::FromStr;
 ///
 /// use alloy::signers::local::PrivateKeySigner;
+/// # #[cfg(feature = "client")]
 /// use hl_rs::{BaseUrl, ExchangeClient, ReserveRequestWeight};
 ///
+/// # #[cfg(feature = "client")]
 /// # async fn run() -> Result<(), hl_rs::Error> {
 /// let wallet = PrivateKeySigner::from_str(
 ///     "0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",

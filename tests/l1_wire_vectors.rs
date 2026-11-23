@@ -1,11 +1,18 @@
 //! L1 action signing hashes against hyperliquid-python-sdk.
 //!
-//! `tests/vectors/l1_wire.json` holds 44 L1 actions, each with the action
+//! `tests/vectors/l1_wire.json` holds 68 L1 actions, each with the action
 //! dict, the nonce, the msgpack the SDK hashes, and the EIP-712 `Agent`
 //! digest an agent key signs on mainnet and on testnet. Cases marked
 //! `sdk-method` come from the SDK's own `Exchange` methods (0.21.0,
 //! `be7523d`); cases marked `hand-built` have no SDK method and carry the
 //! body shape HyperCore recovered the signer of on testnet.
+//!
+//! 24 of them are the order family, written by
+//! `tests/vectors/gen_order_family.py`: `order` (each tif, with and without
+//! a cloid, prices 0.1 and 3000, size 1.5) and two-to-three-order batches,
+//! `cancel` and `cancelByCloid` (single and batch, with and without the fast
+//! flag), `batchModify` by cloid and by oid, and `borrowLend` supply and
+//! withdraw with an amount and with `null`.
 //!
 //! Each case goes through the public API only: the dict is read with
 //! `SignedActionKind::from_json`, the concrete action gets the case nonce,
@@ -124,7 +131,7 @@ fn cases() -> Vec<Value> {
 #[test]
 fn l1_wire_vectors_match_the_sdk_on_both_chains() {
     let cases = cases();
-    assert_eq!(cases.len(), 44, "vector file changed size");
+    assert_eq!(cases.len(), 68, "vector file changed size");
     let failures: Vec<String> = cases
         .iter()
         .filter_map(|case| {

@@ -143,6 +143,7 @@ impl_action_kind![
     SubAccountSpotTransfer,
     VaultTransfer,
     BorrowLend,
+    AgentSendAsset,
     AgentEnableDexAbstraction,
     FinalizeEvmContract,
     // Trading actions
@@ -185,4 +186,7 @@ impl_action_kind![
     FreezeUser,
     RevokeFreezePrivilege,
     EnableQuoteToken,
+    DisableQuoteToken,
+    SetDeployerLabel,
+    SetTokenAnnotation,
 ];

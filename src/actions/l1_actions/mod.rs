@@ -37,5 +37,8 @@ pub use vault_transfer::VaultTransfer;
 mod borrow_lend;
 pub use borrow_lend::{BorrowLend, BorrowLendOperation};
 
+mod agent_send_asset;
+pub use agent_send_asset::AgentSendAsset;
+
 mod agent_enable_dex_abstraction;
 pub use agent_enable_dex_abstraction::AgentEnableDexAbstraction;

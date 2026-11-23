@@ -1,5 +1,6 @@
 use alloy::primitives::{Address, U256};
 use alloy_signer::Signature;
+use rust_decimal::Decimal;
 use serde::{
     de::DeserializeOwned,
     ser::{Error, SerializeMap, SerializeSeq, SerializeStruct},
@@ -306,11 +307,89 @@ pub(crate) fn is_false(value: &bool) -> bool {
     !*value
 }
 
+/// Serialize a `Decimal` as the normalised string HyperLiquid's wire format uses, matching the
+/// Python SDK's `float_to_wire`: no trailing zeros, no trailing point (`1.50000000` -> `"1.5"`,
+/// `3000.0` -> `"3000"`).
+///
+/// rust_decimal's own serde keeps the scale, so a value built at a fixed scale (an 8-decimal
+/// fixed-point amount, say) would otherwise go out as `"1.50000000"`. Every decimal field on an
+/// L1 action should use this, so one amount has one rendering and one hash.
+pub(crate) fn serialize_decimal_wire<S>(d: &Decimal, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    serializer.serialize_str(&d.normalize().to_string())
+}
+
+/// As [`serialize_decimal_wire`], for an optional amount. `None` stays `null`, which some actions
+/// give a meaning of its own (`borrowLend`: the whole balance).
+pub(crate) fn serialize_opt_decimal_wire<S>(
+    d: &Option<Decimal>,
+    serializer: S,
+) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    match d {
+        Some(d) => serialize_decimal_wire(d, serializer),
+        None => serializer.serialize_none(),
+    }
+}
+
+/// Deserialize a `Decimal` from its wire string, normalised.
+pub(crate) fn deserialize_decimal_wire<'de, D>(deserializer: D) -> Result<Decimal, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    use serde::de::Error;
+    let s = String::deserialize(deserializer)?;
+    s.trim()
+        .parse::<Decimal>()
+        .map_err(D::Error::custom)
+        .map(|d| d.normalize())
+}
+
 pub(crate) fn ser_lowercase<S>(address: &Address, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
     serializer.serialize_str(&address.to_string().to_lowercase())
+}
+
+/// An optional address as its lowercase hex string. Pair it with
+/// `skip_serializing_if = "Option::is_none"` where the absent key is the wire form.
+pub(crate) fn ser_lowercase_opt<S>(
+    address: &Option<Address>,
+    serializer: S,
+) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    match address {
+        Some(a) => serializer.serialize_str(&format!("{a:#x}")),
+        None => serializer.serialize_none(),
+    }
+}
+
+/// Optional `[user, flag]` pairs with each user address string lowercased, as
+/// HyperCore re-serialises an address before hashing.
+pub(crate) fn ser_lowercase_user_flags<S>(
+    pairs: &Option<Vec<(String, bool)>>,
+    serializer: S,
+) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    match pairs {
+        Some(pairs) => {
+            let lowered: Vec<(String, bool)> = pairs
+                .iter()
+                .map(|(user, flag)| (user.to_lowercase(), *flag))
+                .collect();
+            serializer.serialize_some(&lowered)
+        }
+        None => serializer.serialize_none(),
+    }
 }
 
 /// Msgpack key order follows insertion order. `serde_json::Value` serialization through

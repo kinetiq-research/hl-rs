@@ -320,7 +320,10 @@ fn canonical_l1_action(action: &serde_json::Value) -> serde_json::Value {
 }
 
 /// Shared checks over recomputed hashes: signer recovery, membership, threshold, leader.
-#[allow(clippy::too_many_arguments)]
+#[allow(
+    clippy::too_many_arguments,
+    reason = "each argument is a separate field of the signed envelope"
+)]
 fn finish_validation(
     inner_signing_hash: B256,
     outer_signing_hash: B256,
@@ -406,7 +409,10 @@ fn finish_validation(
 /// Use this when you already hold the typed inner action (rather than a raw wire
 /// request). The action must carry the exact `nonce` used at signing time
 /// (`with_nonce`); `vault_address`/`expires_after` must match the outer envelope.
-#[allow(clippy::too_many_arguments)]
+#[allow(
+    clippy::too_many_arguments,
+    reason = "each argument is a separate field of the signed envelope"
+)]
 pub fn validate_multisig_l1_action<A: super::Action + serde::Serialize>(
     action: A,
     multi_sig_user: Address,
@@ -465,7 +471,10 @@ pub fn validate_multisig_l1_action<A: super::Action + serde::Serialize>(
 /// Validate a multisig user-signed action (e.g. `SpotTransfer`) from the typed action.
 ///
 /// The action must carry the exact `nonce` used at signing time (`with_nonce`).
-#[allow(clippy::too_many_arguments)]
+#[allow(
+    clippy::too_many_arguments,
+    reason = "each argument is a separate field of the signed envelope"
+)]
 pub fn validate_multisig_user_signed_action<
     A: super::UserSignedAction + super::Action + serde::Serialize,
 >(

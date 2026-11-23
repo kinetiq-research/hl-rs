@@ -2,11 +2,11 @@ use serde::Serialize;
 
 use crate::{actions::SigningMeta, Error, SigningChain};
 use alloy::{
-    primitives::{keccak256, Address, B256},
+    primitives::{Address, B256},
     sol_types::eip712_domain,
 };
 
-use super::ActionKind;
+use super::{eip712_digest, ActionKind};
 
 // ============================================================================
 // L1Action Trait
@@ -98,13 +98,7 @@ pub trait UserSignedAction: Serialize + Send + Sync + 'static {
 
         let domain_hash = domain.hash_struct();
 
-        let mut digest = [0u8; 66];
-        digest[0] = 0x19;
-        digest[1] = 0x01;
-        digest[2..34].copy_from_slice(&domain_hash[..]);
-        digest[34..66].copy_from_slice(&struct_hash[..]);
-
-        keccak256(digest)
+        eip712_digest(domain_hash, struct_hash)
     }
 }
 

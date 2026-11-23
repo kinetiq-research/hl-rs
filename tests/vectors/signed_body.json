@@ -1,0 +1,51 @@
+{
+  "signer": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+  "cases": [
+    {
+      "name": "short-r",
+      "chain": "mainnet",
+      "body": {
+        "action": {
+          "type": "cancel",
+          "cancels": [
+            {
+              "a": 0,
+              "o": 63638909939
+            }
+          ]
+        },
+        "nonce": 1700000000009,
+        "signature": {
+          "r": "0xd6c596460a166dcee77ab9db5ec4fc8db116f93e3d27ccf0006143dcf8fb2f",
+          "s": "0x33049c6f3fb781a0a46737ebbfed7957ea1b2395963217f4b5c7ddc245241a54",
+          "v": 27
+        },
+        "vaultAddress": null,
+        "expiresAfter": null
+      }
+    },
+    {
+      "name": "short-s",
+      "chain": "mainnet",
+      "body": {
+        "action": {
+          "type": "cancel",
+          "cancels": [
+            {
+              "a": 0,
+              "o": 63638909939
+            }
+          ]
+        },
+        "nonce": 1700000000002,
+        "signature": {
+          "r": "0xaabbc388a457a5c261d7a16174fdfc32ef81409a4b7ac00544cd2d82d469536a",
+          "s": "0x3cc6a70edca9c166c3f16caee6ea69e023f8221a64c4f5a0861fbe4a340d76f",
+          "v": 28
+        },
+        "vaultAddress": null,
+        "expiresAfter": null
+      }
+    }
+  ]
+}

@@ -114,15 +114,10 @@ fn eip712_type_to_dyn_sol_type(ty: &str) -> TokenStream2 {
 }
 
 fn enrich_types_preimage(full_types_preimage: &str) -> String {
-    let Some(idx) = full_types_preimage.find("hyperliquidChain,") else {
+    let Some((head, tail)) = full_types_preimage.split_once("hyperliquidChain,") else {
         return full_types_preimage.to_string();
     };
-    let insert_at = idx + "hyperliquidChain,".len();
-    format!(
-        "{}address payloadMultiSigUser,address outerSigner,{}",
-        &full_types_preimage[..insert_at],
-        &full_types_preimage[insert_at..]
-    )
+    format!("{head}hyperliquidChain,address payloadMultiSigUser,address outerSigner,{tail}")
 }
 
 fn build_struct_hash_tokens(
@@ -133,7 +128,7 @@ fn build_struct_hash_tokens(
     let (field_map, has_nonce) = build_field_map(fields)?;
 
     let params = parse_types_params(full_types_preimage)?;
-    let mut tokens = Vec::with_capacity(params.len() + 1);
+    let mut tokens = Vec::with_capacity(params.len().saturating_add(1));
     tokens.push(quote! {
         alloy::dyn_abi::DynSolValue::FixedBytes(type_hash, 32)
     });

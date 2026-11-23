@@ -248,7 +248,7 @@ impl Serialize for BatchOrder {
         S: Serializer,
     {
         use serde::ser::SerializeMap;
-        let len = 2 + self.builder.is_some() as usize;
+        let len = if self.builder.is_some() { 3 } else { 2 };
         let mut map = serializer.serialize_map(Some(len))?;
         map.serialize_entry("orders", &self.orders)?;
         map.serialize_entry("grouping", &self.grouping)?;

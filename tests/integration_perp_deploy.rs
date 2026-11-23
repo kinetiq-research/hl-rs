@@ -355,7 +355,9 @@ async fn test_set_sub_deployers_multisig_request() {
         address!("0xFE09176D7615fd49b6b1Eeb538d0a8D2eb84d218"),
     );
 
-    action.nonce = Some(ExchangeClient::current_timestamp_ms());
+    action.nonce = Some(
+        ExchangeClient::current_timestamp_ms().expect("system clock is before the Unix epoch"),
+    );
     log_action("SetSubDeployers (multisig request)", &action);
 
     // Include one inner signature from the outer signer as well.

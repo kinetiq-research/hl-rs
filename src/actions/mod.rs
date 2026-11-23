@@ -23,6 +23,8 @@ mod signing;
 mod traits;
 mod user_signed_actions;
 
+#[cfg(feature = "client")]
+pub(crate) use core::current_timestamp_ms;
 pub use core::{PreparedAction, SignedAction, SignedActionKind};
 pub use l1_action_kind::{PreparedL1Action, SignedL1Action};
 pub use l1_actions::*;
@@ -40,7 +42,7 @@ pub use user_signed_actions::*;
 
 pub(crate) use serialization::L1ActionWrapper;
 pub(crate) use serialization::{build_action_value, build_multisig_inner_action_value};
-pub(crate) use signing::{agent_signing_hash, compute_l1_hash, SigningMeta};
+pub(crate) use signing::{agent_signing_hash, compute_l1_hash, eip712_digest, SigningMeta};
 
 /// Macro that generates the `ActionKind` and `L1ActionKind` enums and the runtime dispatcher.
 ///
@@ -269,13 +271,14 @@ macro_rules! impl_action_kind {
             )*
 
             // Handle sum type results
-            match sum_type_matches.len() {
-                1 => Ok(sum_type_matches.into_iter().next().unwrap()),
-                0 => Ok(ActionKind::Unknown {
+            let mut sum_type_matches = sum_type_matches.into_iter();
+            match (sum_type_matches.next(), sum_type_matches.next()) {
+                (Some(action), None) => Ok(action),
+                (None, _) => Ok(ActionKind::Unknown {
                     action_type: action_type.to_string(),
                     raw: serde_json::Value::Object(obj.clone()),
                 }),
-                _ => Err(E::custom(format!(
+                (Some(_), Some(_)) => Err(E::custom(format!(
                     "ambiguous action type '{}' (multiple payload keys present)",
                     action_type
                 ))),

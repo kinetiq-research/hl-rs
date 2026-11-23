@@ -151,14 +151,22 @@ impl SpotMeta {
             .collect();
 
         for asset in self.universe.iter() {
-            let spot_ind: u32 = 10000 + asset.index as u32;
+            // A spot asset's id is 10000 + its index; an index with no such id names no
+            // asset this map could hold.
+            let Some(spot_ind) = u32::try_from(asset.index)
+                .ok()
+                .and_then(|index| index.checked_add(10000))
+            else {
+                continue;
+            };
             let name_to_ind = (asset.name.clone(), spot_ind);
 
-            let Some(token_1_name) = index_to_name.get(&asset.tokens[0]) else {
+            let [token_1, token_2] = asset.tokens;
+            let Some(token_1_name) = index_to_name.get(&token_1) else {
                 continue;
             };
 
-            let Some(token_2_name) = index_to_name.get(&asset.tokens[1]) else {
+            let Some(token_2_name) = index_to_name.get(&token_2) else {
                 continue;
             };
 

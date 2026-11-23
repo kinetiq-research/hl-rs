@@ -69,7 +69,9 @@ async fn main() {
     };
     let mut place = BatchOrder::new(vec![order]);
     // Pin the nonce so the inner signature and the outer submission agree.
-    place.nonce = Some(ExchangeClient::current_timestamp_ms());
+    place.nonce = Some(
+        ExchangeClient::current_timestamp_ms().expect("system clock is before the Unix epoch"),
+    );
 
     let inner_signature = client
         .sign_multisig_inner_action(place.clone(), MULTI_SIG_USER, signer_address)
@@ -94,7 +96,9 @@ async fn main() {
 
     // --- Cancel that order via multisig ---
     let mut cancel = BatchCancel::single(ASSET, oid);
-    cancel.nonce = Some(ExchangeClient::current_timestamp_ms());
+    cancel.nonce = Some(
+        ExchangeClient::current_timestamp_ms().expect("system clock is before the Unix epoch"),
+    );
 
     let inner_signature = client
         .sign_multisig_inner_action(cancel.clone(), MULTI_SIG_USER, signer_address)

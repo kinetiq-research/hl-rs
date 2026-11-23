@@ -34,7 +34,9 @@ async fn main() {
     );
 
     let mut action = SpotTransfer::new(DESTINATION, HYPE_TOKEN, dec!(0.01));
-    action.nonce = Some(ExchangeClient::current_timestamp_ms());
+    action.nonce = Some(
+        ExchangeClient::current_timestamp_ms().expect("system clock is before the Unix epoch"),
+    );
 
     let client = ExchangeClient::new(BASE_URL).with_signer(wallet);
 

@@ -1,3 +1,30 @@
+// A panic in this crate takes its caller down with it, and a signer built with
+// `panic = "abort"` halts. Library code returns `Error` instead; a site that truly
+// cannot fail carries `#[allow(clippy::..., reason = "...")]` stating why, and
+// `allow_attributes_without_reason` rejects an allow without one. Arithmetic that can
+// overflow or divide by zero (integers, and `rust_decimal::Decimal`, whose operators
+// panic) goes through `checked_*`. Tests may panic. CI runs clippy with these lints
+// for the actions-only and the client build, plus
+// `.github/scripts/no_panic_outside_clippy.py` for what clippy cannot see: macro
+// bodies, and calls that panic on a bad length or condition (`assert!`, `from_slice`,
+// `copy_from_slice`, `split_at`), each of which needs a `// cannot panic: ...`
+// comment on its line or the line above.
+#![cfg_attr(
+    not(test),
+    deny(
+        clippy::unwrap_used,
+        clippy::expect_used,
+        clippy::panic,
+        clippy::unreachable,
+        clippy::todo,
+        clippy::unimplemented,
+        clippy::indexing_slicing,
+        clippy::string_slice,
+        clippy::arithmetic_side_effects,
+        clippy::allow_attributes_without_reason
+    )
+)]
+
 pub mod types;
 
 mod abi_value;

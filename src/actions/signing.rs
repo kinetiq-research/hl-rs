@@ -1,6 +1,6 @@
 use alloy::{
     dyn_abi::Eip712Domain,
-    primitives::{keccak256, Address, B256},
+    primitives::{keccak256, Address, Keccak256, B256},
     sol,
     sol_types::{eip712_domain, SolStruct},
 };
@@ -44,13 +44,17 @@ pub(crate) fn agent_signing_hash(connection_id: B256, source: &str) -> B256 {
     let domain_hash = agent_domain().hash_struct();
     let struct_hash = agent.eip712_hash_struct();
 
-    let mut digest = [0u8; 66];
-    digest[0] = 0x19;
-    digest[1] = 0x01;
-    digest[2..34].copy_from_slice(&domain_hash[..]);
-    digest[34..66].copy_from_slice(&struct_hash[..]);
+    eip712_digest(domain_hash, struct_hash)
+}
 
-    keccak256(digest)
+/// The EIP-712 digest `keccak256(0x19 || 0x01 || domain_hash || struct_hash)`, hashed
+/// incrementally so there is no buffer to index.
+pub(crate) fn eip712_digest(domain_hash: B256, struct_hash: B256) -> B256 {
+    let mut hasher = Keccak256::new();
+    hasher.update([0x19, 0x01]);
+    hasher.update(domain_hash);
+    hasher.update(struct_hash);
+    hasher.finalize()
 }
 
 pub(crate) fn compute_l1_hash<T: Serialize>(
@@ -87,6 +91,26 @@ mod tests {
     use super::SigningMeta;
     use crate::actions::{Action, UsdSend};
     use crate::SigningChain;
+
+    /// The incremental hash equals keccak256 over the 66-byte `0x19 0x01 || domain || struct`
+    /// buffer the three digest builders used to fill by index.
+    #[test]
+    fn eip712_digest_hashes_the_66_byte_preimage() {
+        use alloy::primitives::{keccak256, B256};
+        let domain = keccak256("domain");
+        let structure = keccak256("struct");
+        let mut preimage = [0u8; 66];
+        preimage[0] = 0x19;
+        preimage[1] = 0x01;
+        preimage[2..34].copy_from_slice(domain.as_slice());
+        preimage[34..].copy_from_slice(structure.as_slice());
+        assert_eq!(super::eip712_digest(domain, structure), keccak256(preimage));
+        assert_ne!(
+            super::eip712_digest(structure, domain),
+            super::eip712_digest(domain, structure)
+        );
+        assert_ne!(super::eip712_digest(B256::ZERO, B256::ZERO), B256::ZERO);
+    }
 
     #[test]
     fn test_usd_send_signing_hardcoded() {

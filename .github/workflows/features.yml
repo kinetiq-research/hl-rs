@@ -13,6 +13,7 @@ env:
     -D clippy::unwrap_used -D clippy::expect_used -D clippy::panic
     -D clippy::unreachable -D clippy::todo -D clippy::unimplemented
     -D clippy::indexing_slicing -D clippy::string_slice
+    -D clippy::arithmetic_side_effects -D clippy::allow_attributes_without_reason
 
 jobs:
   actions-only:
@@ -28,8 +29,8 @@ jobs:
         run: cargo build --no-default-features --all-targets
       - name: No panics in library code (clippy)
         run: cargo clippy --no-default-features --lib -- $NO_PANIC_LINTS
-      - name: No panics in macro bodies (clippy cannot see them)
-        run: python3 .github/scripts/no_panic_in_macros.py
+      - name: No panics clippy cannot see (macro bodies, asserts, slice lengths)
+        run: python3 .github/scripts/no_panic_outside_clippy.py
       - name: Test
         run: cargo test --no-default-features
       - name: No HTTP, TLS or async runtime in the tree

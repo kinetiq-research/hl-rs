@@ -16,7 +16,7 @@ use crate::{
 
 use super::{
     agent_signing_hash, build_action_value, build_multisig_inner_action_value, compute_l1_hash,
-    core::current_timestamp_ms, traits::UserSignedAction, Action, L1ActionWrapper,
+    core::current_timestamp_ms, eip712_digest, traits::UserSignedAction, Action, L1ActionWrapper,
 };
 
 /// Wrapper payload used by Hyperliquid `multiSig` actions.
@@ -112,12 +112,7 @@ fn send_multisig_envelope_signing_hash(
     };
     let domain_hash = domain.hash_struct();
 
-    let mut digest = [0u8; 66];
-    digest[0] = 0x19;
-    digest[1] = 0x01;
-    digest[2..34].copy_from_slice(&domain_hash[..]);
-    digest[34..66].copy_from_slice(&struct_hash[..]);
-    keccak256(digest)
+    eip712_digest(domain_hash, struct_hash)
 }
 
 #[derive(Serialize)]

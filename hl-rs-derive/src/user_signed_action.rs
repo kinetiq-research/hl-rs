@@ -128,7 +128,7 @@ fn build_struct_hash_tokens(
     let (field_map, has_nonce) = build_field_map(fields)?;
 
     let params = parse_types_params(full_types_preimage)?;
-    let mut tokens = Vec::with_capacity(params.len() + 1);
+    let mut tokens = Vec::with_capacity(params.len().saturating_add(1));
     tokens.push(quote! {
         alloy::dyn_abi::DynSolValue::FixedBytes(type_hash, 32)
     });

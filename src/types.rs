@@ -161,11 +161,12 @@ impl SpotMeta {
             };
             let name_to_ind = (asset.name.clone(), spot_ind);
 
-            let Some(token_1_name) = index_to_name.get(&asset.tokens[0]) else {
+            let [token_1, token_2] = asset.tokens;
+            let Some(token_1_name) = index_to_name.get(&token_1) else {
                 continue;
             };
 
-            let Some(token_2_name) = index_to_name.get(&asset.tokens[1]) else {
+            let Some(token_2_name) = index_to_name.get(&token_2) else {
                 continue;
             };
 

@@ -175,7 +175,13 @@ impl ExchangeClient {
         let now = Self::current_timestamp_ms()?;
         loop {
             let last = self.nonce_counter.load(Ordering::Relaxed);
-            let next = if now > last { now } else { last + 1 };
+            let next = if now > last {
+                now
+            } else {
+                last.checked_add(1).ok_or_else(|| {
+                    Error::GenericRequest("nonce counter is at u64::MAX".to_string())
+                })?
+            };
             if self
                 .nonce_counter
                 .compare_exchange(last, next, Ordering::SeqCst, Ordering::Relaxed)

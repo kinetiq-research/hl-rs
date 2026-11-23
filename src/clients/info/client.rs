@@ -83,7 +83,10 @@ impl InfoClient {
         for (i, value) in rest.iter().enumerate() {
             let mut dex: PerpDex = serde_json::from_value(value.clone())
                 .map_err(|e| Error::JsonParse(e.to_string()))?;
-            dex.id = (i as u32) + 1;
+            dex.id = u32::try_from(i)
+                .ok()
+                .and_then(|i| i.checked_add(1))
+                .ok_or_else(|| Error::GenericParse("perp dex index exceeds u32".to_string()))?;
             dexs.push(dex);
         }
 

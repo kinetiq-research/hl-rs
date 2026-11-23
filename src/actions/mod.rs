@@ -42,7 +42,7 @@ pub use user_signed_actions::*;
 
 pub(crate) use serialization::L1ActionWrapper;
 pub(crate) use serialization::{build_action_value, build_multisig_inner_action_value};
-pub(crate) use signing::{agent_signing_hash, compute_l1_hash, SigningMeta};
+pub(crate) use signing::{agent_signing_hash, compute_l1_hash, eip712_digest, SigningMeta};
 
 /// Macro that generates the `ActionKind` and `L1ActionKind` enums and the runtime dispatcher.
 ///

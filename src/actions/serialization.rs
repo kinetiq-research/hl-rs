@@ -279,7 +279,8 @@ where
     // Match Python SDK `to_hex`: unpadded lowercase hex (msgpack hash is sensitive to this).
     state.serialize_field("r", &format!("0x{:x}", sig.r()))?;
     state.serialize_field("s", &format!("0x{:x}", sig.s()))?;
-    state.serialize_field("v", &(27 + sig.v() as u64))?;
+    let v: u64 = if sig.v() { 28 } else { 27 };
+    state.serialize_field("v", &v)?;
     state.end()
 }
 

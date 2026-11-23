@@ -15,13 +15,15 @@
 //! withdraw with an amount and with `null`.
 //!
 //! Each case goes through the public API only: the dict is read with
-//! `SignedActionKind::from_json`, the concrete action gets the case nonce,
-//! and `PreparedAction::signing_hash` must equal the SDK digest on both
-//! chains. The `/exchange` body built from the prepared action must equal
-//! the SDK dict, and its msgpack must equal the SDK bytes.
+//! `SignedActionKind::from_json` and narrowed to an `L1ActionKind` with the
+//! case nonce, and `L1ActionKind::signing_hash` must equal the SDK digest on
+//! both chains. The `/exchange` body of the `SignedL1Action` must equal the
+//! SDK dict, and its msgpack must equal the SDK bytes. `tests/l1_action_kind.rs`
+//! checks that `L1ActionKind` hashes and serialises as `PreparedAction` does
+//! for every concrete type.
 
 use alloy::hex;
-use hl_rs::{Action, ActionKind, PreparedAction, SignedActionKind, SigningChain};
+use hl_rs::{L1ActionKind, SignedActionKind, SigningChain};
 use serde_json::{json, Value};
 
 const VECTORS: &str = include_str!("vectors/l1_wire.json");
@@ -35,65 +37,37 @@ struct Hashed {
     action: Value,
 }
 
-fn signed_kind(action: &Value, nonce: u64) -> Result<SignedActionKind, String> {
+/// Reads the dict as an `L1ActionKind` with the case nonce; a user-signed or unknown
+/// action is an error.
+fn l1_kind(action: &Value, nonce: u64) -> Result<(L1ActionKind, SignedActionKind), String> {
     let envelope = json!({
         "action": action,
         "nonce": nonce,
         "signature": serde_json::from_str::<Value>(SIGNATURE).unwrap(),
     });
-    SignedActionKind::from_json(&envelope.to_string()).map_err(|e| e.to_string())
-}
-
-fn hash<A: Action + Clone>(action: A, nonce: u64, signed: SignedActionKind) -> Hashed {
-    let digest = |chain: &SigningChain| {
-        let prepared =
-            PreparedAction::new(action.clone().with_nonce(nonce), chain, None, None).unwrap();
-        format!("{:#x}", prepared.signing_hash())
-    };
-    let prepared = PreparedAction::new(
-        action.clone().with_nonce(nonce),
-        &SigningChain::Mainnet,
-        None,
-        None,
-    )
-    .unwrap();
-    let body = serde_json::to_value(prepared.with_signature(signed.signature)).unwrap();
-    Hashed {
-        mainnet: digest(&SigningChain::Mainnet),
-        testnet: digest(&SigningChain::Testnet),
-        action: body["action"].clone(),
-    }
-}
-
-/// Hashes every L1 `ActionKind` variant; a user-signed or unknown action is an error.
-macro_rules! hash_l1 {
-    ($signed:expr, $nonce:expr; $($variant:ident),* $(,)?) => {{
-        let signed: SignedActionKind = $signed;
-        match signed.action.clone() {
-            $(ActionKind::$variant(a) => Ok(hash(a, $nonce, signed)),)*
-            other => Err(format!("not an L1 action: {other:?}")),
-        }
-    }};
+    let signed = SignedActionKind::from_json(&envelope.to_string()).map_err(|e| e.to_string())?;
+    let kind = L1ActionKind::try_from(signed.action.clone())
+        .map_err(|other| format!("not an L1 action: {other:?}"))?;
+    Ok((kind.with_nonce(nonce), signed))
 }
 
 fn hash_case(action: &Value, nonce: u64) -> Result<Hashed, String> {
-    let signed = signed_kind(action, nonce)?;
-    hash_l1!(signed, nonce;
-        ToggleBigBlocks, ReserveRequestWeight, NoOp, ClaimRewards, SetReferrer,
-        CreateSubAccount, SubAccountTransfer, SubAccountSpotTransfer, VaultTransfer,
-        BorrowLend, AgentSendAsset, AgentEnableDexAbstraction, FinalizeEvmContract,
-        UpdateLeverage, UpdateIsolatedMargin, ScheduleCancel,
-        BatchOrder, BatchCancel, CancelByCloid, BatchModify,
-        RegisterAsset, SetOpenInterestCaps, ToggleTrading, SetOracle, SetFeeRecipient,
-        SetFeeScale, SetFundingMultipliers, SetFundingInterestRates, SetFundingClamps,
-        SetMarginTableIds, InsertMarginTable, MigrateDexQuoteToken, DisableDex,
-        SetSubDeployers, SetGrowthModes, SetMarginModes, SetPerpAnnotation,
-        PerpSetDeployerFees,
-        RegisterToken, Genesis, UserGenesis, RegisterSpot, RegisterHyperliquidity,
-        SetDeployerFees, RequestEvmContract, EnableFreezePrivilege, FreezeUser,
-        RevokeFreezePrivilege, EnableQuoteToken, DisableQuoteToken, SetDeployerLabel,
-        SetTokenAnnotation,
-    )
+    let (kind, signed) = l1_kind(action, nonce)?;
+    let digest = |chain: &SigningChain| {
+        kind.signing_hash(chain, None, None)
+            .map(|hash| format!("{hash:#x}"))
+            .map_err(|e| e.to_string())
+    };
+    let prepared = kind
+        .clone()
+        .prepare(&SigningChain::Mainnet, None, None)
+        .map_err(|e| e.to_string())?;
+    let body = serde_json::to_value(prepared.with_signature(signed.signature)).unwrap();
+    Ok(Hashed {
+        mainnet: digest(&SigningChain::Mainnet)?,
+        testnet: digest(&SigningChain::Testnet)?,
+        action: body["action"].clone(),
+    })
 }
 
 fn check(case: &Value) -> Result<(), String> {

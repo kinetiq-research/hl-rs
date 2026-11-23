@@ -193,20 +193,48 @@ impl<T: Action + Serialize> Serialize for SignedAction<T> {
     where
         S: Serializer,
     {
-        let action_value =
-            build_action_value(&self.action, self.signing_chain.as_ref()).map_err(Error::custom)?;
-        let mut state = serializer.serialize_struct("SignedAction", 5)?;
-        state.serialize_field("action", &action_value)?;
-        state.serialize_field("nonce", &self.nonce)?;
-        state.serialize_field("signature", &SigSer(&self.signature))?;
-        if let Some(vault_address) = &self.vault_address {
-            state.serialize_field("vaultAddress", vault_address)?;
-        }
-        if let Some(expires_after) = &self.expires_after {
-            state.serialize_field("expiresAfter", expires_after)?;
-        }
-        state.end()
+        serialize_signed_action(
+            &self.action,
+            self.nonce,
+            &self.signature,
+            self.vault_address,
+            self.expires_after,
+            self.signing_chain.as_ref(),
+            serializer,
+        )
     }
+}
+
+/// The `/exchange` body of a signed action: `action`, `nonce` and `signature`, then
+/// `vaultAddress` and `expiresAfter` only when set.
+///
+/// Shared by [`SignedAction`] and `SignedL1Action` so both send the same bytes.
+/// `signing_chain` is required for user-signed actions and unused for L1 actions.
+pub(crate) fn serialize_signed_action<T, S>(
+    action: &T,
+    nonce: u64,
+    signature: &Signature,
+    vault_address: Option<Address>,
+    expires_after: Option<u64>,
+    signing_chain: Option<&SigningChain>,
+    serializer: S,
+) -> Result<S::Ok, S::Error>
+where
+    T: Action + Serialize,
+    S: Serializer,
+{
+    let action_value = build_action_value(action, signing_chain).map_err(Error::custom)?;
+    let mut state = serializer.serialize_struct("SignedAction", 5)?;
+    state.serialize_field("action", &action_value)?;
+    state.serialize_field("nonce", &nonce)?;
+    state.serialize_field("signature", &SigSer(signature))?;
+    if let Some(vault_address) = &vault_address {
+        state.serialize_field("vaultAddress", vault_address)?;
+    }
+    if let Some(expires_after) = &expires_after {
+        state.serialize_field("expiresAfter", expires_after)?;
+    }
+    state.end()
 }
 
 impl<'de, T: Action + DeserializeOwned> Deserialize<'de> for SignedAction<T> {

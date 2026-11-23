@@ -42,3 +42,6 @@ pub use agent_send_asset::AgentSendAsset;
 
 mod agent_enable_dex_abstraction;
 pub use agent_enable_dex_abstraction::AgentEnableDexAbstraction;
+
+mod agent_set_abstraction;
+pub use agent_set_abstraction::{AgentAbstractionMode, AgentSetAbstraction};

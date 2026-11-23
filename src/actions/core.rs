@@ -32,7 +32,10 @@ impl<A: Action> PreparedAction<A> {
         vault_address: Option<Address>,
         expires_after: Option<u64>,
     ) -> Result<Self, Error> {
-        let nonce = action.nonce().unwrap_or_else(current_timestamp_ms);
+        let nonce = match action.nonce() {
+            Some(nonce) => nonce,
+            None => current_timestamp_ms()?,
+        };
         let action = action.with_nonce(nonce);
 
         let meta = SigningMeta {
@@ -137,10 +140,13 @@ impl SignedActionKind {
     }
 }
 
-/// Get current timestamp in milliseconds
-pub fn current_timestamp_ms() -> u64 {
-    std::time::SystemTime::now()
+/// The current Unix time in milliseconds: the nonce an action gets when it has none.
+///
+/// # Errors
+/// Returns [`Error::ClockBeforeEpoch`] if the system clock reads earlier than the Unix epoch.
+pub(crate) fn current_timestamp_ms() -> Result<u64, Error> {
+    let elapsed = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
-        .as_millis() as u64
+        .map_err(|e| Error::ClockBeforeEpoch(e.to_string()))?;
+    Ok(elapsed.as_millis() as u64)
 }

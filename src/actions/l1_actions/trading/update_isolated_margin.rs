@@ -20,7 +20,7 @@ impl UpdateIsolatedMargin {
         Self {
             asset,
             is_buy,
-            ntli: amount.abs(),
+            ntli: amount.saturating_abs(),
             nonce: None,
         }
     }
@@ -29,7 +29,7 @@ impl UpdateIsolatedMargin {
         Self {
             asset,
             is_buy,
-            ntli: -amount.abs(),
+            ntli: amount.saturating_abs().saturating_neg(),
             nonce: None,
         }
     }

@@ -1,3 +1,22 @@
+// A panic in this crate takes its caller down with it, and a signer built with
+// `panic = "abort"` halts. Library code returns `Error` instead; a site that truly
+// cannot fail carries `#[allow(clippy::..., reason = "...")]` stating why. Tests may
+// panic. CI runs clippy with these lints for the actions-only and the client build,
+// plus `.github/scripts/no_panic_in_macros.py` for macro bodies clippy cannot see.
+#![cfg_attr(
+    not(test),
+    deny(
+        clippy::unwrap_used,
+        clippy::expect_used,
+        clippy::panic,
+        clippy::unreachable,
+        clippy::todo,
+        clippy::unimplemented,
+        clippy::indexing_slicing,
+        clippy::string_slice
+    )
+)]
+
 pub mod types;
 
 mod abi_value;

@@ -62,11 +62,11 @@ mod serde_decimal {
         let Value::Array(arr) = v else {
             return Err(D::Error::custom("expected array[2] of decimals"));
         };
-        if arr.len() != 2 {
+        let Ok([a, b]) = <[Value; 2]>::try_from(arr) else {
             return Err(D::Error::custom("expected array[2] of decimals"));
-        }
-        let a: Decimal = serde_json::from_value(arr[0].clone()).map_err(D::Error::custom)?;
-        let b: Decimal = serde_json::from_value(arr[1].clone()).map_err(D::Error::custom)?;
+        };
+        let a: Decimal = serde_json::from_value(a).map_err(D::Error::custom)?;
+        let b: Decimal = serde_json::from_value(b).map_err(D::Error::custom)?;
         Ok([a, b])
     }
 

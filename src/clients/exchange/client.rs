@@ -8,7 +8,6 @@ use reqwest::Client;
 use serde::Serialize;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::{
     actions::{
@@ -76,11 +75,13 @@ pub struct ExchangeClient {
 }
 
 impl ExchangeClient {
-    pub fn current_timestamp_ms() -> u64 {
-        SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_millis() as u64
+    /// The current Unix time in milliseconds, the nonce an action gets when it has none.
+    ///
+    /// # Errors
+    /// Returns [`Error::ClockBeforeEpoch`] if the system clock reads earlier than the Unix
+    /// epoch.
+    pub fn current_timestamp_ms() -> Result<u64, Error> {
+        crate::actions::current_timestamp_ms()
     }
 
     pub fn new(base_url: BaseUrl) -> Self {
@@ -95,7 +96,9 @@ impl ExchangeClient {
             vault_address: None,
             expires_after: None,
             signer_private_key: None,
-            nonce_counter: Arc::new(AtomicU64::new(Self::current_timestamp_ms())),
+            // Only a floor for `next_nonce`, which reads the clock again and returns its
+            // error; a clock before the epoch starts the floor at 0.
+            nonce_counter: Arc::new(AtomicU64::new(Self::current_timestamp_ms().unwrap_or(0))),
         }
     }
 
@@ -115,7 +118,7 @@ impl ExchangeClient {
 
     pub fn prepare_action<A: Action>(&self, action: A) -> Result<PreparedAction<A>, Error> {
         PreparedAction::new(
-            self.ensure_action_nonce(action),
+            self.ensure_action_nonce(action)?,
             self.base_url.get_signing_chain(),
             self.vault_address,
             self.expires_after,
@@ -127,7 +130,7 @@ impl ExchangeClient {
         action: A,
         wallet: &PrivateKeySigner,
     ) -> Result<SignedAction<A>, Error> {
-        self.prepare_action(self.ensure_action_nonce(action))?
+        self.prepare_action(self.ensure_action_nonce(action)?)?
             .sign(wallet)
     }
 
@@ -146,7 +149,7 @@ impl ExchangeClient {
         &self,
         action: A,
     ) -> Result<ExchangeResponse, Error> {
-        let prepared = self.prepare_action(self.ensure_action_nonce(action))?;
+        let prepared = self.prepare_action(self.ensure_action_nonce(action)?)?;
         let signer = self
             .signer_private_key
             .as_ref()
@@ -158,18 +161,18 @@ impl ExchangeClient {
     /// Ensure the action carries a nonce before signing. If the caller already
     /// set one, respect it; otherwise assign a strictly-monotonic nonce so
     /// rapid-fire actions (e.g. UpdateLeverage then an order) never collide.
-    fn ensure_action_nonce<A: Action>(&self, action: A) -> A {
+    fn ensure_action_nonce<A: Action>(&self, action: A) -> Result<A, Error> {
         if action.nonce().is_some() {
-            action
+            Ok(action)
         } else {
-            action.with_nonce(self.next_nonce())
+            Ok(action.with_nonce(self.next_nonce()?))
         }
     }
 
     /// Monotonic nonce: current ms, bumped by 1 if we'd otherwise repeat or go
     /// backwards within the same millisecond. Lock-free via a CAS loop.
-    fn next_nonce(&self) -> u64 {
-        let now = Self::current_timestamp_ms();
+    fn next_nonce(&self) -> Result<u64, Error> {
+        let now = Self::current_timestamp_ms()?;
         loop {
             let last = self.nonce_counter.load(Ordering::Relaxed);
             let next = if now > last { now } else { last + 1 };
@@ -178,7 +181,7 @@ impl ExchangeClient {
                 .compare_exchange(last, next, Ordering::SeqCst, Ordering::Relaxed)
                 .is_ok()
             {
-                return next;
+                return Ok(next);
             }
         }
     }
@@ -234,7 +237,10 @@ impl ExchangeClient {
             ));
         }
 
-        let nonce = action.nonce().unwrap_or_else(Self::current_timestamp_ms);
+        let nonce = match action.nonce() {
+            Some(nonce) => nonce,
+            None => Self::current_timestamp_ms()?,
+        };
         let action = action.with_nonce(nonce);
         let signing_chain = self.base_url.get_signing_chain().clone();
         let inner_payload = (
@@ -268,7 +274,10 @@ impl ExchangeClient {
         multi_sig_user: Address,
         outer_signer: Address,
     ) -> Result<Signature, Error> {
-        let nonce = action.nonce().unwrap_or_else(Self::current_timestamp_ms);
+        let nonce = match action.nonce() {
+            Some(nonce) => nonce,
+            None => Self::current_timestamp_ms()?,
+        };
         let action = action.with_nonce(nonce);
         let signing_chain = self.base_url.get_signing_chain().clone();
         let signing_hash =
@@ -290,7 +299,10 @@ impl ExchangeClient {
         outer_signer: Address,
         inner_signatures: Vec<Signature>,
     ) -> Result<SignedMultiSigAction, Error> {
-        let nonce = action.nonce().unwrap_or_else(Self::current_timestamp_ms);
+        let nonce = match action.nonce() {
+            Some(nonce) => nonce,
+            None => Self::current_timestamp_ms()?,
+        };
         let action = action.with_nonce(nonce);
         let signing_chain = self.base_url.get_signing_chain().clone();
         let wrapped_action = build_multisig_action(

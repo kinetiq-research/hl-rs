@@ -297,7 +297,10 @@ pub fn multisig_inner_signing_hash<A: Action + Serialize>(
         ));
     }
 
-    let nonce = action.nonce().unwrap_or_else(current_timestamp_ms);
+    let nonce = match action.nonce() {
+        Some(nonce) => nonce,
+        None => current_timestamp_ms()?,
+    };
     let action = action.with_nonce(nonce);
     let inner_payload = (
         multi_sig_user.to_string().to_lowercase(),
@@ -322,7 +325,10 @@ pub fn multisig_inner_user_signed_signing_hash<A: UserSignedAction + Action + Se
     outer_signer: Address,
     signing_chain: &SigningChain,
 ) -> Result<(A, MultisigSigningHashes), Error> {
-    let nonce = action.nonce().unwrap_or_else(current_timestamp_ms);
+    let nonce = match action.nonce() {
+        Some(nonce) => nonce,
+        None => current_timestamp_ms()?,
+    };
     let action = action.with_nonce(nonce);
     let inner_signing_hash =
         action.multisig_eip712_signing_hash(signing_chain, multi_sig_user, outer_signer)?;

@@ -114,15 +114,10 @@ fn eip712_type_to_dyn_sol_type(ty: &str) -> TokenStream2 {
 }
 
 fn enrich_types_preimage(full_types_preimage: &str) -> String {
-    let Some(idx) = full_types_preimage.find("hyperliquidChain,") else {
+    let Some((head, tail)) = full_types_preimage.split_once("hyperliquidChain,") else {
         return full_types_preimage.to_string();
     };
-    let insert_at = idx + "hyperliquidChain,".len();
-    format!(
-        "{}address payloadMultiSigUser,address outerSigner,{}",
-        &full_types_preimage[..insert_at],
-        &full_types_preimage[insert_at..]
-    )
+    format!("{head}hyperliquidChain,address payloadMultiSigUser,address outerSigner,{tail}")
 }
 
 fn build_struct_hash_tokens(

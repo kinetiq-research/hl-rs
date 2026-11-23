@@ -66,21 +66,21 @@ impl InfoClient {
 
         let response: Vec<Value> = self.send_request(InfoRequest::PerpDexs).await?;
 
-        if response.is_empty() {
+        let Some((first, rest)) = response.split_first() else {
             return Ok(vec![]);
-        }
+        };
 
         // First element is error (null = no error)
-        if !response[0].is_null() {
-            let error = response[0]
+        if !first.is_null() {
+            let error = first
                 .as_str()
                 .ok_or_else(|| Error::GenericParse("Expected string error".to_string()))?
                 .to_string();
             return Err(Error::Api(ApiError::Other { message: error }));
         }
 
-        let mut dexs = Vec::with_capacity(response.len().saturating_sub(1));
-        for (i, value) in response[1..].iter().enumerate() {
+        let mut dexs = Vec::with_capacity(rest.len());
+        for (i, value) in rest.iter().enumerate() {
             let mut dex: PerpDex = serde_json::from_value(value.clone())
                 .map_err(|e| Error::JsonParse(e.to_string()))?;
             dex.id = (i as u32) + 1;

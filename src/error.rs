@@ -37,6 +37,9 @@ pub enum Error {
     /// An L1 action was hashed without a nonce. Set one with `with_nonce` first.
     #[error("nonce not set: call with_nonce before hashing an L1 action")]
     NonceNotSet,
+    /// The system clock read earlier than the Unix epoch, so no timestamp nonce could be taken.
+    #[error("system clock is before the Unix epoch: {0}")]
+    ClockBeforeEpoch(String),
     #[error("ABI encoding error: {rust_type} cannot be encoded as EIP-712 type {abi_type}")]
     AbiEncode {
         rust_type: &'static str,

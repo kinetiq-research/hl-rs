@@ -1,0 +1,103 @@
+{
+  "provenance": "tests/vectors/gen_user_outcome.py; see its docstring",
+  "sdk": "hyperliquid-python-sdk 0.21.0 (be7523d)",
+  "cases": [
+    {
+      "name": "split, accepted",
+      "source": "accepted",
+      "action": {
+        "type": "userOutcome",
+        "splitOutcome": {
+          "outcome": 11074,
+          "amount": "1.0"
+        }
+      },
+      "nonce": 1700000000000,
+      "msgpack": "0x82a474797065ab757365724f7574636f6d65ac73706c69744f7574636f6d6582a76f7574636f6d65cd2b42a6616d6f756e74a3312e30",
+      "connection_id": "0x0692a66afe27d7d6501db32011c53673b250e0d6c9cbcefaa354ef12269ce889",
+      "digest_mainnet": "0x6abbf8e7a6dfe508448b23921d95f380cdbfae5ca98f9c21906cec1456a96897",
+      "digest_testnet": "0xebb4ffd80c5fe302da9075545e70d28d597b41708b6859225707959e94fcbf6d"
+    },
+    {
+      "name": "merge all, accepted",
+      "source": "accepted",
+      "action": {
+        "type": "userOutcome",
+        "mergeOutcome": {
+          "outcome": 11074,
+          "amount": null
+        }
+      },
+      "nonce": 1700000000000,
+      "msgpack": "0x82a474797065ab757365724f7574636f6d65ac6d657267654f7574636f6d6582a76f7574636f6d65cd2b42a6616d6f756e74c0",
+      "connection_id": "0x9d86ae8c18ed3948c22900c1929e62f7f582b29babbc412ee325f5dd500be1ee",
+      "digest_mainnet": "0x348f38d9620f46403403a0e051f08b1db40a563cd442af1748e5fad699b34d4c",
+      "digest_testnet": "0x5594077ee51f5676b005cb239e58318aae568ee9985d50274e5ce8956793ef2b"
+    },
+    {
+      "name": "merge question all, signer recovered",
+      "source": "signer-recovered",
+      "action": {
+        "type": "userOutcome",
+        "mergeQuestion": {
+          "question": 1283,
+          "amount": null
+        }
+      },
+      "nonce": 1700000000000,
+      "msgpack": "0x82a474797065ab757365724f7574636f6d65ad6d657267655175657374696f6e82a87175657374696f6ecd0503a6616d6f756e74c0",
+      "connection_id": "0x1499a67b2fc8599404dbca241aae42eb0da7ded95c59f62a0d9fbf1d0075b5f5",
+      "digest_mainnet": "0x287f16f08217e548af99cb43c74d1bbdf3ae1ca6364c1943a9dce95d0055018a",
+      "digest_testnet": "0xe2bcff7c556f85c384cca9ca6a71f1605ca4b147131b046757c17bf3ae808470"
+    },
+    {
+      "name": "negate, signer recovered",
+      "source": "signer-recovered",
+      "action": {
+        "type": "userOutcome",
+        "negateOutcome": {
+          "question": 1283,
+          "outcome": 17209,
+          "amount": "1.0"
+        }
+      },
+      "nonce": 1700000000000,
+      "msgpack": "0x82a474797065ab757365724f7574636f6d65ad6e65676174654f7574636f6d6583a87175657374696f6ecd0503a76f7574636f6d65cd4339a6616d6f756e74a3312e30",
+      "connection_id": "0xf467551d22b791105882d52ac92ea9645cd0e48135f9469b0bd7a45f63c91f83",
+      "digest_mainnet": "0x602c31a5671ae040dce10f0a2e0ed61243cced65d88d9386a90e2c2e4d62dd14",
+      "digest_testnet": "0xe7a7a63c1f67fe083cb6d5784d4d1632526b7596c59a2214bd2e7740a05bebd3"
+    },
+    {
+      "name": "merge an amount, documented shape",
+      "source": "documented",
+      "action": {
+        "type": "userOutcome",
+        "mergeOutcome": {
+          "outcome": 20115,
+          "amount": "0.5"
+        }
+      },
+      "nonce": 1700000000000,
+      "msgpack": "0x82a474797065ab757365724f7574636f6d65ac6d657267654f7574636f6d6582a76f7574636f6d65cd4e93a6616d6f756e74a3302e35",
+      "connection_id": "0x035e1c27f0b5d48d21f7a692ed108e5e4c7ee14d7f9600e887dbccdbff25969a",
+      "digest_mainnet": "0x5977223e2c35b2ff1ca0356c2933236983e0922137da4ecb56c58a3be9672cb3",
+      "digest_testnet": "0x1746f5b6224067c9129dcd586e3487b6513f3c58f98200034478a18e2a1b8c04"
+    },
+    {
+      "name": "merge question an amount, documented shape",
+      "source": "documented",
+      "action": {
+        "type": "userOutcome",
+        "mergeQuestion": {
+          "question": 820,
+          "amount": "123.0"
+        }
+      },
+      "nonce": 1700000000000,
+      "msgpack": "0x82a474797065ab757365724f7574636f6d65ad6d657267655175657374696f6e82a87175657374696f6ecd0334a6616d6f756e74a53132332e30",
+      "connection_id": "0xb722e11de9a40a703854a20d7719ff9d6a47d4de10176bd86cb6e381678402d6",
+      "digest_mainnet": "0x4a73ec04b11aaa59c00b725df015faa89a01311b6ce0a9ebe00b3b670fa170f6",
+      "digest_testnet": "0x72fd050de1950a586bcb740902bcb20e9aa3e2fbbb08989bbcb5a9960f586be2"
+    }
+  ]
+}

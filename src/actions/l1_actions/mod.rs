@@ -45,3 +45,6 @@ pub use agent_enable_dex_abstraction::AgentEnableDexAbstraction;
 
 mod agent_set_abstraction;
 pub use agent_set_abstraction::{AgentAbstractionMode, AgentSetAbstraction};
+
+mod user_outcome;
+pub use user_outcome::{MergeOutcome, MergeQuestion, NegateOutcome, SplitOutcome};

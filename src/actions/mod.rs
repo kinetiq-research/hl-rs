@@ -369,5 +369,10 @@ impl_action_kind! {
         DisableQuoteToken,
         SetDeployerLabel,
         SetTokenAnnotation,
+        // Sum types: userOutcome (action_type = "userOutcome", payload_key varies)
+        SplitOutcome,
+        MergeOutcome,
+        MergeQuestion,
+        NegateOutcome,
     }
 }

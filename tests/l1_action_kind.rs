@@ -16,11 +16,12 @@ use alloy_signer::Signature;
 use hl_rs::{
     Action, ActionKind, AgentEnableDexAbstraction, AgentSetAbstraction, AssetRequest, BatchCancel,
     DeployerFeeConfig, DisableDex, Error, FinalizeEvmContract, InsertMarginTable, L1ActionKind,
-    MarginMode, MigrateDexQuoteToken, NoOp, PerpDexSchema, PerpSetDeployerFees, PreparedAction,
-    RegisterAsset, ReserveRequestWeight, SetFeeRecipient, SetFeeScale, SetFundingClamps,
-    SetFundingInterestRates, SetFundingMultipliers, SetGrowthModes, SetMarginModes,
-    SetMarginTableIds, SetOpenInterestCaps, SetOracle, SetPerpAnnotation, SetSubDeployers,
-    SignedActionKind, SigningChain, SubDeployerVariant, ToggleTrading, UsdSend, VaultTransfer,
+    MarginMode, MergeOutcome, MergeQuestion, MigrateDexQuoteToken, NegateOutcome, NoOp,
+    PerpDexSchema, PerpSetDeployerFees, PreparedAction, RegisterAsset, ReserveRequestWeight,
+    SetFeeRecipient, SetFeeScale, SetFundingClamps, SetFundingInterestRates, SetFundingMultipliers,
+    SetGrowthModes, SetMarginModes, SetMarginTableIds, SetOpenInterestCaps, SetOracle,
+    SetPerpAnnotation, SetSubDeployers, SignedActionKind, SigningChain, SplitOutcome,
+    SubDeployerVariant, ToggleTrading, UsdSend, VaultTransfer,
 };
 use rust_decimal_macros::dec;
 use serde_json::{json, Value};
@@ -129,6 +130,10 @@ l1_variants![
     DisableQuoteToken,
     SetDeployerLabel,
     SetTokenAnnotation,
+    SplitOutcome,
+    MergeOutcome,
+    MergeQuestion,
+    NegateOutcome,
 ];
 
 /// Every action in the SDK vector file, read through `SignedActionKind`.
@@ -197,6 +202,10 @@ fn constructed_samples() -> Vec<L1ActionKind> {
         SetPerpAnnotation::new("dex", "TEST", "Crypto", "A test perp").into(),
         PerpSetDeployerFees::new("dex", vec![("TEST", DeployerFeeConfig::new("1.0", false))])
             .into(),
+        SplitOutcome::new(11074, dec!(1.0)).into(),
+        MergeOutcome::all(11074).into(),
+        MergeQuestion::new(1283, dec!(2.5)).into(),
+        NegateOutcome::new(1283, 17209, dec!(1.0)).into(),
     ]
 }
 

@@ -40,6 +40,7 @@ async fn main() -> Result<(), hl_rs::Error> {
 For advanced use cases (external signing, batching, delayed sending):
 
 ```rust
+use alloy::primitives::Address;
 use alloy::signers::local::PrivateKeySigner;
 use hl_rs::{BaseUrl, ExchangeClient, UsdSend};
 use rust_decimal_macros::dec;

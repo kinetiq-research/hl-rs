@@ -1,31 +1,26 @@
 //! Approve a builder fee cap, then place an order that attributes volume to that builder.
 //!
-//! Hyperliquid expects `maxFeeRate` in the EIP-712 payload as a string; this SDK stores it
-//! as a [`rust_decimal::Decimal`] (see [`hl_rs::ApproveBuilderFee`]). The order `builder.f`
-//! field is the fee in **tenths of a basis point** (see Hyperliquid exchange docs): `f = 10`
-//! charges **1 bp** of notional to the builder. Keep `f` within the approved cap.
+//! Hyperliquid expects `maxFeeRate` as a percentage string with a `%` suffix (see
+//! [`hl_rs::ApproveBuilderFee`]). The order `builder.f` field is the fee in **tenths of a basis
+//! point** (see Hyperliquid exchange docs): `f = 10` charges **1 bp** of notional to the builder,
+//! which the `"0.01%"` cap approved below allows. Keep `f` within the approved cap.
 //!
 //! # Environment
 //!
 //! - `PRIVATE_KEY` — hex private key for the trading wallet (required).
-//! - `BUILDER_ADDRESS` — builder address to approve and attach to the order (required).
+//! - `ASSET_INDEX` — asset id (optional, default: `11338` spot on testnet, same as `place_order`
+//!   example).
 //!
-//! # Optional
-//!
-//! - `ASSET_INDEX` — asset id (default: `11338` spot on testnet, same as `place_order` example).
-//! - `BUILDER_F` — builder fee in tenths of a basis point (default: `10` → 1 bp). Must stay
-//!   under the approved `MAX_FEE_RATE` cap.
-//! - `MAX_FEE_RATE` — decimal string for `ApproveBuilderFee::max_fee_rate` (default `0.001`).
+//! The builder address, `f` and the approved cap are constants in `main`.
 
 use std::str::FromStr;
 
-use alloy::primitives::{address, Address};
+use alloy::primitives::address;
 use alloy::signers::local::PrivateKeySigner;
 use hl_rs::{
     ApproveBuilderFee, BaseUrl, BatchOrder, BuilderInfo, ExchangeClient, LimitOrderType, OrderType,
     OrderWire, Tif,
 };
-use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 
 #[tokio::main]
@@ -42,7 +37,7 @@ async fn main() {
         .unwrap_or(10_000 + 1338);
 
     let builder_f: u32 = 10;
-    let max_fee_rate = dec!(10);
+    let max_fee_rate = "0.01%";
 
     let url = BaseUrl::Testnet;
     let wallet_addr = wallet.address();
